@@ -10,6 +10,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
+    "dev:web": "pnpm --filter @autodify/web dev",
+    "dev:server": "pnpm --filter @autodify/server dev",
+    "dev:all": "pnpm --filter @autodify/server --filter @autodify/web --parallel dev",
     "test": "pnpm -r test",
     "test:coverage": "pnpm -r test:coverage",
     "lint": "eslint . --ext .ts,.tsx",
@@ -17,7 +20,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "typecheck": "pnpm -r typecheck",
-    "clean": "pnpm -r clean && rm -rf node_modules"
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "litellm:start": "docker-compose up litellm -d",
+    "litellm:stop": "docker-compose down"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

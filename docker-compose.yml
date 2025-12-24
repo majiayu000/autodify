@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # LiteLLM Proxy - 统一的 LLM API 网关
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-autodify}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Autodify API Server
+  autodify-server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - LLM_PROVIDER=openai
+      - LLM_BASE_URL=http://litellm:4000/v1
+      - LLM_API_KEY=${LITELLM_MASTER_KEY:-sk-autodify}
+      - LLM_DEFAULT_MODEL=gpt-4o
+    depends_on:
+      litellm:
+        condition: service_healthy
+
+  # Autodify Web Frontend
+  autodify-web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - autodify-server
+
+# 开发模式使用
+# docker-compose up litellm  # 只启动 LiteLLM proxy

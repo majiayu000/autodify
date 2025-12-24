@@ -1,0 +1,80 @@
+# LiteLLM Configuration
+# 文档: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # OpenAI Models
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: o1
+    litellm_params:
+      model: openai/o1
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Anthropic Models
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # DeepSeek Models
+  - model_name: deepseek-chat
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com/v1
+
+  - model_name: deepseek-reasoner
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com/v1
+
+litellm_settings:
+  # 故障转移配置
+  fallbacks:
+    - gpt-4o: [claude-sonnet, deepseek-chat]
+    - claude-sonnet: [gpt-4o, deepseek-chat]
+
+  # 重试配置
+  num_retries: 3
+  request_timeout: 60
+
+  # 日志级别
+  set_verbose: false
+
+  # 缓存设置 (可选)
+  # cache: true
+  # cache_params:
+  #   type: redis
+  #   host: redis
+  #   port: 6379
+
+general_settings:
+  # 主密钥
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+  # 允许的 IP (生产环境应限制)
+  # allowed_ips: ["127.0.0.1"]
+
+  # 启用健康检查
+  health_check_interval: 300
+
+router_settings:
+  # 路由策略
+  routing_strategy: simple-shuffle
+
+  # 模型组负载均衡
+  # enable_loadbalancing: true
