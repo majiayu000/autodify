@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
+import { useShallow } from 'zustand/react/shallow';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import NodeEditor from './components/NodeEditor';
 import NodePalette from './components/NodePalette';
@@ -33,12 +34,14 @@ export default function App() {
   } = useWorkflowStore();
 
   // 时间旅行（撤销/重做）
-  const { undo, redo, pastStates, futureStates } = useTemporalStore((state) => ({
-    undo: state.undo,
-    redo: state.redo,
-    pastStates: state.pastStates,
-    futureStates: state.futureStates,
-  }));
+  const { undo, redo, pastStates, futureStates } = useTemporalStore(
+    useShallow((state) => ({
+      undo: state.undo,
+      redo: state.redo,
+      pastStates: state.pastStates,
+      futureStates: state.futureStates,
+    }))
+  );
 
   const canUndo = pastStates.length > 0;
   const canRedo = futureStates.length > 0;
