@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import { cn } from '../lib/utils';
 
 // Node type icons
 const nodeIcons: Record<string, string> = {
@@ -49,13 +50,13 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
 
   return (
     <div
+      className={cn(
+        'rounded-lg px-4 py-3 min-w-[180px] transition-shadow',
+        selected && 'ring-2 ring-indigo-500/30'
+      )}
       style={{
         background: colors.bg,
         border: `2px solid ${selected ? '#6366f1' : colors.border}`,
-        borderRadius: '8px',
-        padding: '12px 16px',
-        minWidth: '180px',
-        boxShadow: selected ? '0 0 0 2px rgba(99, 102, 241, 0.3)' : 'none',
       }}
     >
       {/* Input Handle */}
@@ -64,23 +65,19 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
           type="target"
           position={Position.Top}
           id="target"
-          style={{
-            background: colors.border,
-            width: 10,
-            height: 10,
-            border: '2px solid #1e293b',
-          }}
+          className="!w-2.5 !h-2.5 !border-2 !border-slate-800"
+          style={{ background: colors.border }}
         />
       )}
 
       {/* Node Content */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '18px' }}>{icon}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{icon}</span>
         <div>
-          <div style={{ fontWeight: 600, fontSize: '13px', color: '#f1f5f9' }}>
+          <div className="font-semibold text-[13px] text-slate-100">
             {data.title}
           </div>
-          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {nodeType}
           </div>
         </div>
@@ -92,12 +89,8 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
           type="source"
           position={Position.Bottom}
           id="source"
-          style={{
-            background: colors.border,
-            width: 10,
-            height: 10,
-            border: '2px solid #1e293b',
-          }}
+          className="!w-2.5 !h-2.5 !border-2 !border-slate-800"
+          style={{ background: colors.border }}
         />
       )}
 
@@ -108,25 +101,15 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
             type="source"
             position={Position.Right}
             id="branch-1"
-            style={{
-              background: colors.border,
-              width: 8,
-              height: 8,
-              border: '2px solid #1e293b',
-              top: '30%',
-            }}
+            className="!w-2 !h-2 !border-2 !border-slate-800 !top-[30%]"
+            style={{ background: colors.border }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="branch-2"
-            style={{
-              background: colors.border,
-              width: 8,
-              height: 8,
-              border: '2px solid #1e293b',
-              top: '70%',
-            }}
+            className="!w-2 !h-2 !border-2 !border-slate-800 !top-[70%]"
+            style={{ background: colors.border }}
           />
         </>
       )}
