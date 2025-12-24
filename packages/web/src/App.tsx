@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import WorkflowCanvas from './components/WorkflowCanvas';
-import NodeEditor, { type NodeData } from './components/NodeEditor';
+import NodeEditor from './components/NodeEditor';
 import NodePalette from './components/NodePalette';
+import { useWorkflowStore, type DslType } from './store/workflowStore';
 import { generateWorkflow, saveApiConfig, getApiConfig, clearApiConfig } from './api/generate';
 import yaml from 'js-yaml';
 
@@ -14,51 +15,53 @@ const EXAMPLE_PROMPTS = [
   '创建一个文档翻译工作流，支持多语言',
 ];
 
-interface DslType {
-  version?: string;
-  kind?: string;
-  app?: {
-    name?: string;
-    description?: string;
-    icon?: string;
-    mode?: string;
-  };
-  workflow?: {
-    graph: {
-      nodes: Array<{
-        id: string;
-        type?: string;
-        data: NodeData;
-      }>;
-      edges: Array<{
-        id: string;
-        source: string;
-        target: string;
-        sourceHandle?: string;
-        targetHandle?: string;
-      }>;
-    };
-  };
-}
-
 export default function App() {
+  // Store 状态
+  const {
+    dsl,
+    selectedNodeId,
+    isGenerating,
+    yamlOutput,
+    duration,
+    setDsl,
+    setYamlOutput,
+    setDuration,
+    setIsGenerating,
+    selectNode,
+    updateNode,
+    addNode,
+  } = useWorkflowStore();
+
+  // 本地 UI 状态
   const [prompt, setPrompt] = useState('');
-  const [dsl, setDsl] = useState<DslType | null>(null);
-  const [yamlOutput, setYamlOutput] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showYaml, setShowYaml] = useState(false);
-  const [duration, setDuration] = useState<number>(0);
-
-  // API settings
   const [apiConfig, setApiConfigState] = useState(() => getApiConfig());
+
+  // 同步 DSL 变化到 YAML
+  useEffect(() => {
+    if (dsl) {
+      try {
+        const yamlStr = yaml.dump(dsl, {
+          indent: 2,
+          lineWidth: -1,
+          quotingType: "'",
+          forceQuotes: true,
+        });
+        setYamlOutput(yamlStr);
+      } catch {
+        // 忽略 YAML 生成错误
+      }
+    } else {
+      setYamlOutput('');
+    }
+  }, [dsl, setYamlOutput]);
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
-    setSelectedNode(null);
+    selectNode(null);
 
     try {
       const result = await generateWorkflow({ prompt });
@@ -66,19 +69,6 @@ export default function App() {
       if (result.success && result.dsl) {
         setDsl(result.dsl as DslType);
         setDuration(result.duration || 0);
-
-        // Generate YAML
-        try {
-          const yamlStr = yaml.dump(result.dsl, {
-            indent: 2,
-            lineWidth: -1,
-            quotingType: "'",
-            forceQuotes: true,
-          });
-          setYamlOutput(yamlStr);
-        } catch {
-          setYamlOutput('');
-        }
       } else {
         console.error('Generation failed:', result.error);
       }
@@ -87,7 +77,7 @@ export default function App() {
     }
 
     setIsGenerating(false);
-  }, [prompt]);
+  }, [prompt, setIsGenerating, selectNode, setDsl, setDuration]);
 
   const handleExampleClick = useCallback((example: string) => {
     setPrompt(example);
@@ -130,123 +120,15 @@ export default function App() {
     navigator.clipboard.writeText(yamlOutput);
   }, [yamlOutput]);
 
-  // 更新节点数据
-  const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<NodeData>) => {
-    if (!dsl?.workflow?.graph?.nodes) return;
-
-    const updatedDsl = {
-      ...dsl,
-      workflow: {
-        ...dsl.workflow,
-        graph: {
-          ...dsl.workflow.graph,
-          nodes: dsl.workflow.graph.nodes.map((node) =>
-            node.id === nodeId
-              ? { ...node, data: { ...node.data, ...newData } }
-              : node
-          ),
-        },
-      },
-    };
-
-    setDsl(updatedDsl);
-
-    // 同步更新 YAML
-    try {
-      const yamlStr = yaml.dump(updatedDsl, {
-        indent: 2,
-        lineWidth: -1,
-        quotingType: "'",
-        forceQuotes: true,
-      });
-      setYamlOutput(yamlStr);
-    } catch {
-      // 忽略 YAML 生成错误
-    }
-  }, [dsl]);
-
-  // 获取选中的节点
-  const selectedNodeData = selectedNode && dsl?.workflow?.graph?.nodes
-    ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNode)
-    : null;
-
   // 添加新节点
-  const handleAddNode = useCallback((nodeType: string, nodeTitle: string, _position: { x: number; y: number }) => {
-    const newNodeId = `${nodeType}-${Date.now()}`;
-    const newNode = {
-      id: newNodeId,
-      type: 'custom',
-      data: {
-        type: nodeType,
-        title: nodeTitle,
-      } as NodeData,
-    };
+  const handleAddNode = useCallback((_nodeType: string, _nodeTitle: string, _position: { x: number; y: number }) => {
+    addNode(_nodeType, _nodeTitle);
+  }, [addNode]);
 
-    // 如果没有 DSL，创建一个新的
-    if (!dsl) {
-      const newDsl: DslType = {
-        version: '0.5.0',
-        kind: 'app',
-        app: {
-          name: '新工作流',
-          description: '通过拖拽创建的工作流',
-          icon: '🎨',
-          mode: 'workflow',
-        },
-        workflow: {
-          graph: {
-            nodes: [newNode],
-            edges: [],
-          },
-        },
-      };
-      setDsl(newDsl);
-
-      // 更新 YAML
-      try {
-        const yamlStr = yaml.dump(newDsl, {
-          indent: 2,
-          lineWidth: -1,
-          quotingType: "'",
-          forceQuotes: true,
-        });
-        setYamlOutput(yamlStr);
-      } catch {
-        // 忽略
-      }
-      return;
-    }
-
-    // 添加到现有 DSL
-    const updatedDsl: DslType = {
-      ...dsl,
-      workflow: {
-        ...dsl.workflow!,
-        graph: {
-          ...dsl.workflow!.graph,
-          nodes: [...dsl.workflow!.graph.nodes, newNode],
-        },
-      },
-    };
-
-    setDsl(updatedDsl);
-
-    // 更新 YAML
-    try {
-      const yamlStr = yaml.dump(updatedDsl, {
-        indent: 2,
-        lineWidth: -1,
-        quotingType: "'",
-        forceQuotes: true,
-      });
-      setYamlOutput(yamlStr);
-    } catch {
-      // 忽略
-    }
-
-    // 选中新节点
-    setSelectedNode(newNodeId);
-  }, [dsl]);
+  // 获取选中的节点数据
+  const selectedNodeData = selectedNodeId && dsl?.workflow?.graph?.nodes
+    ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNodeId)
+    : null;
 
   const nodeCount = dsl?.workflow?.graph?.nodes?.length || 0;
   const edgeCount = dsl?.workflow?.graph?.edges?.length || 0;
@@ -348,9 +230,9 @@ export default function App() {
             {selectedNodeData && (
               <div style={{ marginTop: '16px' }}>
                 <NodeEditor
-                  node={{ id: selectedNode!, data: selectedNodeData.data }}
-                  onUpdate={handleNodeUpdate}
-                  onClose={() => setSelectedNode(null)}
+                  node={{ id: selectedNodeId!, data: selectedNodeData.data }}
+                  onUpdate={updateNode}
+                  onClose={() => selectNode(null)}
                 />
               </div>
             )}
@@ -389,7 +271,7 @@ export default function App() {
 
         {/* Canvas */}
         <main className="canvas-container">
-          <WorkflowCanvas dsl={dsl} onNodeSelect={setSelectedNode} onAddNode={handleAddNode} />
+          <WorkflowCanvas dsl={dsl} onNodeSelect={selectNode} onAddNode={handleAddNode} />
         </main>
       </div>
 
