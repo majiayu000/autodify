@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import WorkflowCanvas from './components/WorkflowCanvas';
+import NodeEditor, { type NodeData } from './components/NodeEditor';
 import { generateWorkflow, saveApiConfig, getApiConfig, clearApiConfig } from './api/generate';
 import yaml from 'js-yaml';
 
@@ -19,21 +20,21 @@ interface DslType {
     name?: string;
     description?: string;
     icon?: string;
+    mode?: string;
   };
   workflow?: {
     graph: {
       nodes: Array<{
         id: string;
-        data: {
-          type: string;
-          title: string;
-        };
+        type?: string;
+        data: NodeData;
       }>;
       edges: Array<{
         id: string;
         source: string;
         target: string;
         sourceHandle?: string;
+        targetHandle?: string;
       }>;
     };
   };
@@ -128,6 +129,46 @@ export default function App() {
     navigator.clipboard.writeText(yamlOutput);
   }, [yamlOutput]);
 
+  // 更新节点数据
+  const handleNodeUpdate = useCallback((nodeId: string, newData: Partial<NodeData>) => {
+    if (!dsl?.workflow?.graph?.nodes) return;
+
+    const updatedDsl = {
+      ...dsl,
+      workflow: {
+        ...dsl.workflow,
+        graph: {
+          ...dsl.workflow.graph,
+          nodes: dsl.workflow.graph.nodes.map((node) =>
+            node.id === nodeId
+              ? { ...node, data: { ...node.data, ...newData } }
+              : node
+          ),
+        },
+      },
+    };
+
+    setDsl(updatedDsl);
+
+    // 同步更新 YAML
+    try {
+      const yamlStr = yaml.dump(updatedDsl, {
+        indent: 2,
+        lineWidth: -1,
+        quotingType: "'",
+        forceQuotes: true,
+      });
+      setYamlOutput(yamlStr);
+    } catch {
+      // 忽略 YAML 生成错误
+    }
+  }, [dsl]);
+
+  // 获取选中的节点
+  const selectedNodeData = selectedNode && dsl?.workflow?.graph?.nodes
+    ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNode)
+    : null;
+
   const nodeCount = dsl?.workflow?.graph?.nodes?.length || 0;
   const edgeCount = dsl?.workflow?.graph?.edges?.length || 0;
 
@@ -221,23 +262,14 @@ export default function App() {
               </div>
             )}
 
-            {/* Selected Node Info */}
-            {selectedNode && dsl && (
-              <div className="node-info">
-                <h3>节点详情</h3>
-                {(() => {
-                  const node = dsl.workflow?.graph?.nodes?.find(
-                    (n) => n.id === selectedNode
-                  );
-                  if (!node) return null;
-                  return (
-                    <>
-                      <p><strong>ID:</strong> {node.id}</p>
-                      <p><strong>类型:</strong> {node.data.type}</p>
-                      <p><strong>标题:</strong> {node.data.title}</p>
-                    </>
-                  );
-                })()}
+            {/* Node Editor */}
+            {selectedNodeData && (
+              <div style={{ marginTop: '16px' }}>
+                <NodeEditor
+                  node={{ id: selectedNode!, data: selectedNodeData.data }}
+                  onUpdate={handleNodeUpdate}
+                  onClose={() => setSelectedNode(null)}
+                />
               </div>
             )}
 

@@ -71,7 +71,8 @@ function layoutNodes(
   });
 }
 
-const nodeTypes = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const nodeTypes: any = {
   workflowNode: WorkflowNode,
 };
 
@@ -106,7 +107,9 @@ export default function WorkflowCanvas({ dsl, onNodeSelect }: WorkflowCanvasProp
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      sourceHandle: edge.sourceHandle,
+      // 只使用标准的 source/target handle，忽略自定义的 handle id
+      sourceHandle: 'source',
+      targetHandle: 'target',
       ...defaultEdgeOptions,
     }));
 

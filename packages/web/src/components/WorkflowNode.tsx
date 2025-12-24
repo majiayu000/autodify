@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { memo } from 'react';
+import { Handle, Position } from '@xyflow/react';
 
 // Node type icons
 const nodeIcons: Record<string, string> = {
@@ -31,13 +31,18 @@ const nodeColors: Record<string, { bg: string; border: string }> = {
   answer: { bg: '#1e3a5f', border: '#3b82f6' },
 };
 
-interface WorkflowNodeData {
+export interface WorkflowNodeData {
   type: string;
   title: string;
   description?: string;
 }
 
-const WorkflowNode = memo(({ data, selected }: NodeProps<WorkflowNodeData>) => {
+interface WorkflowNodeProps {
+  data: WorkflowNodeData;
+  selected?: boolean;
+}
+
+const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
   const nodeType = data.type || 'llm';
   const colors = nodeColors[nodeType] || nodeColors.llm;
   const icon = nodeIcons[nodeType] || '⚙️';
@@ -58,6 +63,7 @@ const WorkflowNode = memo(({ data, selected }: NodeProps<WorkflowNodeData>) => {
         <Handle
           type="target"
           position={Position.Top}
+          id="target"
           style={{
             background: colors.border,
             width: 10,
@@ -85,6 +91,7 @@ const WorkflowNode = memo(({ data, selected }: NodeProps<WorkflowNodeData>) => {
         <Handle
           type="source"
           position={Position.Bottom}
+          id="source"
           style={{
             background: colors.border,
             width: 10,
