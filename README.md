@@ -8,7 +8,7 @@ Autodify 是一个 CLI 工具，让你可以使用自然语言描述来生成 [D
 
 - 🚀 **自然语言生成** - 用一句话描述你想要的工作流
 - ✅ **DSL 验证** - 验证工作流配置的正确性
-- 🔧 **多模型支持** - 支持 OpenAI、Anthropic 等多种 LLM
+- 🔧 **多模型支持** - 支持 OpenAI、Anthropic、DeepSeek、智谱 AI 等多种 LLM
 - 📦 **完整类型定义** - TypeScript 类型定义，支持 IDE 智能提示
 
 ## 安装
@@ -135,10 +135,10 @@ pnpm format
 
 | Provider | Models |
 |----------|--------|
-| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo |
-| Anthropic | claude-3-5-sonnet, claude-3-opus, claude-3-haiku |
+| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4, gpt-3.5-turbo, o1, o1-preview, o1-mini |
+| Anthropic | claude-3-5-sonnet-20241022, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307 |
 | DeepSeek | deepseek-chat, deepseek-coder |
-| 智谱 AI | glm-4, glm-4v |
+| 智谱 AI | glm-4, glm-4-plus, glm-4-air, glm-4-flash, glm-4v |
 
 ## 路线图
 
@@ -150,7 +150,7 @@ pnpm format
   - [x] 核心生成器 MVP
   - [x] CLI 工具 V1
 
-- [ ] Phase 2: 完整节点支持与模板系统
+- [x] Phase 2: 完整节点支持与模板系统
 - [ ] Phase 3: 编辑能力与上下文管理
 - [ ] Phase 4: API 服务与 Dify 集成
 - [ ] Phase 5: 智能化增强

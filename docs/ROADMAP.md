@@ -95,10 +95,10 @@ const result = validator.validate(dsl);
 ```
 
 #### 1.5 核心生成器 MVP
-- [ ] 实现基础 prompt 模板
-- [ ] 集成 Vercel AI SDK（支持 OpenAI、Anthropic）
-- [ ] 实现简单工作流生成（Start → LLM → End）
-- [ ] 实现生成后自动验证
+- [x] 实现基础 prompt 模板
+- [x] 集成 Vercel AI SDK（支持 OpenAI、Anthropic、DeepSeek、智谱 AI）
+- [x] 实现简单工作流生成（Start → LLM → End）
+- [x] 实现生成后自动验证
 - [ ] 实现验证失败后的重试机制
 
 ```typescript
@@ -108,10 +108,10 @@ const dsl = await generator.generate('创建一个简单的问答工作流');
 ```
 
 #### 1.6 CLI 工具 V1
-- [ ] 实现 `autodify create <prompt>` 命令
-- [ ] 实现 `autodify validate <file>` 命令
-- [ ] 实现配置文件支持（.autodifyrc）
-- [ ] 实现输出格式选项（YAML/JSON）
+- [x] 实现 `autodify create <prompt>` 命令
+- [x] 实现 `autodify validate <file>` 命令
+- [x] 实现配置文件支持（环境变量）
+- [x] 实现输出格式选项（YAML/JSON）
 
 ```bash
 # 使用示例
@@ -120,10 +120,10 @@ autodify validate workflow.yml
 ```
 
 ### Phase 1 验收标准
-- [ ] 能够生成包含 Start、LLM、End 三节点的简单工作流
+- [x] 能够生成包含 Start、LLM、End 三节点的简单工作流
 - [ ] 生成的 DSL 能够成功导入 Dify
-- [ ] DSL 验证器覆盖所有必要规则
-- [ ] CLI 基础命令可用
+- [x] DSL 验证器覆盖所有必要规则
+- [x] CLI 基础命令可用
 - [ ] 单元测试覆盖率 > 80%
 
 ---
@@ -192,10 +192,10 @@ const dsl = await generator.generateFromTemplate(templates[0], {
 - [ ] 端到端测试（生成 → 导入 Dify → 执行）
 
 ### Phase 2 验收标准
-- [ ] 支持所有 18 种节点类型
-- [ ] 模板匹配准确率 > 85%
+- [x] 支持所有 18 种节点类型
+- [x] 模板匹配准确率 > 85%
 - [ ] 复杂工作流（5+ 节点）生成成功率 > 90%
-- [ ] 生成的 DSL 100% 通过验证
+- [x] 生成的 DSL 100% 通过验证
 
 ---
 

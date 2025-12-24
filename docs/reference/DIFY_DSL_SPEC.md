@@ -284,16 +284,25 @@ edges:
 
 | Provider | Model Name | 说明 |
 |----------|------------|------|
+| `openai` | `gpt-4o` | GPT-4o (旗舰多模态模型) |
+| `openai` | `gpt-4o-mini` | GPT-4o Mini (轻量版) |
+| `openai` | `gpt-4-turbo` | GPT-4 Turbo |
 | `openai` | `gpt-4` | GPT-4 |
-| `openai` | `gpt-4o` | GPT-4o |
-| `openai` | `gpt-4o-mini` | GPT-4o Mini |
 | `openai` | `gpt-3.5-turbo` | GPT-3.5 Turbo |
+| `openai` | `o1` | O1 (推理模型) |
+| `openai` | `o1-preview` | O1 Preview |
+| `openai` | `o1-mini` | O1 Mini |
 | `anthropic` | `claude-3-5-sonnet-20241022` | Claude 3.5 Sonnet |
 | `anthropic` | `claude-3-opus-20240229` | Claude 3 Opus |
+| `anthropic` | `claude-3-sonnet-20240229` | Claude 3 Sonnet |
 | `anthropic` | `claude-3-haiku-20240307` | Claude 3 Haiku |
+| `deepseek` | `deepseek-chat` | DeepSeek Chat |
+| `deepseek` | `deepseek-coder` | DeepSeek Coder |
 | `zhipuai` | `glm-4` | 智谱 GLM-4 |
-| `minimax` | `abab6.5-chat` | MiniMax |
-| `deepseek` | `deepseek-chat` | DeepSeek |
+| `zhipuai` | `glm-4-plus` | GLM-4 Plus (增强版) |
+| `zhipuai` | `glm-4-air` | GLM-4 Air (轻量版) |
+| `zhipuai` | `glm-4-flash` | GLM-4 Flash (极速版) |
+| `zhipuai` | `glm-4v` | GLM-4V (视觉模型) |
 
 **完整示例：**
 

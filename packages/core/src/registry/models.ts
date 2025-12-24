@@ -7,7 +7,7 @@
 import type { ModelProvider, ModelInfo } from './types.js';
 
 /**
- * OpenAI 模型
+ * OpenAI 模型 (2024-2025)
  */
 export const openaiModels: ModelInfo[] = [
   {
@@ -44,6 +44,27 @@ export const openaiModels: ModelInfo[] = [
     contextWindow: 16385,
     supportsVision: false,
     supportsTools: true,
+  },
+  {
+    id: 'o1',
+    name: 'O1',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: false,
+  },
+  {
+    id: 'o1-preview',
+    name: 'O1 Preview',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: false,
+  },
+  {
+    id: 'o1-mini',
+    name: 'O1 Mini',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: false,
   },
 ];
 
@@ -82,32 +103,53 @@ export const anthropicModels: ModelInfo[] = [
 ];
 
 /**
- * DeepSeek 模型
+ * DeepSeek 模型 (2024-2025)
  */
 export const deepseekModels: ModelInfo[] = [
   {
     id: 'deepseek-chat',
     name: 'DeepSeek Chat',
-    contextWindow: 64000,
+    contextWindow: 128000,
     supportsVision: false,
     supportsTools: true,
   },
   {
     id: 'deepseek-coder',
     name: 'DeepSeek Coder',
-    contextWindow: 64000,
+    contextWindow: 128000,
     supportsVision: false,
     supportsTools: true,
   },
 ];
 
 /**
- * 智谱 AI 模型
+ * 智谱 AI 模型 (2024-2025)
  */
 export const zhipuModels: ModelInfo[] = [
   {
     id: 'glm-4',
     name: 'GLM-4',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: true,
+  },
+  {
+    id: 'glm-4-plus',
+    name: 'GLM-4 Plus',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: true,
+  },
+  {
+    id: 'glm-4-air',
+    name: 'GLM-4 Air',
+    contextWindow: 128000,
+    supportsVision: false,
+    supportsTools: true,
+  },
+  {
+    id: 'glm-4-flash',
+    name: 'GLM-4 Flash',
     contextWindow: 128000,
     supportsVision: false,
     supportsTools: true,
