@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import NodeEditor, { type NodeData } from './components/NodeEditor';
+import NodePalette from './components/NodePalette';
 import { generateWorkflow, saveApiConfig, getApiConfig, clearApiConfig } from './api/generate';
 import yaml from 'js-yaml';
 
@@ -169,6 +170,84 @@ export default function App() {
     ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNode)
     : null;
 
+  // 添加新节点
+  const handleAddNode = useCallback((nodeType: string, nodeTitle: string, _position: { x: number; y: number }) => {
+    const newNodeId = `${nodeType}-${Date.now()}`;
+    const newNode = {
+      id: newNodeId,
+      type: 'custom',
+      data: {
+        type: nodeType,
+        title: nodeTitle,
+      } as NodeData,
+    };
+
+    // 如果没有 DSL，创建一个新的
+    if (!dsl) {
+      const newDsl: DslType = {
+        version: '0.5.0',
+        kind: 'app',
+        app: {
+          name: '新工作流',
+          description: '通过拖拽创建的工作流',
+          icon: '🎨',
+          mode: 'workflow',
+        },
+        workflow: {
+          graph: {
+            nodes: [newNode],
+            edges: [],
+          },
+        },
+      };
+      setDsl(newDsl);
+
+      // 更新 YAML
+      try {
+        const yamlStr = yaml.dump(newDsl, {
+          indent: 2,
+          lineWidth: -1,
+          quotingType: "'",
+          forceQuotes: true,
+        });
+        setYamlOutput(yamlStr);
+      } catch {
+        // 忽略
+      }
+      return;
+    }
+
+    // 添加到现有 DSL
+    const updatedDsl: DslType = {
+      ...dsl,
+      workflow: {
+        ...dsl.workflow!,
+        graph: {
+          ...dsl.workflow!.graph,
+          nodes: [...dsl.workflow!.graph.nodes, newNode],
+        },
+      },
+    };
+
+    setDsl(updatedDsl);
+
+    // 更新 YAML
+    try {
+      const yamlStr = yaml.dump(updatedDsl, {
+        indent: 2,
+        lineWidth: -1,
+        quotingType: "'",
+        forceQuotes: true,
+      });
+      setYamlOutput(yamlStr);
+    } catch {
+      // 忽略
+    }
+
+    // 选中新节点
+    setSelectedNode(newNodeId);
+  }, [dsl]);
+
   const nodeCount = dsl?.workflow?.graph?.nodes?.length || 0;
   const edgeCount = dsl?.workflow?.graph?.edges?.length || 0;
 
@@ -247,6 +326,9 @@ export default function App() {
               ))}
             </div>
 
+            {/* Node Palette */}
+            <NodePalette />
+
             {/* Workflow Info */}
             {dsl && (
               <div className="node-info" style={{ marginTop: '16px' }}>
@@ -307,7 +389,7 @@ export default function App() {
 
         {/* Canvas */}
         <main className="canvas-container">
-          <WorkflowCanvas dsl={dsl} onNodeSelect={setSelectedNode} />
+          <WorkflowCanvas dsl={dsl} onNodeSelect={setSelectedNode} onAddNode={handleAddNode} />
         </main>
       </div>
 

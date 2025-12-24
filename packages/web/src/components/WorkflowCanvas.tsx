@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState, DragEvent } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -37,6 +37,7 @@ interface WorkflowCanvasProps {
     };
   } | null;
   onNodeSelect?: (nodeId: string | null) => void;
+  onAddNode?: (nodeType: string, nodeTitle: string, position: { x: number; y: number }) => void;
 }
 
 // Layout nodes using dagre
@@ -86,7 +87,10 @@ const defaultEdgeOptions = {
   },
 };
 
-export default function WorkflowCanvas({ dsl, onNodeSelect }: WorkflowCanvasProps) {
+export default function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: WorkflowCanvasProps) {
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
   // Convert DSL to React Flow nodes and edges
   const { initialNodes, initialEdges } = useMemo(() => {
     if (!dsl?.workflow?.graph) {
@@ -146,9 +150,49 @@ export default function WorkflowCanvas({ dsl, onNodeSelect }: WorkflowCanvasProp
     onNodeSelect?.(null);
   }, [onNodeSelect]);
 
+  // 拖放处理
+  const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  }, []);
+
+  const onDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const onDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      setIsDragOver(false);
+
+      const nodeData = event.dataTransfer.getData('application/autodify-node');
+      if (!nodeData || !onAddNode || !reactFlowWrapper.current) return;
+
+      try {
+        const { type, title } = JSON.parse(nodeData);
+
+        // 获取画布边界
+        const bounds = reactFlowWrapper.current.getBoundingClientRect();
+
+        // 计算放置位置（相对于画布）
+        const position = {
+          x: event.clientX - bounds.left - 100, // 偏移节点宽度的一半
+          y: event.clientY - bounds.top - 30,   // 偏移节点高度的一半
+        };
+
+        onAddNode(type, title, position);
+      } catch {
+        console.error('Failed to parse dropped node data');
+      }
+    },
+    [onAddNode]
+  );
+
   if (!dsl) {
     return (
       <div
+        ref={reactFlowWrapper}
         style={{
           height: '100%',
           display: 'flex',
@@ -158,17 +202,31 @@ export default function WorkflowCanvas({ dsl, onNodeSelect }: WorkflowCanvasProp
           flexDirection: 'column',
           gap: '16px',
         }}
+        className={isDragOver ? 'drag-over' : ''}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
       >
         <div style={{ fontSize: '48px' }}>🎨</div>
-        <div style={{ fontSize: '16px' }}>输入描述后生成工作流</div>
+        <div style={{ fontSize: '16px' }}>
+          {isDragOver ? '释放以添加节点' : '输入描述后生成工作流'}
+        </div>
         <div style={{ fontSize: '13px', color: '#475569' }}>
-          工作流图将在这里显示
+          {isDragOver ? '' : '或从左侧节点库拖拽节点到此处'}
         </div>
       </div>
     );
   }
 
   return (
+    <div
+      ref={reactFlowWrapper}
+      style={{ width: '100%', height: '100%' }}
+      className={isDragOver ? 'drag-over' : ''}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
     <ReactFlow
       nodes={nodes}
       edges={edges}
@@ -197,5 +255,6 @@ export default function WorkflowCanvas({ dsl, onNodeSelect }: WorkflowCanvasProp
         color="#334155"
       />
     </ReactFlow>
+    </div>
   );
 }
