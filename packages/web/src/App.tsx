@@ -3,7 +3,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import NodeEditor from './components/NodeEditor';
 import NodePalette from './components/NodePalette';
-import { useWorkflowStore, type DslType } from './store/workflowStore';
+import { useWorkflowStore, useTemporalStore, type DslType } from './store/workflowStore';
 import { generateWorkflow, saveApiConfig, getApiConfig, clearApiConfig } from './api/generate';
 import yaml from 'js-yaml';
 
@@ -32,6 +32,17 @@ export default function App() {
     addNode,
   } = useWorkflowStore();
 
+  // 时间旅行（撤销/重做）
+  const { undo, redo, pastStates, futureStates } = useTemporalStore((state) => ({
+    undo: state.undo,
+    redo: state.redo,
+    pastStates: state.pastStates,
+    futureStates: state.futureStates,
+  }));
+
+  const canUndo = pastStates.length > 0;
+  const canRedo = futureStates.length > 0;
+
   // 本地 UI 状态
   const [prompt, setPrompt] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -56,6 +67,36 @@ export default function App() {
       setYamlOutput('');
     }
   }, [dsl, setYamlOutput]);
+
+  // 全局键盘快捷键：撤销/重做
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果在输入框中，不处理
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        return;
+      }
+
+      // Cmd/Ctrl + Z: 撤销
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) undo();
+      }
+      // Cmd/Ctrl + Shift + Z: 重做
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
+      // Cmd/Ctrl + Y: 重做（Windows 习惯）
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, undo, redo]);
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
@@ -140,7 +181,26 @@ export default function App() {
         <h1>
           <span>Autodify</span> 工作流生成器
         </h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {/* 撤销/重做按钮 */}
+          <div className="undo-redo-group">
+            <button
+              className="btn btn-icon"
+              onClick={() => undo()}
+              disabled={!canUndo}
+              title="撤销 (⌘Z)"
+            >
+              ↩️
+            </button>
+            <button
+              className="btn btn-icon"
+              onClick={() => redo()}
+              disabled={!canRedo}
+              title="重做 (⌘⇧Z)"
+            >
+              ↪️
+            </button>
+          </div>
           <button
             className="btn btn-secondary"
             onClick={() => setShowSettings(true)}

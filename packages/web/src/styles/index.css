@@ -161,6 +161,47 @@ body {
   background: var(--bg-node);
 }
 
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Icon Buttons */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+  background: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+.btn-icon:hover {
+  background: var(--bg-node);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-dark);
+}
+
+/* Undo/Redo Button Group */
+.undo-redo-group {
+  display: flex;
+  gap: 4px;
+  padding-right: 12px;
+  border-right: 1px solid var(--border);
+  margin-right: 4px;
+}
+
 /* Examples */
 .examples {
   margin-top: 16px;

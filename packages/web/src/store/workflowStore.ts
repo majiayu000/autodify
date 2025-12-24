@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { create, useStore } from 'zustand';
+import { temporal, type TemporalState } from 'zundo';
 import type { NodeData } from '../components/NodeEditor';
 
 // DSL 类型定义
@@ -73,169 +74,190 @@ const createEmptyDsl = (): DslType => ({
 // 生成唯一 ID
 const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-export const useWorkflowStore = create<WorkflowState>((set, get) => ({
-  // 初始状态
-  dsl: null,
-  selectedNodeId: null,
-  isGenerating: false,
-  yamlOutput: '',
-  duration: 0,
-
-  // 设置 DSL
-  setDsl: (dsl) => set({ dsl }),
-
-  // 设置 YAML 输出
-  setYamlOutput: (yamlOutput) => set({ yamlOutput }),
-
-  // 设置生成时间
-  setDuration: (duration) => set({ duration }),
-
-  // 设置生成状态
-  setIsGenerating: (isGenerating) => set({ isGenerating }),
-
-  // 选择节点
-  selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
-
-  // 更新节点
-  updateNode: (nodeId, newData) => {
-    const { dsl } = get();
-    if (!dsl?.workflow?.graph?.nodes) return;
-
-    set({
-      dsl: {
-        ...dsl,
-        workflow: {
-          ...dsl.workflow,
-          graph: {
-            ...dsl.workflow.graph,
-            nodes: dsl.workflow.graph.nodes.map((node) =>
-              node.id === nodeId
-                ? { ...node, data: { ...node.data, ...newData } }
-                : node
-            ),
-          },
-        },
-      },
-    });
-  },
-
-  // 添加节点
-  addNode: (nodeType, nodeTitle) => {
-    const { dsl } = get();
-    const newNodeId = generateId(nodeType);
-
-    const newNode = {
-      id: newNodeId,
-      type: 'custom',
-      data: {
-        type: nodeType,
-        title: nodeTitle,
-      } as NodeData,
-    };
-
-    if (!dsl) {
-      // 创建新的 DSL
-      const newDsl = createEmptyDsl();
-      newDsl.workflow!.graph.nodes.push(newNode);
-      set({ dsl: newDsl, selectedNodeId: newNodeId });
-    } else {
-      // 添加到现有 DSL
-      set({
-        dsl: {
-          ...dsl,
-          workflow: {
-            ...dsl.workflow!,
-            graph: {
-              ...dsl.workflow!.graph,
-              nodes: [...dsl.workflow!.graph.nodes, newNode],
-            },
-          },
-        },
-        selectedNodeId: newNodeId,
-      });
-    }
-
-    return newNodeId;
-  },
-
-  // 删除节点
-  removeNode: (nodeId) => {
-    const { dsl, selectedNodeId } = get();
-    if (!dsl?.workflow?.graph) return;
-
-    set({
-      dsl: {
-        ...dsl,
-        workflow: {
-          ...dsl.workflow,
-          graph: {
-            nodes: dsl.workflow.graph.nodes.filter((n) => n.id !== nodeId),
-            edges: dsl.workflow.graph.edges.filter(
-              (e) => e.source !== nodeId && e.target !== nodeId
-            ),
-          },
-        },
-      },
-      selectedNodeId: selectedNodeId === nodeId ? null : selectedNodeId,
-    });
-  },
-
-  // 添加边
-  addEdge: (edge) => {
-    const { dsl } = get();
-    if (!dsl?.workflow?.graph) return;
-
-    const newEdge = {
-      id: generateId('edge'),
-      source: edge.source,
-      target: edge.target,
-      sourceHandle: edge.sourceHandle || 'source',
-      targetHandle: edge.targetHandle || 'target',
-    };
-
-    set({
-      dsl: {
-        ...dsl,
-        workflow: {
-          ...dsl.workflow,
-          graph: {
-            ...dsl.workflow.graph,
-            edges: [...dsl.workflow.graph.edges, newEdge],
-          },
-        },
-      },
-    });
-  },
-
-  // 删除边
-  removeEdge: (edgeId) => {
-    const { dsl } = get();
-    if (!dsl?.workflow?.graph) return;
-
-    set({
-      dsl: {
-        ...dsl,
-        workflow: {
-          ...dsl.workflow,
-          graph: {
-            ...dsl.workflow.graph,
-            edges: dsl.workflow.graph.edges.filter((e) => e.id !== edgeId),
-          },
-        },
-      },
-    });
-  },
-
-  // 重置状态
-  reset: () =>
-    set({
+// 创建带有时间旅行功能的 store
+export const useWorkflowStore = create<WorkflowState>()(
+  temporal(
+    (set, get) => ({
+      // 初始状态
       dsl: null,
       selectedNodeId: null,
       isGenerating: false,
       yamlOutput: '',
       duration: 0,
+
+      // 设置 DSL
+      setDsl: (dsl) => set({ dsl }),
+
+      // 设置 YAML 输出
+      setYamlOutput: (yamlOutput) => set({ yamlOutput }),
+
+      // 设置生成时间
+      setDuration: (duration) => set({ duration }),
+
+      // 设置生成状态
+      setIsGenerating: (isGenerating) => set({ isGenerating }),
+
+      // 选择节点
+      selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
+
+      // 更新节点
+      updateNode: (nodeId, newData) => {
+        const { dsl } = get();
+        if (!dsl?.workflow?.graph?.nodes) return;
+
+        set({
+          dsl: {
+            ...dsl,
+            workflow: {
+              ...dsl.workflow,
+              graph: {
+                ...dsl.workflow.graph,
+                nodes: dsl.workflow.graph.nodes.map((node) =>
+                  node.id === nodeId
+                    ? { ...node, data: { ...node.data, ...newData } }
+                    : node
+                ),
+              },
+            },
+          },
+        });
+      },
+
+      // 添加节点
+      addNode: (nodeType, nodeTitle) => {
+        const { dsl } = get();
+        const newNodeId = generateId(nodeType);
+
+        const newNode = {
+          id: newNodeId,
+          type: 'custom',
+          data: {
+            type: nodeType,
+            title: nodeTitle,
+          } as NodeData,
+        };
+
+        if (!dsl) {
+          // 创建新的 DSL
+          const newDsl = createEmptyDsl();
+          newDsl.workflow!.graph.nodes.push(newNode);
+          set({ dsl: newDsl, selectedNodeId: newNodeId });
+        } else {
+          // 添加到现有 DSL
+          set({
+            dsl: {
+              ...dsl,
+              workflow: {
+                ...dsl.workflow!,
+                graph: {
+                  ...dsl.workflow!.graph,
+                  nodes: [...dsl.workflow!.graph.nodes, newNode],
+                },
+              },
+            },
+            selectedNodeId: newNodeId,
+          });
+        }
+
+        return newNodeId;
+      },
+
+      // 删除节点
+      removeNode: (nodeId) => {
+        const { dsl, selectedNodeId } = get();
+        if (!dsl?.workflow?.graph) return;
+
+        set({
+          dsl: {
+            ...dsl,
+            workflow: {
+              ...dsl.workflow,
+              graph: {
+                nodes: dsl.workflow.graph.nodes.filter((n) => n.id !== nodeId),
+                edges: dsl.workflow.graph.edges.filter(
+                  (e) => e.source !== nodeId && e.target !== nodeId
+                ),
+              },
+            },
+          },
+          selectedNodeId: selectedNodeId === nodeId ? null : selectedNodeId,
+        });
+      },
+
+      // 添加边
+      addEdge: (edge) => {
+        const { dsl } = get();
+        if (!dsl?.workflow?.graph) return;
+
+        const newEdge = {
+          id: generateId('edge'),
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle || 'source',
+          targetHandle: edge.targetHandle || 'target',
+        };
+
+        set({
+          dsl: {
+            ...dsl,
+            workflow: {
+              ...dsl.workflow,
+              graph: {
+                ...dsl.workflow.graph,
+                edges: [...dsl.workflow.graph.edges, newEdge],
+              },
+            },
+          },
+        });
+      },
+
+      // 删除边
+      removeEdge: (edgeId) => {
+        const { dsl } = get();
+        if (!dsl?.workflow?.graph) return;
+
+        set({
+          dsl: {
+            ...dsl,
+            workflow: {
+              ...dsl.workflow,
+              graph: {
+                ...dsl.workflow.graph,
+                edges: dsl.workflow.graph.edges.filter((e) => e.id !== edgeId),
+              },
+            },
+          },
+        });
+      },
+
+      // 重置状态
+      reset: () =>
+        set({
+          dsl: null,
+          selectedNodeId: null,
+          isGenerating: false,
+          yamlOutput: '',
+          duration: 0,
+        }),
     }),
-}));
+    {
+      // 配置时间旅行
+      limit: 50, // 保留 50 步历史
+      // 只跟踪 dsl 的变化，不跟踪 UI 状态
+      partialize: (state) => ({
+        dsl: state.dsl,
+      }),
+      // 相等性检查，避免不必要的历史记录
+      equality: (pastState, currentState) =>
+        JSON.stringify(pastState) === JSON.stringify(currentState),
+    }
+  )
+);
+
+// 导出时间旅行 hook
+export const useTemporalStore = <T>(
+  selector: (state: TemporalState<Pick<WorkflowState, 'dsl'>>) => T
+) => useStore(useWorkflowStore.temporal, selector);
 
 // 导出类型
 export type { NodeData };
