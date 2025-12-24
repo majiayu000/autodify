@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import WorkflowCanvas from './components/WorkflowCanvas';
+import { generateWorkflow, saveApiConfig, getApiConfig, clearApiConfig } from './api/generate';
+import yaml from 'js-yaml';
 
 // Example prompts
 const EXAMPLE_PROMPTS = [
@@ -10,109 +12,45 @@ const EXAMPLE_PROMPTS = [
   '创建一个文档翻译工作流，支持多语言',
 ];
 
-// Demo DSL for testing (will be replaced with real generation)
-const DEMO_DSL_SIMPLE = {
-  workflow: {
+interface DslType {
+  version?: string;
+  kind?: string;
+  app?: {
+    name?: string;
+    description?: string;
+    icon?: string;
+  };
+  workflow?: {
     graph: {
-      nodes: [
-        { id: 'start', data: { type: 'start', title: '开始' } },
-        { id: 'llm', data: { type: 'llm', title: 'AI 回答' } },
-        { id: 'end', data: { type: 'end', title: '结束' } },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'llm' },
-        { id: 'e2', source: 'llm', target: 'end' },
-      ],
-    },
-  },
-};
-
-const DEMO_DSL_RAG = {
-  workflow: {
-    graph: {
-      nodes: [
-        { id: 'start', data: { type: 'start', title: '开始' } },
-        { id: 'retrieval', data: { type: 'knowledge-retrieval', title: '知识检索' } },
-        { id: 'llm', data: { type: 'llm', title: '生成回答' } },
-        { id: 'end', data: { type: 'end', title: '结束' } },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'retrieval' },
-        { id: 'e2', source: 'retrieval', target: 'llm' },
-        { id: 'e3', source: 'llm', target: 'end' },
-      ],
-    },
-  },
-};
-
-const DEMO_DSL_COMPLEX = {
-  workflow: {
-    graph: {
-      nodes: [
-        { id: 'start', data: { type: 'start', title: '开始' } },
-        { id: 'classifier', data: { type: 'question-classifier', title: '问题分类' } },
-        { id: 'retrieval-tech', data: { type: 'knowledge-retrieval', title: '技术文档检索' } },
-        { id: 'retrieval-billing', data: { type: 'knowledge-retrieval', title: '账单FAQ检索' } },
-        { id: 'llm-tech', data: { type: 'llm', title: '技术支持回答' } },
-        { id: 'llm-billing', data: { type: 'llm', title: '账单咨询回答' } },
-        { id: 'llm-other', data: { type: 'llm', title: '通用回答' } },
-        { id: 'aggregator', data: { type: 'variable-aggregator', title: '结果聚合' } },
-        { id: 'end', data: { type: 'end', title: '结束' } },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'classifier' },
-        { id: 'e2', source: 'classifier', target: 'retrieval-tech', sourceHandle: 'tech' },
-        { id: 'e3', source: 'classifier', target: 'retrieval-billing', sourceHandle: 'billing' },
-        { id: 'e4', source: 'classifier', target: 'llm-other', sourceHandle: 'other' },
-        { id: 'e5', source: 'retrieval-tech', target: 'llm-tech' },
-        { id: 'e6', source: 'retrieval-billing', target: 'llm-billing' },
-        { id: 'e7', source: 'llm-tech', target: 'aggregator' },
-        { id: 'e8', source: 'llm-billing', target: 'aggregator' },
-        { id: 'e9', source: 'llm-other', target: 'aggregator' },
-        { id: 'e10', source: 'aggregator', target: 'end' },
-      ],
-    },
-  },
-};
-
-const DEMO_DSL_TRANSLATE = {
-  workflow: {
-    graph: {
-      nodes: [
-        { id: 'start', data: { type: 'start', title: '开始' } },
-        { id: 'llm-detect', data: { type: 'llm', title: '语言检测' } },
-        { id: 'llm-translate', data: { type: 'llm', title: '翻译处理' } },
-        { id: 'end', data: { type: 'end', title: '结束' } },
-      ],
-      edges: [
-        { id: 'e1', source: 'start', target: 'llm-detect' },
-        { id: 'e2', source: 'llm-detect', target: 'llm-translate' },
-        { id: 'e3', source: 'llm-translate', target: 'end' },
-      ],
-    },
-  },
-};
-
-// Simple matching function (will be replaced with real core integration)
-function matchDemoDSL(prompt: string) {
-  const lowerPrompt = prompt.toLowerCase();
-  if (lowerPrompt.includes('分类') || lowerPrompt.includes('客服') || lowerPrompt.includes('分支')) {
-    return DEMO_DSL_COMPLEX;
-  }
-  if (lowerPrompt.includes('rag') || lowerPrompt.includes('知识库') || lowerPrompt.includes('检索')) {
-    return DEMO_DSL_RAG;
-  }
-  if (lowerPrompt.includes('翻译')) {
-    return DEMO_DSL_TRANSLATE;
-  }
-  return DEMO_DSL_SIMPLE;
+      nodes: Array<{
+        id: string;
+        data: {
+          type: string;
+          title: string;
+        };
+      }>;
+      edges: Array<{
+        id: string;
+        source: string;
+        target: string;
+        sourceHandle?: string;
+      }>;
+    };
+  };
 }
 
 export default function App() {
   const [prompt, setPrompt] = useState('');
-  const [dsl, setDsl] = useState<typeof DEMO_DSL_SIMPLE | null>(null);
+  const [dsl, setDsl] = useState<DslType | null>(null);
+  const [yamlOutput, setYamlOutput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showYaml, setShowYaml] = useState(false);
+  const [duration, setDuration] = useState<number>(0);
+
+  // API settings
+  const [apiConfig, setApiConfigState] = useState(() => getApiConfig());
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return;
@@ -120,12 +58,32 @@ export default function App() {
     setIsGenerating(true);
     setSelectedNode(null);
 
-    // Simulate generation delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const result = await generateWorkflow({ prompt });
 
-    // Use demo DSL matching (will be replaced with real API call)
-    const result = matchDemoDSL(prompt);
-    setDsl(result);
+      if (result.success && result.dsl) {
+        setDsl(result.dsl as DslType);
+        setDuration(result.duration || 0);
+
+        // Generate YAML
+        try {
+          const yamlStr = yaml.dump(result.dsl, {
+            indent: 2,
+            lineWidth: -1,
+            quotingType: "'",
+            forceQuotes: true,
+          });
+          setYamlOutput(yamlStr);
+        } catch {
+          setYamlOutput('');
+        }
+      } else {
+        console.error('Generation failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Generation error:', error);
+    }
+
     setIsGenerating(false);
   }, [prompt]);
 
@@ -142,6 +100,34 @@ export default function App() {
     [handleGenerate]
   );
 
+  const handleSaveConfig = useCallback((config: typeof apiConfig) => {
+    if (config) {
+      saveApiConfig(config);
+      setApiConfigState(config);
+    } else {
+      clearApiConfig();
+      setApiConfigState(null);
+    }
+    setShowSettings(false);
+  }, []);
+
+  const handleExportYaml = useCallback(() => {
+    if (!yamlOutput) return;
+
+    const blob = new Blob([yamlOutput], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dsl?.app?.name || 'workflow'}.yml`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [yamlOutput, dsl]);
+
+  const handleCopyYaml = useCallback(() => {
+    if (!yamlOutput) return;
+    navigator.clipboard.writeText(yamlOutput);
+  }, [yamlOutput]);
+
   const nodeCount = dsl?.workflow?.graph?.nodes?.length || 0;
   const edgeCount = dsl?.workflow?.graph?.edges?.length || 0;
 
@@ -153,10 +139,17 @@ export default function App() {
           <span>Autodify</span> 工作流生成器
         </h1>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn btn-secondary">
-            📥 导入 DSL
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowSettings(true)}
+          >
+            ⚙️ 设置
           </button>
-          <button className="btn btn-secondary" disabled={!dsl}>
+          <button
+            className="btn btn-secondary"
+            disabled={!dsl}
+            onClick={handleExportYaml}
+          >
             📤 导出 YAML
           </button>
         </div>
@@ -213,10 +206,25 @@ export default function App() {
               ))}
             </div>
 
+            {/* Workflow Info */}
+            {dsl && (
+              <div className="node-info" style={{ marginTop: '16px' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {dsl.app?.icon} {dsl.app?.name}
+                </h3>
+                <p style={{ marginTop: '8px' }}>{dsl.app?.description}</p>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '16px', fontSize: '12px' }}>
+                  <span>📦 {nodeCount} 节点</span>
+                  <span>🔗 {edgeCount} 连接</span>
+                  <span>⏱️ {duration}ms</span>
+                </div>
+              </div>
+            )}
+
             {/* Selected Node Info */}
             {selectedNode && dsl && (
               <div className="node-info">
-                <h3>节点信息</h3>
+                <h3>节点详情</h3>
                 {(() => {
                   const node = dsl.workflow?.graph?.nodes?.find(
                     (n) => n.id === selectedNode
@@ -224,18 +232,42 @@ export default function App() {
                   if (!node) return null;
                   return (
                     <>
-                      <p>
-                        <strong>ID:</strong> {node.id}
-                      </p>
-                      <p>
-                        <strong>类型:</strong> {node.data.type}
-                      </p>
-                      <p>
-                        <strong>标题:</strong> {node.data.title}
-                      </p>
+                      <p><strong>ID:</strong> {node.id}</p>
+                      <p><strong>类型:</strong> {node.data.type}</p>
+                      <p><strong>标题:</strong> {node.data.title}</p>
                     </>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* YAML Preview */}
+            {dsl && (
+              <div className="yaml-preview">
+                <h3>
+                  <span>📄 YAML 预览</span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '4px 8px', fontSize: '11px' }}
+                      onClick={handleCopyYaml}
+                    >
+                      复制
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '4px 8px', fontSize: '11px' }}
+                      onClick={() => setShowYaml(!showYaml)}
+                    >
+                      {showYaml ? '收起' : '展开'}
+                    </button>
+                  </div>
+                </h3>
+                {showYaml && (
+                  <div className="yaml-content">
+                    <pre>{yamlOutput}</pre>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -250,8 +282,8 @@ export default function App() {
       {/* Status Bar */}
       <footer className="status-bar">
         <div className="status-item">
-          <span className="status-dot" />
-          就绪
+          <span className="status-dot" style={{ background: apiConfig ? '#22c55e' : '#f59e0b' }} />
+          {apiConfig ? `已连接 ${apiConfig.provider}` : '演示模式'}
         </div>
         {dsl && (
           <>
@@ -260,6 +292,167 @@ export default function App() {
           </>
         )}
       </footer>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          config={apiConfig}
+          onSave={handleSaveConfig}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </ReactFlowProvider>
+  );
+}
+
+// Settings Modal Component
+function SettingsModal({
+  config,
+  onSave,
+  onClose,
+}: {
+  config: ReturnType<typeof getApiConfig>;
+  onSave: (config: ReturnType<typeof getApiConfig>) => void;
+  onClose: () => void;
+}) {
+  const [provider, setProvider] = useState(config?.provider || 'anthropic');
+  const [apiKey, setApiKey] = useState(config?.apiKey || '');
+  const [baseUrl, setBaseUrl] = useState(config?.baseUrl || '');
+  const [model, setModel] = useState(config?.model || '');
+
+  const handleSave = () => {
+    if (apiKey) {
+      onSave({ provider, apiKey, baseUrl: baseUrl || undefined, model: model || undefined });
+    } else {
+      onSave(null);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#1e293b',
+          borderRadius: '12px',
+          padding: '24px',
+          width: '400px',
+          maxWidth: '90%',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 style={{ marginBottom: '20px', fontSize: '18px' }}>⚙️ API 设置</h2>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#94a3b8' }}>
+            Provider
+          </label>
+          <select
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: '#0f172a',
+              border: '1px solid #475569',
+              borderRadius: '6px',
+              color: '#f1f5f9',
+              fontSize: '14px',
+            }}
+          >
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#94a3b8' }}>
+            API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="sk-..."
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: '#0f172a',
+              border: '1px solid #475569',
+              borderRadius: '6px',
+              color: '#f1f5f9',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#94a3b8' }}>
+            Base URL (可选)
+          </label>
+          <input
+            type="text"
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="https://api.example.com"
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: '#0f172a',
+              border: '1px solid #475569',
+              borderRadius: '6px',
+              color: '#f1f5f9',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#94a3b8' }}>
+            Model (可选)
+          </label>
+          <input
+            type="text"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder="gpt-4o / claude-3-5-sonnet / glm-4"
+            style={{
+              width: '100%',
+              padding: '10px',
+              background: '#0f172a',
+              border: '1px solid #475569',
+              borderRadius: '6px',
+              color: '#f1f5f9',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button className="btn btn-secondary" onClick={onClose}>
+            取消
+          </button>
+          <button className="btn btn-primary" onClick={handleSave}>
+            保存
+          </button>
+        </div>
+
+        <p style={{ marginTop: '16px', fontSize: '11px', color: '#64748b' }}>
+          💡 不配置 API Key 将使用演示模式，只能生成预设的工作流模板。
+        </p>
+      </div>
+    </div>
   );
 }
