@@ -118,9 +118,9 @@ app:
     it('should serialize DSL to YAML', () => {
       const yaml = stringifyYAML(validDSL);
 
-      expect(yaml).toContain("version: '0.5.0'");
-      expect(yaml).toContain("kind: 'app'");
-      expect(yaml).toContain("name: 'Test'");
+      expect(yaml).toContain('version: 0.5.0');
+      expect(yaml).toContain('kind: app');
+      expect(yaml).toContain('name: Test');
     });
 
     it('should respect options', () => {

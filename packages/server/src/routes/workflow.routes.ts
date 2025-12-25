@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { getWorkflowService } from '../services/workflow.service.js';
+import { config } from '../config/index.js';
 
 // Request schemas
 const GenerateRequestSchema = z.object({
@@ -29,6 +30,14 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   // POST /api/generate - 生成工作流
   fastify.post(
     '/generate',
+    {
+      config: {
+        rateLimit: {
+          max: config.rateLimit.generate.max,
+          timeWindow: config.rateLimit.generate.timeWindow,
+        },
+      },
+    },
     async (
       request: FastifyRequest<{ Body: z.infer<typeof GenerateRequestSchema> }>,
       reply: FastifyReply
@@ -50,6 +59,14 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   // POST /api/refine - 迭代优化工作流
   fastify.post(
     '/refine',
+    {
+      config: {
+        rateLimit: {
+          max: config.rateLimit.refine.max,
+          timeWindow: config.rateLimit.refine.timeWindow,
+        },
+      },
+    },
     async (
       request: FastifyRequest<{ Body: z.infer<typeof RefineRequestSchema> }>,
       reply: FastifyReply

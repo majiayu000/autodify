@@ -1,6 +1,6 @@
 import { create, useStore } from 'zustand';
 import { temporal, type TemporalState } from 'zundo';
-import type { NodeData } from '../components/NodeEditor';
+import type { NodeData } from '../types/nodeData';
 
 // DSL 类型定义
 export interface DslType {

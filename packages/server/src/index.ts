@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import { config } from './config/index.js';
 import { workflowRoutes } from './routes/workflow.routes.js';
 
@@ -20,10 +21,24 @@ async function main() {
     },
   });
 
-  // CORS
+  // CORS - 白名单模式
   await fastify.register(cors, {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true, // 允许携带凭证（cookies、授权头等）
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // 全局速率限制
+  await fastify.register(rateLimit, {
+    max: config.rateLimit.global.max,
+    timeWindow: config.rateLimit.global.timeWindow,
+    errorResponseBuilder: () => ({
+      success: false,
+      error: '请求过于频繁，请稍后再试',
+      statusCode: 429,
+      retryAfter: '请在稍后重试',
+    }),
   });
 
   // API routes
