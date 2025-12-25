@@ -2,6 +2,9 @@
  * Workflow Orchestrator
  *
  * Main entry point for intelligent workflow generation and editing.
+ * Supports two generation modes:
+ * - Legacy: Single-shot YAML generation with retry
+ * - MultiStage: Node-by-node JSON generation with validation
  */
 
 import type {
@@ -18,6 +21,7 @@ import { WorkflowPlanner } from '../planner/index.js';
 import { DSLValidator } from '../validator/validator.js';
 import { parseYAML, stringifyYAML } from '../utils/yaml.js';
 import { ExampleStore, builtinExamples } from '../examples/index.js';
+import { MultiStageGenerator } from '../generator/multi-stage-generator.js';
 import {
   GENERATION_SYSTEM_PROMPT,
   EDIT_SYSTEM_PROMPT,
@@ -30,18 +34,20 @@ import {
  * Workflow Orchestrator
  */
 export class WorkflowOrchestrator {
-  private config: OrchestratorConfig;
+  private config: OrchestratorConfig & { useMultiStage?: boolean };
   private llm: ILLMService;
   private planner: WorkflowPlanner;
   private validator: DSLValidator;
   private exampleStore: ExampleStore;
+  private multiStageGenerator: MultiStageGenerator;
 
-  constructor(config: OrchestratorConfig) {
+  constructor(config: OrchestratorConfig & { useMultiStage?: boolean }) {
     this.config = {
       planningModel: config.planningModel ?? 'gpt-4o',
       generationModel: config.generationModel ?? 'gpt-4o',
-      maxRetries: config.maxRetries ?? 2,
+      maxRetries: config.maxRetries ?? 3,
       verbose: config.verbose ?? false,
+      useMultiStage: config.useMultiStage ?? true, // Default to new multi-stage generator
       ...config,
     };
 
@@ -65,6 +71,14 @@ export class WorkflowOrchestrator {
     for (const example of builtinExamples) {
       this.exampleStore.add(example);
     }
+
+    // Initialize multi-stage generator
+    this.multiStageGenerator = new MultiStageGenerator(this.llm, {
+      maxRetries: this.config.maxRetries,
+      verbose: this.config.verbose,
+      preferredProvider: config.provider,
+      preferredModel: this.config.generationModel,
+    });
   }
 
   /**
@@ -74,7 +88,50 @@ export class WorkflowOrchestrator {
     const startTime = Date.now();
 
     try {
-      // Step 1: Plan the workflow
+      // Use multi-stage generator for better complex workflow handling
+      if (this.config.useMultiStage) {
+        this.log('Using multi-stage generator...');
+        const result = await this.multiStageGenerator.generate(request.prompt);
+
+        if (result.success && result.dsl) {
+          // Validate the generated DSL
+          const validation = this.validator.validate(result.dsl);
+
+          if (validation.valid) {
+            return {
+              success: true,
+              dsl: result.dsl,
+              yaml: stringifyYAML(result.dsl),
+              metadata: {
+                duration: Date.now() - startTime,
+                generator: 'multi-stage',
+              },
+            };
+          }
+
+          // If validation fails, log warnings but still return if it's close
+          if (validation.warnings.length > 0 && validation.errors.length === 0) {
+            this.log(`Validation warnings: ${validation.warnings.length}`);
+            return {
+              success: true,
+              dsl: result.dsl,
+              yaml: stringifyYAML(result.dsl),
+              metadata: {
+                duration: Date.now() - startTime,
+                generator: 'multi-stage',
+                warnings: validation.warnings.map(w => w.message),
+              },
+            };
+          }
+
+          // Fall through to legacy generator if multi-stage fails validation
+          this.log(`Multi-stage validation failed: ${validation.errors.length} errors, falling back to legacy`);
+        } else {
+          this.log(`Multi-stage generation failed: ${result.error}, falling back to legacy`);
+        }
+      }
+
+      // Legacy generation: Plan + Single-shot YAML
       this.log('Planning workflow...');
       const planResult = await this.planner.plan(request.prompt);
 
@@ -88,7 +145,7 @@ export class WorkflowOrchestrator {
 
       this.log(`Plan created: ${planResult.plan.nodes.length} nodes`);
 
-      // Step 3: Generate DSL from plan
+      // Generate DSL from plan
       this.log('Generating DSL...');
       const generationResult = await this.generateFromPlan(planResult.plan, request);
 
@@ -98,6 +155,7 @@ export class WorkflowOrchestrator {
           metadata: {
             duration: Date.now() - startTime,
             planSummary: `${planResult.plan.nodes.length} nodes, ${planResult.plan.edges.length} edges`,
+            generator: 'legacy',
           },
         };
       }
@@ -107,7 +165,8 @@ export class WorkflowOrchestrator {
         metadata: {
           duration: Date.now() - startTime,
           planSummary: `${planResult.plan.nodes.length} nodes, ${planResult.plan.edges.length} edges`,
-          tokensUsed: undefined, // Would be tracked from LLM response
+          generator: 'legacy',
+          tokensUsed: undefined,
         },
       };
     } catch (error) {

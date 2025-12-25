@@ -63,6 +63,10 @@ export interface GenerationResult {
     templateUsed?: string;
     /** Planning result */
     planSummary?: string;
+    /** Generator type used */
+    generator?: 'multi-stage' | 'legacy';
+    /** Validation warnings */
+    warnings?: string[];
   };
 }
 
