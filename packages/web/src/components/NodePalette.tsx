@@ -1,4 +1,4 @@
-import { DragEvent } from 'react';
+import { DragEvent, memo } from 'react';
 
 // 节点类型定义
 interface NodeTypeInfo {
@@ -46,7 +46,7 @@ interface NodePaletteProps {
   disabled?: boolean;
 }
 
-export default function NodePalette({ disabled }: NodePaletteProps) {
+const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
   const handleDragStart = (e: DragEvent<HTMLDivElement>, nodeType: NodeTypeInfo) => {
     if (disabled) return;
 
@@ -98,4 +98,6 @@ export default function NodePalette({ disabled }: NodePaletteProps) {
       </div>
     </div>
   );
-}
+});
+
+export default NodePalette;

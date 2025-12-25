@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface WorkflowInfoProps {
   appName?: string;
   appIcon?: string;
@@ -7,7 +9,7 @@ interface WorkflowInfoProps {
   duration: number;
 }
 
-export default function WorkflowInfo({
+const WorkflowInfo = memo(function WorkflowInfo({
   appName,
   appIcon,
   appDescription,
@@ -28,4 +30,6 @@ export default function WorkflowInfo({
       </div>
     </div>
   );
-}
+});
+
+export default WorkflowInfo;

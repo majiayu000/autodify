@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { memo, lazy, Suspense } from 'react';
 import PromptInput from './PromptInput';
 import ExamplePrompts from './ExamplePrompts';
 import NodePalette from './NodePalette';
 import WorkflowInfo from './WorkflowInfo';
-import NodeEditor from './NodeEditor';
-import YamlPreview from './YamlPreview';
 import { type DslType } from '../store/workflowStore';
 import { NodeData } from '../types/nodeData';
+
+// 懒加载不常用的组件
+const NodeEditor = lazy(() => import('./NodeEditor'));
+const YamlPreview = lazy(() => import('./YamlPreview'));
 
 interface SidebarProps {
   // Prompt 输入相关
@@ -36,7 +38,7 @@ interface SidebarProps {
   onCopyYaml: () => void;
 }
 
-export default function Sidebar({
+const Sidebar = memo(function Sidebar({
   prompt,
   isGenerating,
   apiConnected,
@@ -94,17 +96,25 @@ export default function Sidebar({
         {/* 节点编辑器 */}
         {selectedNodeData && (
           <div style={{ marginTop: '16px' }}>
-            <NodeEditor
-              node={{ id: selectedNodeId!, data: selectedNodeData.data }}
-              onUpdate={onNodeUpdate}
-              onClose={onNodeEditorClose}
-            />
+            <Suspense fallback={<div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>加载中...</div>}>
+              <NodeEditor
+                node={{ id: selectedNodeId!, data: selectedNodeData.data }}
+                onUpdate={onNodeUpdate}
+                onClose={onNodeEditorClose}
+              />
+            </Suspense>
           </div>
         )}
 
         {/* YAML 预览 */}
-        {dsl && <YamlPreview yamlOutput={yamlOutput} onCopy={onCopyYaml} />}
+        {dsl && (
+          <Suspense fallback={<div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>加载中...</div>}>
+            <YamlPreview yamlOutput={yamlOutput} onCopy={onCopyYaml} />
+          </Suspense>
+        )}
       </div>
     </aside>
   );
-}
+});
+
+export default Sidebar;

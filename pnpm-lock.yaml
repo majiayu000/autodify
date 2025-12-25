@@ -109,6 +109,9 @@ importers:
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
+      pino:
+        specifier: ^10.1.0
+        version: 10.1.0
       pino-pretty:
         specifier: ^13.0.0
         version: 13.1.3

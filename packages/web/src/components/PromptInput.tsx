@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 interface PromptInputProps {
   prompt: string;
@@ -10,7 +10,7 @@ interface PromptInputProps {
   onKeyDown: (e: React.KeyboardEvent) => void;
 }
 
-export default function PromptInput({
+const PromptInput = memo(function PromptInput({
   prompt,
   isGenerating,
   apiConnected,
@@ -64,4 +64,6 @@ export default function PromptInput({
       </div>
     </div>
   );
-}
+});
+
+export default PromptInput;

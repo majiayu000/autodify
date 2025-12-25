@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 import WorkflowCanvas from './components/WorkflowCanvas';
@@ -167,13 +167,14 @@ export default function App() {
     [addNode]
   );
 
-  const selectedNodeData =
+  const selectedNodeData = useMemo(() =>
     selectedNodeId && dsl?.workflow?.graph?.nodes
       ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNodeId)
-      : null;
+      : null
+  , [selectedNodeId, dsl?.workflow?.graph?.nodes]);
 
-  const nodeCount = dsl?.workflow?.graph?.nodes?.length || 0;
-  const edgeCount = dsl?.workflow?.graph?.edges?.length || 0;
+  const nodeCount = useMemo(() => dsl?.workflow?.graph?.nodes?.length || 0, [dsl?.workflow?.graph?.nodes]);
+  const edgeCount = useMemo(() => dsl?.workflow?.graph?.edges?.length || 0, [dsl?.workflow?.graph?.edges]);
 
   return (
     <ReactFlowProvider>

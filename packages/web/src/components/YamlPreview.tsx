@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 interface YamlPreviewProps {
   yamlOutput: string;
   onCopy: () => void;
 }
 
-export default function YamlPreview({ yamlOutput, onCopy }: YamlPreviewProps) {
+const YamlPreview = memo(function YamlPreview({ yamlOutput, onCopy }: YamlPreviewProps) {
   const [showYaml, setShowYaml] = useState(false);
 
   return (
@@ -36,4 +36,6 @@ export default function YamlPreview({ yamlOutput, onCopy }: YamlPreviewProps) {
       )}
     </div>
   );
-}
+});
+
+export default YamlPreview;

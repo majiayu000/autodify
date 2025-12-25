@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { NodeData } from '../types/nodeData';
 import { NODE_ICONS } from '../constants/nodeConfig';
 import StartNodeEditor from './node-editors/StartNodeEditor';
@@ -19,7 +19,7 @@ interface NodeEditorProps {
   onClose: () => void;
 }
 
-export default function NodeEditor({ node, onUpdate, onClose }: NodeEditorProps) {
+const NodeEditor = memo(function NodeEditor({ node, onUpdate, onClose }: NodeEditorProps) {
   const [localData, setLocalData] = useState<NodeData>(node.data);
 
   // 当 node 变化时重置本地数据
@@ -27,11 +27,10 @@ export default function NodeEditor({ node, onUpdate, onClose }: NodeEditorProps)
     setLocalData(node.data);
   }, [node.id, node.data]);
 
-  const handleChange = (field: keyof NodeData, value: unknown) => {
-    const newData = { ...localData, [field]: value };
-    setLocalData(newData);
+  const handleChange = useCallback((field: keyof NodeData, value: unknown) => {
+    setLocalData(prev => ({ ...prev, [field]: value }));
     onUpdate(node.id, { [field]: value });
-  };
+  }, [node.id, onUpdate]);
 
   const icon = NODE_ICONS[node.data.type] || '⚙️';
 
@@ -134,4 +133,6 @@ export default function NodeEditor({ node, onUpdate, onClose }: NodeEditorProps)
       </div>
     </div>
   );
-}
+});
+
+export default NodeEditor;

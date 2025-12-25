@@ -72,6 +72,7 @@ function layoutNodes(
   });
 }
 
+// Memoize nodeTypes to prevent recreation on every render
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const nodeTypes: any = {
   workflowNode: WorkflowNode,
@@ -87,7 +88,7 @@ const defaultEdgeOptions = {
   },
 };
 
-export default function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: WorkflowCanvasProps) {
+const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: WorkflowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -240,6 +241,13 @@ export default function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: Workflo
       fitView
       fitViewOptions={{ padding: 0.2 }}
       proOptions={{ hideAttribution: true }}
+      nodesDraggable={true}
+      nodesConnectable={true}
+      nodesFocusable={true}
+      edgesFocusable={true}
+      elementsSelectable={true}
+      minZoom={0.2}
+      maxZoom={4}
     >
       <Controls
         style={{
@@ -257,4 +265,6 @@ export default function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: Workflo
     </ReactFlow>
     </div>
   );
-}
+});
+
+export default WorkflowCanvas;

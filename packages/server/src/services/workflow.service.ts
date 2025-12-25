@@ -8,6 +8,13 @@ import {
 } from '@autodify/core';
 import { config } from '../config/index.js';
 import yaml from 'js-yaml';
+import {
+  GenerationFailedError,
+  RefinementFailedError,
+  LLMError,
+  InternalError,
+} from '../errors/custom-errors.js';
+import { getLogger } from '../lib/logging/index.js';
 
 export interface GenerateApiRequest {
   prompt: string;
@@ -105,14 +112,10 @@ export class WorkflowService {
       const result = await this.orchestrator.generate(genRequest);
 
       if (!result.success || !result.dsl) {
-        return {
-          success: false,
-          error: result.error || '生成失败',
-          metadata: {
-            duration: Date.now() - startTime,
-            model,
-          },
-        };
+        throw new GenerationFailedError(result.error || '工作流生成失败', {
+          duration: Date.now() - startTime,
+          model,
+        });
       }
 
       // 转换为 YAML
@@ -134,16 +137,30 @@ export class WorkflowService {
         },
       };
     } catch (error) {
+      // 如果已经是自定义错误，直接抛出
+      if (error instanceof GenerationFailedError) {
+        throw error;
+      }
+
+      // 检查是否是 LLM 相关错误
       const message = error instanceof Error ? error.message : '未知错误';
-      console.error('Generate error:', error);
-      return {
-        success: false,
-        error: message,
-        metadata: {
-          duration: Date.now() - startTime,
+      if (message.toLowerCase().includes('api') || message.toLowerCase().includes('llm')) {
+        throw new LLMError('LLM 服务调用失败', { originalError: message, duration: Date.now() - startTime });
+      }
+
+      // 其他未知错误
+      const logger = getLogger();
+      logger.error(
+        {
+          err: error,
+          error_message: message,
+          duration_ms: Date.now() - startTime,
           model,
+          prompt: request.prompt.substring(0, 100), // 只记录前100个字符
         },
-      };
+        'Workflow generation failed with unexpected error'
+      );
+      throw new InternalError('工作流生成过程中发生错误', { originalError: message, duration: Date.now() - startTime });
     }
   }
 
@@ -156,10 +173,7 @@ export class WorkflowService {
       });
 
       if (!result.success || !result.dsl) {
-        return {
-          success: false,
-          error: result.error || '优化失败',
-        };
+        throw new RefinementFailedError(result.error || '工作流优化失败');
       }
 
       const yamlStr = yaml.dump(result.dsl, {
@@ -181,11 +195,19 @@ export class WorkflowService {
         })),
       };
     } catch (error) {
+      // 如果已经是自定义错误，直接抛出
+      if (error instanceof RefinementFailedError) {
+        throw error;
+      }
+
+      // 检查是否是 LLM 相关错误
       const message = error instanceof Error ? error.message : '未知错误';
-      return {
-        success: false,
-        error: message,
-      };
+      if (message.toLowerCase().includes('api') || message.toLowerCase().includes('llm')) {
+        throw new LLMError('LLM 服务调用失败', { originalError: message });
+      }
+
+      // 其他未知错误
+      throw new InternalError('工作流优化过程中发生错误', { originalError: message });
     }
   }
 

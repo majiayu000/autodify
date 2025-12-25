@@ -66,6 +66,16 @@ function validateEnv() {
         }
       });
 
+      // 使用结构化的错误输出（日志系统尚未初始化，使用 console.error）
+      const errorLog = {
+        timestamp: new Date().toISOString(),
+        level: 'FATAL',
+        service: 'autodify-server',
+        message: 'Environment variable validation failed',
+        validation_errors: errorMessages,
+      };
+
+      // 开发环境：打印友好的错误信息
       console.error('\n========================================');
       console.error('❌ Environment Variable Validation Failed');
       console.error('========================================\n');
@@ -75,12 +85,28 @@ function validateEnv() {
       console.error('💡 Refer to .env.example for the required configuration.\n');
       console.error('========================================\n');
 
+      // 生产环境：也输出 JSON 格式便于日志收集
+      if (process.env.NODE_ENV === 'production') {
+        console.error(JSON.stringify(errorLog));
+      }
+
       process.exit(1);
     }
 
     return parsed.data;
   } catch (error) {
-    console.error('\n❌ Unexpected error during environment validation:', error);
+    // 使用结构化的错误输出
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      level: 'FATAL',
+      service: 'autodify-server',
+      message: 'Unexpected error during environment validation',
+      error: error instanceof Error ? error.message : String(error),
+      error_stack: error instanceof Error ? error.stack : undefined,
+    };
+
+    console.error('\n❌ Unexpected error during environment validation:');
+    console.error(JSON.stringify(errorLog, null, 2));
     process.exit(1);
   }
 }

@@ -1,34 +1,35 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { z } from 'zod';
 import { getWorkflowService } from '../services/workflow.service.js';
 import { config } from '../config/index.js';
-
-// Request schemas
-const GenerateRequestSchema = z.object({
-  prompt: z.string().min(1, '请输入工作流描述'),
-  options: z
-    .object({
-      model: z.string().optional(),
-      temperature: z.number().min(0).max(2).optional(),
-      useTemplate: z.boolean().optional(),
-    })
-    .optional(),
-});
-
-const RefineRequestSchema = z.object({
-  dsl: z.record(z.unknown()),
-  instruction: z.string().min(1, '请输入修改指令'),
-});
-
-const ValidateRequestSchema = z.object({
-  dsl: z.record(z.unknown()),
-});
+import { NotFoundError } from '../errors/custom-errors.js';
+import { createValidationHook } from '../plugins/index.js';
+import {
+  GenerateRequestBodySchema,
+  RefineRequestBodySchema,
+  ValidateRequestBodySchema,
+  TemplateParamsSchema,
+  type GenerateRequestBody,
+  type RefineRequestBody,
+  type ValidateRequestBody,
+  type TemplateParams,
+  type GenerateResponse,
+  type RefineResponse,
+  type ValidateResponse,
+  type TemplatesResponse,
+  type TemplateDetailResponse,
+  type HealthResponse,
+} from '../schemas/index.js';
 
 export async function workflowRoutes(fastify: FastifyInstance) {
   const workflowService = getWorkflowService();
 
-  // POST /api/generate - 生成工作流
-  fastify.post(
+  /**
+   * POST /api/generate - 生成工作流
+   */
+  fastify.post<{
+    Body: GenerateRequestBody;
+    Reply: GenerateResponse;
+  }>(
     '/generate',
     {
       config: {
@@ -37,27 +38,23 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           timeWindow: config.rateLimit.generate.timeWindow,
         },
       },
+      preHandler: createValidationHook({
+        body: GenerateRequestBodySchema,
+      }),
     },
-    async (
-      request: FastifyRequest<{ Body: z.infer<typeof GenerateRequestSchema> }>,
-      reply: FastifyReply
-    ) => {
-      const parseResult = GenerateRequestSchema.safeParse(request.body);
-
-      if (!parseResult.success) {
-        return reply.status(400).send({
-          success: false,
-          error: parseResult.error.errors[0].message,
-        });
-      }
-
-      const result = await workflowService.generate(parseResult.data);
+    async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
+      const result = await workflowService.generate(request.body);
       return reply.send(result);
     }
   );
 
-  // POST /api/refine - 迭代优化工作流
-  fastify.post(
+  /**
+   * POST /api/refine - 迭代优化工作流
+   */
+  fastify.post<{
+    Body: RefineRequestBody;
+    Reply: RefineResponse;
+  }>(
     '/refine',
     {
       config: {
@@ -66,76 +63,90 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           timeWindow: config.rateLimit.refine.timeWindow,
         },
       },
+      preHandler: createValidationHook({
+        body: RefineRequestBodySchema,
+      }),
     },
-    async (
-      request: FastifyRequest<{ Body: z.infer<typeof RefineRequestSchema> }>,
-      reply: FastifyReply
-    ) => {
-      const parseResult = RefineRequestSchema.safeParse(request.body);
-
-      if (!parseResult.success) {
-        return reply.status(400).send({
-          success: false,
-          error: parseResult.error.errors[0].message,
-        });
-      }
-
+    async (request: FastifyRequest<{ Body: RefineRequestBody }>, reply: FastifyReply) => {
       const result = await workflowService.refine({
-        dsl: parseResult.data.dsl as any,
-        instruction: parseResult.data.instruction,
+        dsl: request.body.dsl as any,
+        instruction: request.body.instruction,
       });
       return reply.send(result);
     }
   );
 
-  // POST /api/validate - 验证 DSL
-  fastify.post(
+  /**
+   * POST /api/validate - 验证 DSL
+   */
+  fastify.post<{
+    Body: ValidateRequestBody;
+    Reply: ValidateResponse;
+  }>(
     '/validate',
-    async (
-      request: FastifyRequest<{ Body: z.infer<typeof ValidateRequestSchema> }>,
-      reply: FastifyReply
-    ) => {
-      const parseResult = ValidateRequestSchema.safeParse(request.body);
-
-      if (!parseResult.success) {
-        return reply.status(400).send({
-          valid: false,
-          errors: [{ code: 'E001', message: parseResult.error.errors[0].message }],
-          warnings: [],
-        });
-      }
-
-      const result = await workflowService.validate(parseResult.data.dsl);
+    {
+      preHandler: createValidationHook({
+        body: ValidateRequestBodySchema,
+      }),
+    },
+    async (request: FastifyRequest<{ Body: ValidateRequestBody }>, reply: FastifyReply) => {
+      const result = await workflowService.validate(request.body.dsl);
       return reply.send(result);
     }
   );
 
-  // GET /api/templates - 获取模板列表
-  fastify.get('/templates', async (_request, reply) => {
-    const templates = workflowService.getTemplates();
-    return reply.send({ templates });
-  });
-
-  // GET /api/templates/:id - 获取模板详情
-  fastify.get(
-    '/templates/:id',
-    async (request: FastifyRequest<{ Params: { id: string } }>, reply) => {
-      const dsl = await workflowService.getTemplateById(request.params.id);
-      if (!dsl) {
-        return reply.status(404).send({
-          success: false,
-          error: '模板不存在',
-        });
-      }
-      return reply.send({ success: true, dsl });
+  /**
+   * GET /api/templates - 获取模板列表
+   */
+  fastify.get<{
+    Reply: TemplatesResponse;
+  }>(
+    '/templates',
+    async (_request, reply: FastifyReply) => {
+      const templates = workflowService.getTemplates();
+      return reply.send({ templates });
     }
   );
 
-  // GET /api/health - 健康检查
-  fastify.get('/health', async (_request, reply) => {
-    return reply.send({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    });
-  });
+  /**
+   * GET /api/templates/:id - 获取模板详情
+   */
+  fastify.get<{
+    Params: TemplateParams;
+    Reply: TemplateDetailResponse;
+  }>(
+    '/templates/:id',
+    {
+      preHandler: createValidationHook({
+        params: TemplateParamsSchema,
+      }),
+    },
+    async (request: FastifyRequest<{ Params: TemplateParams }>, reply: FastifyReply) => {
+      const dsl = await workflowService.getTemplateById(request.params.id);
+
+      if (!dsl) {
+        throw new NotFoundError('模板不存在', 'template');
+      }
+
+      return reply.send({
+        success: true,
+        dsl
+      });
+    }
+  );
+
+  /**
+   * GET /api/health - 健康检查
+   */
+  fastify.get<{
+    Reply: HealthResponse;
+  }>(
+    '/health',
+    async (_request, reply: FastifyReply) => {
+      return reply.send({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  );
 }

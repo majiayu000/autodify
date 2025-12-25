@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface HeaderProps {
   canUndo: boolean;
   canRedo: boolean;
@@ -7,7 +9,7 @@ interface HeaderProps {
   hasDsl: boolean;
 }
 
-export default function Header({
+const Header = memo(function Header({
   canUndo,
   canRedo,
   onUndo,
@@ -45,4 +47,6 @@ export default function Header({
       </div>
     </header>
   );
-}
+});
+
+export default Header;

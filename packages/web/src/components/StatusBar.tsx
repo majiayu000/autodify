@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface StatusBarProps {
   apiConnected: boolean | null;
   nodeCount: number;
@@ -5,7 +7,7 @@ interface StatusBarProps {
   hasDsl: boolean;
 }
 
-export default function StatusBar({ apiConnected, nodeCount, edgeCount, hasDsl }: StatusBarProps) {
+const StatusBar = memo(function StatusBar({ apiConnected, nodeCount, edgeCount, hasDsl }: StatusBarProps) {
   return (
     <footer className="status-bar">
       <div className="status-item">
@@ -26,4 +28,6 @@ export default function StatusBar({ apiConnected, nodeCount, edgeCount, hasDsl }
       )}
     </footer>
   );
-}
+});
+
+export default StatusBar;
