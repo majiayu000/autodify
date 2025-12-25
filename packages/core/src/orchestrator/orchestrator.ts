@@ -17,7 +17,6 @@ import { createLLMService } from '../llm/index.js';
 import { WorkflowPlanner } from '../planner/index.js';
 import { DSLValidator } from '../validator/validator.js';
 import { parseYAML, stringifyYAML } from '../utils/yaml.js';
-import { defaultTemplateStore } from '../templates/index.js';
 import { ExampleStore, builtinExamples } from '../examples/index.js';
 import {
   GENERATION_SYSTEM_PROMPT,
@@ -75,33 +74,7 @@ export class WorkflowOrchestrator {
     const startTime = Date.now();
 
     try {
-      // Step 1: Try to find matching template (unless skipped)
-      if (!request.skipTemplates) {
-        const templateMatch = defaultTemplateStore.findBest(request.prompt);
-
-        // Use template only if score is very high (80+) for a confident match
-        if (templateMatch && templateMatch.score >= 80) {
-          this.log(`Using template: ${templateMatch.template.metadata.name}`);
-
-          const dsl = templateMatch.template.build({
-            provider: request.preferredProvider ?? 'openai',
-            model: request.preferredModel ?? 'gpt-4o',
-            datasetIds: request.datasetIds,
-          });
-
-          return {
-            success: true,
-            dsl,
-            yaml: stringifyYAML(dsl),
-            metadata: {
-              duration: Date.now() - startTime,
-              templateUsed: templateMatch.template.metadata.id,
-            },
-          };
-        }
-      }
-
-      // Step 2: Plan the workflow
+      // Step 1: Plan the workflow
       this.log('Planning workflow...');
       const planResult = await this.planner.plan(request.prompt);
 

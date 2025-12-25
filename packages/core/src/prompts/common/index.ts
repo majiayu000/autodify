@@ -11,6 +11,7 @@ import {
   NODE_STRUCTURE,
   EDGE_STRUCTURE,
   VARIABLE_REFERENCE,
+  COMPLETE_DSL_EXAMPLE,
 } from './dsl-format.js';
 import { getNodeTypesDocumentation } from './node-types.js';
 import { OUTPUT_REQUIREMENTS, DESIGN_PRINCIPLES, VALIDATION_RULES } from './rules.js';
@@ -27,7 +28,9 @@ ${NODE_STRUCTURE}
 
 ${EDGE_STRUCTURE}
 
-${VARIABLE_REFERENCE}`;
+${VARIABLE_REFERENCE}
+
+${COMPLETE_DSL_EXAMPLE}`;
 }
 
 /**

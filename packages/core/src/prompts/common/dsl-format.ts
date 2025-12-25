@@ -7,48 +7,23 @@
  */
 export const DSL_TOP_LEVEL_STRUCTURE = `## DSL 顶级结构
 \`\`\`yaml
-version: "0.1.3"
+version: "0.5.0"
 kind: "app"
 app:
-  name: string
-  mode: "workflow"  # workflow | advanced-chat
-  icon: string (emoji)
-  icon_background: "#FFEAD5"
-  description: string
-  use_icon_as_answer_icon: false
+  name: "工作流名称"
+  mode: "workflow"
+  icon: "🤖"
+  icon_type: "emoji"
+  description: "工作流描述"
 workflow:
-  conversation_variables: []
-  environment_variables: []
   graph:
     nodes: []
     edges: []
-    viewport:
-      x: 0
-      y: 0
-      zoom: 1
   features:
     file_upload:
       enabled: false
-      image:
-        enabled: false
-        number_limits: 3
-        transfer_methods:
-          - local_file
-          - remote_url
-    opening_statement: ""
-    retriever_resource:
-      enabled: true
-    sensitive_word_avoidance:
-      enabled: false
-    speech_to_text:
-      enabled: false
-    suggested_questions: []
-    suggested_questions_after_answer:
-      enabled: false
     text_to_speech:
       enabled: false
-      language: ""
-      voice: ""
 \`\`\``;
 
 /**
@@ -102,5 +77,87 @@ export const VARIABLE_REFERENCE = `## 变量引用语法
 示例：
 - {{#start.user_input#}} - 引用开始节点的 user_input 变量
 - {{#llm.text#}} - 引用 LLM 节点的输出文本
-- {{#retrieval.result#}} - 引用知识检索节点的结果
-- {{#sys.query#}} - 引用系统变量 query`;
+- {{#retrieval.result#}} - 引用知识检索节点的结果`;
+
+/**
+ * 完整的 DSL 示例
+ */
+export const COMPLETE_DSL_EXAMPLE = `## 完整示例
+
+以下是一个简单问答工作流的完整 DSL：
+
+\`\`\`yaml
+version: "0.5.0"
+kind: app
+app:
+  name: 简单问答
+  mode: workflow
+  icon: "💬"
+  icon_type: emoji
+  description: 基础的问答工作流
+workflow:
+  graph:
+    nodes:
+      - id: start
+        type: custom
+        data:
+          type: start
+          title: 开始
+          variables:
+            - variable: question
+              label: 问题
+              type: paragraph
+              required: true
+              max_length: 2000
+      - id: llm
+        type: custom
+        data:
+          type: llm
+          title: AI 回答
+          model:
+            provider: openai
+            name: gpt-4o
+            mode: chat
+            completion_params:
+              temperature: 0.7
+              max_tokens: 4096
+          prompt_template:
+            - role: system
+              text: 你是一个有帮助的 AI 助手。
+            - role: user
+              text: "{{#start.question#}}"
+      - id: end
+        type: custom
+        data:
+          type: end
+          title: 结束
+          outputs:
+            - variable: answer
+              value_selector:
+                - llm
+                - text
+    edges:
+      - id: start-llm
+        source: start
+        sourceHandle: source
+        target: llm
+        targetHandle: target
+        type: custom
+        data:
+          sourceType: start
+          targetType: llm
+      - id: llm-end
+        source: llm
+        sourceHandle: source
+        target: end
+        targetHandle: target
+        type: custom
+        data:
+          sourceType: llm
+          targetType: end
+  features:
+    file_upload:
+      enabled: false
+    text_to_speech:
+      enabled: false
+\`\`\``;
