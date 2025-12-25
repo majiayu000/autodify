@@ -9,7 +9,7 @@ import { registerSwagger } from './plugins/index.js';
 
 async function main() {
   // 初始化结构化日志系统
-  const logger = initializeLogging({
+  initializeLogging({
     service: 'autodify-server',
     level: config.logging.level,
     environment: config.nodeEnv,
@@ -17,10 +17,26 @@ async function main() {
   });
 
   const fastify = Fastify({
-    logger: logger,
+    logger: {
+      level: config.logging.level,
+      transport: config.nodeEnv === 'development' ? {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss.l',
+          ignore: 'pid,hostname',
+        },
+      } : undefined,
+    },
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'request_id',
     disableRequestLogging: true, // 使用我们的自定义请求日志中间件
+    ajv: {
+      customOptions: {
+        strict: 'log', // 允许未知关键字但记录警告
+        keywords: ['example'], // 允许 OpenAPI 的 example 关键字
+      },
+    },
   });
 
   // 注册请求日志中间件
@@ -69,7 +85,7 @@ async function main() {
   try {
     await fastify.listen({ port: config.port, host: config.host });
 
-    logger.info(
+    fastify.log.info(
       {
         server: `http://${config.host}:${config.port}`,
         api_base: `http://${config.host}:${config.port}/api`,
@@ -98,7 +114,7 @@ async function main() {
       `);
     }
   } catch (err) {
-    logger.fatal({ err }, 'Failed to start server');
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
 }
