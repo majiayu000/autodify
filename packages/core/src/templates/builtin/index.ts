@@ -10,6 +10,11 @@ export { summarizerTemplate } from './summarizer.js';
 export { apiCallerTemplate } from './api-caller.js';
 export { codeProcessorTemplate } from './code-processor.js';
 export { conditionalTemplate } from './conditional.js';
+export { customerSupportTemplate } from './customer-support.js';
+export { dataAnalysisTemplate } from './data-analysis.js';
+export { contentGenerationTemplate } from './content-generation.js';
+export { codeReviewTemplate } from './code-review.js';
+export { documentQATemplate } from './document-qa.js';
 
 import { simpleQATemplate } from './simple-qa.js';
 import { translationTemplate } from './translation.js';
@@ -19,6 +24,11 @@ import { summarizerTemplate } from './summarizer.js';
 import { apiCallerTemplate } from './api-caller.js';
 import { codeProcessorTemplate } from './code-processor.js';
 import { conditionalTemplate } from './conditional.js';
+import { customerSupportTemplate } from './customer-support.js';
+import { dataAnalysisTemplate } from './data-analysis.js';
+import { contentGenerationTemplate } from './content-generation.js';
+import { codeReviewTemplate } from './code-review.js';
+import { documentQATemplate } from './document-qa.js';
 import type { WorkflowTemplate } from '../types.js';
 
 /**
@@ -33,4 +43,9 @@ export const builtinTemplates: WorkflowTemplate[] = [
   apiCallerTemplate,
   codeProcessorTemplate,
   conditionalTemplate,
+  customerSupportTemplate,
+  dataAnalysisTemplate,
+  contentGenerationTemplate,
+  codeReviewTemplate,
+  documentQATemplate,
 ];

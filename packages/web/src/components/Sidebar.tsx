@@ -16,8 +16,14 @@ interface SidebarProps {
   isGenerating: boolean;
   apiConnected: boolean | null;
   error: string | null;
+  progress?: {
+    stage: string;
+    percentage: number;
+    message: string;
+  } | null;
   onPromptChange: (prompt: string) => void;
   onGenerate: () => void;
+  onCancelGeneration?: () => void;
   onPromptKeyDown: (e: React.KeyboardEvent) => void;
   onExampleClick: (example: string) => void;
 
@@ -43,8 +49,10 @@ const Sidebar = memo(function Sidebar({
   isGenerating,
   apiConnected,
   error,
+  progress,
   onPromptChange,
   onGenerate,
+  onCancelGeneration,
   onPromptKeyDown,
   onExampleClick,
   dsl,
@@ -70,8 +78,10 @@ const Sidebar = memo(function Sidebar({
           isGenerating={isGenerating}
           apiConnected={apiConnected}
           error={error}
+          progress={progress}
           onPromptChange={onPromptChange}
           onGenerate={onGenerate}
+          onCancelGeneration={onCancelGeneration}
           onKeyDown={onPromptKeyDown}
         />
 

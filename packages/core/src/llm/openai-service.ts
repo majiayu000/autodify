@@ -7,6 +7,8 @@ import type {
   ChatMessage,
   CompletionOptions,
   CompletionResult,
+  StreamingCompletionOptions,
+  StreamChunk,
 } from './types.js';
 import { BaseLLMService } from './base-service.js';
 
@@ -37,6 +39,28 @@ interface OpenAIResponse {
   model: string;
   choices: OpenAIChoice[];
   usage: OpenAIUsage;
+}
+
+/**
+ * OpenAI streaming response types
+ */
+interface OpenAIStreamDelta {
+  role?: string;
+  content?: string;
+}
+
+interface OpenAIStreamChoice {
+  index: number;
+  delta: OpenAIStreamDelta;
+  finish_reason: string | null;
+}
+
+interface OpenAIStreamChunk {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: OpenAIStreamChoice[];
 }
 
 /**
@@ -110,6 +134,169 @@ export class OpenAIService extends BaseLLMService {
         model: data.model,
       };
     });
+  }
+
+  /**
+   * Complete a chat conversation with streaming
+   */
+  override async chatStream(
+    messages: ChatMessage[],
+    options?: StreamingCompletionOptions
+  ): Promise<AsyncGenerator<StreamChunk>> {
+    const opts = this.mergeOptions(options);
+    const signal = options?.signal;
+
+    return this.streamChat(messages, opts, signal, options?.onProgress);
+  }
+
+  /**
+   * Internal streaming implementation
+   */
+  private async *streamChat(
+    messages: ChatMessage[],
+    opts: Required<Omit<CompletionOptions, 'stop'>> & { stop?: string[] },
+    signal?: AbortSignal,
+    onProgress?: (chunk: StreamChunk) => void
+  ): AsyncGenerator<StreamChunk> {
+    let accumulatedContent = '';
+    let streamModel = '';
+
+    try {
+      // Send progress: starting
+      const startChunk: StreamChunk = {
+        type: 'progress',
+        progress: {
+          stage: 'starting',
+          percentage: 0,
+          message: 'Initializing LLM request...',
+        },
+        done: false,
+      };
+      onProgress?.(startChunk);
+      yield startChunk;
+
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: opts.model,
+          messages: messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          temperature: opts.temperature,
+          max_tokens: opts.maxTokens,
+          top_p: opts.topP,
+          frequency_penalty: opts.frequencyPenalty,
+          presence_penalty: opts.presencePenalty,
+          stop: opts.stop,
+          stream: true,
+        }),
+        signal: signal || AbortSignal.timeout(this.config.timeout ?? 60000),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        const errorChunk: StreamChunk = {
+          type: 'error',
+          error: `OpenAI API error: ${response.status} - ${error}`,
+          done: true,
+        };
+        onProgress?.(errorChunk);
+        yield errorChunk;
+        return;
+      }
+
+      // Send progress: streaming
+      const streamingChunk: StreamChunk = {
+        type: 'progress',
+        progress: {
+          stage: 'streaming',
+          percentage: 50,
+          message: 'Receiving response...',
+        },
+        done: false,
+      };
+      onProgress?.(streamingChunk);
+      yield streamingChunk;
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed === 'data: [DONE]') continue;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6)) as OpenAIStreamChunk;
+              streamModel = data.model;
+
+              const delta = data.choices[0]?.delta;
+              if (delta?.content) {
+                accumulatedContent += delta.content;
+
+                const contentChunk: StreamChunk = {
+                  type: 'content',
+                  content: delta.content,
+                  done: false,
+                };
+                onProgress?.(contentChunk);
+                yield contentChunk;
+              }
+            } catch (e) {
+              // Skip invalid JSON
+              console.warn('Failed to parse streaming chunk:', e);
+            }
+          }
+        }
+      }
+
+      // Send metadata
+      const metadataChunk: StreamChunk = {
+        type: 'metadata',
+        metadata: {
+          model: streamModel || opts.model,
+        },
+        done: false,
+      };
+      onProgress?.(metadataChunk);
+      yield metadataChunk;
+
+      // Send final done chunk
+      const doneChunk: StreamChunk = {
+        type: 'done',
+        done: true,
+      };
+      onProgress?.(doneChunk);
+      yield doneChunk;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorChunk: StreamChunk = {
+        type: 'error',
+        error: errorMessage,
+        done: true,
+      };
+      onProgress?.(errorChunk);
+      yield errorChunk;
+    }
   }
 }
 

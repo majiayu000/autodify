@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { createHash } from 'crypto';
 import { getWorkflowService } from '../services/workflow.service.js';
 import { config } from '../config/index.js';
 import { NotFoundError } from '../errors/custom-errors.js';
@@ -26,6 +27,33 @@ import {
   type TemplateDetailResponse,
   type HealthResponse,
 } from '../schemas/index.js';
+
+/**
+ * Response cache for templates list
+ */
+interface CacheEntry {
+  data: TemplatesResponse;
+  etag: string;
+  timestamp: number;
+}
+
+let templatesCache: CacheEntry | null = null;
+
+/**
+ * Generate ETag for response data
+ */
+function generateETag(data: any): string {
+  const hash = createHash('md5');
+  hash.update(JSON.stringify(data));
+  return `"${hash.digest('hex')}"`;
+}
+
+/**
+ * Check if cache is still valid based on TTL
+ */
+function isCacheValid(timestamp: number, ttl: number): boolean {
+  return Date.now() - timestamp < ttl;
+}
 
 export async function workflowRoutes(fastify: FastifyInstance) {
   const workflowService = getWorkflowService();
@@ -104,6 +132,100 @@ export async function workflowRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
       const result = await workflowService.generate(request.body);
       return reply.send(result);
+    }
+  );
+
+  /**
+   * POST /api/generate/stream - 生成工作流（流式响应）
+   */
+  fastify.post<{
+    Body: GenerateRequestBody;
+  }>(
+    '/generate/stream',
+    {
+      schema: {
+        description: '根据自然语言描述生成 Dify 工作流（流式响应，使用 Server-Sent Events）',
+        tags: ['workflow'],
+        summary: '生成工作流（流式）',
+        body: withExample(GenerateRequestBodySchema, {
+          prompt: '创建一个客服聊天机器人，能够回答常见问题',
+          options: {
+            model: 'gpt-4',
+            temperature: 0.7,
+            useTemplate: false,
+          },
+        }),
+        response: {
+          200: {
+            description: '流式响应（Server-Sent Events）',
+            type: 'string',
+            example: 'data: {"type":"progress","progress":{"stage":"initializing","percentage":0,"message":"Starting..."},"done":false}\n\n',
+          },
+          400: {
+            description: '请求参数错误',
+            type: 'object',
+            properties: {
+              success: { type: 'boolean', example: false },
+              error: { type: 'string', example: '请输入工作流描述' },
+            },
+          },
+        },
+      },
+      config: {
+        rateLimit: {
+          max: config.rateLimit.generate.max,
+          timeWindow: config.rateLimit.generate.timeWindow,
+        },
+      },
+      preHandler: createValidationHook({
+        body: GenerateRequestBodySchema,
+      }),
+    },
+    async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
+      // Set up Server-Sent Events headers
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      // Create AbortController for cancellation support
+      const abortController = new AbortController();
+
+      // Handle client disconnect
+      request.raw.on('close', () => {
+        abortController.abort();
+      });
+
+      try {
+        // Stream the generation
+        const stream = workflowService.generateStream(request.body, abortController.signal);
+
+        for await (const chunk of stream) {
+          // Check if connection is still alive
+          if (reply.raw.destroyed || abortController.signal.aborted) {
+            break;
+          }
+
+          // Send SSE message
+          reply.raw.write(`data: ${JSON.stringify(chunk)}\n\n`);
+
+          // If done or error, finish
+          if (chunk.done) {
+            break;
+          }
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        reply.raw.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: errorMessage,
+          done: true,
+        })}\n\n`);
+      } finally {
+        reply.raw.end();
+      }
     }
   );
 
@@ -235,7 +357,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   );
 
   /**
-   * GET /api/templates - 获取模板列表
+   * GET /api/templates - 获取模板列表 (with caching and ETag support)
    */
   fastify.get<{
     Reply: TemplatesResponse;
@@ -270,12 +392,56 @@ export async function workflowRoutes(fastify: FastifyInstance) {
               ],
             }),
           },
+          304: {
+            description: 'Not Modified - 使用缓存版本',
+            type: 'null',
+          },
         },
       },
     },
-    async (_request, reply: FastifyReply) => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // Check if cache is enabled
+      if (!config.cache.enabled) {
+        const templates = workflowService.getTemplates();
+        return reply.send({ templates });
+      }
+
+      // Check if cache is valid
+      const cacheValid =
+        templatesCache && isCacheValid(templatesCache.timestamp, config.cache.templates.ttl);
+
+      // If cache is valid, check ETag
+      if (cacheValid && templatesCache) {
+        const clientETag = request.headers['if-none-match'];
+
+        // If client ETag matches, return 304 Not Modified
+        if (clientETag === templatesCache.etag) {
+          return reply.code(304).send();
+        }
+
+        // Otherwise, return cached data with ETag
+        reply.header('ETag', templatesCache.etag);
+        reply.header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`);
+        return reply.send(templatesCache.data);
+      }
+
+      // Fetch fresh data
       const templates = workflowService.getTemplates();
-      return reply.send({ templates });
+      const data: TemplatesResponse = { templates };
+      const etag = generateETag(data);
+
+      // Update cache
+      templatesCache = {
+        data,
+        etag,
+        timestamp: Date.now(),
+      };
+
+      // Set response headers
+      reply.header('ETag', etag);
+      reply.header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`);
+
+      return reply.send(data);
     }
   );
 

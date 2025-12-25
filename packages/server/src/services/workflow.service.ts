@@ -5,6 +5,7 @@ import {
   type DifyDSL,
   type LLMProvider,
   type GenerationRequest,
+  type StreamChunk,
 } from '@autodify/core';
 import { config } from '../config/index.js';
 import yaml from 'js-yaml';
@@ -231,12 +232,17 @@ export class WorkflowService {
   }
 
   getTemplates() {
+    const complexityMap: Record<number, 'simple' | 'medium' | 'complex'> = {
+      1: 'simple',
+      2: 'medium',
+      3: 'complex',
+    };
     return this.templateStore.getAll().map((t) => ({
       id: t.metadata.id,
       name: t.metadata.name,
       description: t.metadata.description,
-      category: t.metadata.category,
-      complexity: t.metadata.complexity,
+      category: t.metadata.category as string,
+      complexity: complexityMap[t.metadata.complexity] || 'medium',
       tags: t.metadata.tags,
     }));
   }
@@ -245,6 +251,175 @@ export class WorkflowService {
     const template = this.templateStore.get(id);
     if (!template) return null;
     return template.build();
+  }
+
+  /**
+   * Generate workflow with streaming support
+   */
+  async *generateStream(
+    request: GenerateApiRequest,
+    signal?: AbortSignal
+  ): AsyncGenerator<StreamChunk> {
+    const startTime = Date.now();
+    const model = request.options?.model || config.llm.defaultModel;
+
+    try {
+      // Send initial progress
+      yield {
+        type: 'progress',
+        progress: {
+          stage: 'initializing',
+          percentage: 0,
+          message: 'Starting workflow generation...',
+        },
+        done: false,
+      };
+
+      // Check if cancelled
+      if (signal?.aborted) {
+        yield {
+          type: 'error',
+          error: 'Generation cancelled',
+          done: true,
+        };
+        return;
+      }
+
+      // Send progress: analyzing prompt
+      yield {
+        type: 'progress',
+        progress: {
+          stage: 'analyzing',
+          percentage: 10,
+          message: 'Analyzing your requirements...',
+        },
+        done: false,
+      };
+
+      // Check if cancelled
+      if (signal?.aborted) {
+        yield {
+          type: 'error',
+          error: 'Generation cancelled',
+          done: true,
+        };
+        return;
+      }
+
+      // Send progress: generating DSL
+      yield {
+        type: 'progress',
+        progress: {
+          stage: 'generating',
+          percentage: 30,
+          message: 'Generating workflow structure...',
+        },
+        done: false,
+      };
+
+      // Build generation request
+      const genRequest: GenerationRequest = {
+        prompt: request.prompt,
+        skipTemplates: request.options?.useTemplate === false,
+        preferredModel: model,
+      };
+
+      // Generate workflow (using non-streaming for now)
+      const result = await this.orchestrator.generate(genRequest);
+
+      // Check if cancelled
+      if (signal?.aborted) {
+        yield {
+          type: 'error',
+          error: 'Generation cancelled',
+          done: true,
+        };
+        return;
+      }
+
+      if (!result.success || !result.dsl) {
+        yield {
+          type: 'error',
+          error: result.error || 'Workflow generation failed',
+          done: true,
+        };
+        return;
+      }
+
+      // Send progress: converting to YAML
+      yield {
+        type: 'progress',
+        progress: {
+          stage: 'converting',
+          percentage: 80,
+          message: 'Converting to YAML format...',
+        },
+        done: false,
+      };
+
+      // Convert to YAML
+      const yamlStr = yaml.dump(result.dsl, {
+        indent: 2,
+        lineWidth: -1,
+        quotingType: "'",
+        forceQuotes: false,
+      });
+
+      // Send progress: finalizing
+      yield {
+        type: 'progress',
+        progress: {
+          stage: 'finalizing',
+          percentage: 90,
+          message: 'Finalizing workflow...',
+        },
+        done: false,
+      };
+
+      // Send the complete DSL as content
+      yield {
+        type: 'content',
+        content: JSON.stringify({
+          dsl: result.dsl,
+          yaml: yamlStr,
+        }),
+        done: false,
+      };
+
+      // Send metadata
+      yield {
+        type: 'metadata',
+        metadata: {
+          model,
+        },
+        done: false,
+      };
+
+      // Send completion
+      yield {
+        type: 'done',
+        done: true,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      const logger = getLogger();
+      logger.error(
+        {
+          err: error,
+          error_message: message,
+          duration_ms: Date.now() - startTime,
+          model,
+          prompt: request.prompt.substring(0, 100),
+        },
+        'Streaming workflow generation failed'
+      );
+
+      yield {
+        type: 'error',
+        error: message,
+        done: true,
+      };
+    }
   }
 }
 

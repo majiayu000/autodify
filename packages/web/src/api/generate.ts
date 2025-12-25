@@ -59,6 +59,36 @@ export interface TemplateInfo {
 }
 
 /**
+ * Stream chunk types
+ */
+export type StreamChunkType = 'content' | 'progress' | 'metadata' | 'error' | 'done';
+
+export interface StreamChunk {
+  type: StreamChunkType;
+  content?: string;
+  progress?: {
+    stage: string;
+    percentage?: number;
+    message?: string;
+  };
+  metadata?: {
+    model?: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+  };
+  error?: string;
+  done: boolean;
+}
+
+/**
+ * Progress callback for streaming
+ */
+export type ProgressCallback = (chunk: StreamChunk) => void;
+
+/**
  * Generate workflow from natural language
  */
 export async function generateWorkflow(request: GenerateRequest): Promise<GenerateResponse> {
@@ -87,6 +117,148 @@ export async function generateWorkflow(request: GenerateRequest): Promise<Genera
       error: message,
     };
   }
+}
+
+/**
+ * Generate workflow with streaming (Server-Sent Events)
+ */
+export async function generateWorkflowStream(
+  request: GenerateRequest,
+  onProgress: ProgressCallback,
+  abortSignal?: AbortSignal
+): Promise<GenerateResponse> {
+  return new Promise((resolve) => {
+    let result: GenerateResponse = { success: false };
+    let dslData: { dsl?: unknown; yaml?: string } | null = null;
+
+    // We need to use fetch with SSE for POST requests
+    fetch(`${API_BASE_URL}/api/generate/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: abortSignal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const error = await response.text();
+          result = {
+            success: false,
+            error: `API error: ${response.status} - ${error}`,
+          };
+          onProgress({
+            type: 'error',
+            error: result.error,
+            done: true,
+          });
+          resolve(result);
+          return;
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          result = {
+            success: false,
+            error: 'No response body',
+          };
+          resolve(result);
+          return;
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+              try {
+                const chunk = JSON.parse(trimmed.slice(6)) as StreamChunk;
+                onProgress(chunk);
+
+                // Collect content chunks
+                if (chunk.type === 'content' && chunk.content) {
+                  try {
+                    dslData = JSON.parse(chunk.content);
+                  } catch {
+                    // Not JSON, might be partial content
+                  }
+                }
+
+                // Handle completion
+                if (chunk.done) {
+                  if (chunk.type === 'error') {
+                    result = {
+                      success: false,
+                      error: chunk.error || 'Unknown error',
+                    };
+                  } else if (dslData) {
+                    result = {
+                      success: true,
+                      dsl: dslData.dsl,
+                      yaml: dslData.yaml,
+                    };
+                  } else {
+                    result = {
+                      success: true,
+                    };
+                  }
+                  resolve(result);
+                  return;
+                }
+              } catch (e) {
+                console.warn('Failed to parse SSE chunk:', e);
+              }
+            }
+          }
+
+          // If we get here without a done chunk, something went wrong
+          if (result.success === false && !result.error) {
+            result = {
+              success: false,
+              error: 'Stream ended unexpectedly',
+            };
+          }
+          resolve(result);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Stream error';
+          result = {
+            success: false,
+            error: message,
+          };
+          onProgress({
+            type: 'error',
+            error: message,
+            done: true,
+          });
+          resolve(result);
+        }
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : 'Network error';
+        result = {
+          success: false,
+          error: message,
+        };
+        onProgress({
+          type: 'error',
+          error: message,
+          done: true,
+        });
+        resolve(result);
+      });
+  });
 }
 
 /**

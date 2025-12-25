@@ -14,7 +14,7 @@ import type {
 } from './types.js';
 import type { ILLMService } from '../llm/types.js';
 import { createLLMService } from '../llm/index.js';
-import { WorkflowPlanner } from '../planner/planner.js';
+import { WorkflowPlanner } from '../planner/index.js';
 import { DSLValidator } from '../validator/validator.js';
 import { parseYAML, stringifyYAML } from '../utils/yaml.js';
 import { defaultTemplateStore } from '../templates/index.js';

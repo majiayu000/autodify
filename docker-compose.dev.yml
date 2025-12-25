@@ -1,0 +1,82 @@
+version: '3.8'
+
+# ============================================
+# 开发环境配置
+# ============================================
+
+networks:
+  autodify-dev-network:
+    driver: bridge
+
+services:
+  # 开发环境只运行 LiteLLM
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: autodify-litellm-dev
+    restart: unless-stopped
+    ports:
+      - "${LITELLM_PORT:-4000}:4000"
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-autodify}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/litellm
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml:ro
+      # 开发环境挂载本地数据目录（可选）
+      - ./data/litellm:/app/data
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--debug"]
+    networks:
+      - autodify-dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # PostgreSQL（可选 - 用于 LiteLLM 持久化）
+  postgres:
+    image: postgres:16-alpine
+    container_name: autodify-postgres-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=litellm
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - autodify-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis（可选 - 用于缓存和速率限制）
+  redis:
+    image: redis:7-alpine
+    container_name: autodify-redis-dev
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - autodify-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+# 开发环境使用说明:
+# 1. 仅启动 LiteLLM: docker-compose -f docker-compose.dev.yml up litellm
+# 2. 启动 LiteLLM + PostgreSQL: docker-compose -f docker-compose.dev.yml up litellm postgres
+# 3. 启动所有服务: docker-compose -f docker-compose.dev.yml up
+# 4. 后台运行: docker-compose -f docker-compose.dev.yml up -d

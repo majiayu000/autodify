@@ -6,7 +6,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import StatusBar from './components/StatusBar';
 import { useWorkflowStore, useTemporalStore, type DslType } from './store/workflowStore';
-import { generateWorkflow, checkHealth } from './api/generate';
+import { generateWorkflow, generateWorkflowStream, checkHealth, type StreamChunk } from './api/generate';
 import yaml from 'js-yaml';
 
 export default function App() {
@@ -43,6 +43,14 @@ export default function App() {
   const [prompt, setPrompt] = useState('');
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [useStreaming, _setUseStreaming] = useState(true);
+  void _setUseStreaming; // Reserved for future UI toggle
+  const [progress, setProgress] = useState<{
+    stage: string;
+    percentage: number;
+    message: string;
+  } | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // 检查 API 连接状态
   useEffect(() => {
@@ -107,27 +115,80 @@ export default function App() {
 
     setIsGenerating(true);
     setError(null);
+    setProgress(null);
     selectNode(null);
 
-    try {
-      const result = await generateWorkflow({ prompt });
+    // Create abort controller for cancellation
+    const controller = new AbortController();
+    setAbortController(controller);
 
-      if (result.success && result.dsl) {
-        setDsl(result.dsl as DslType);
-        setDuration(result.metadata?.duration || 0);
-        setError(null);
+    try {
+      if (useStreaming) {
+        // Use streaming API
+        const result = await generateWorkflowStream(
+          { prompt },
+          (chunk: StreamChunk) => {
+            // Handle progress updates
+            if (chunk.type === 'progress' && chunk.progress) {
+              setProgress({
+                stage: chunk.progress.stage,
+                percentage: chunk.progress.percentage || 0,
+                message: chunk.progress.message || '',
+              });
+            } else if (chunk.type === 'error') {
+              setError(chunk.error || 'Generation failed');
+            } else if (chunk.type === 'done') {
+              setProgress(null);
+            }
+          },
+          controller.signal
+        );
+
+        if (result.success && result.dsl) {
+          setDsl(result.dsl as DslType);
+          setDuration(result.metadata?.duration || 0);
+          setError(null);
+        } else {
+          setError(result.error || '生成失败');
+          console.error('Generation failed:', result.error);
+        }
       } else {
-        setError(result.error || '生成失败');
-        console.error('Generation failed:', result.error);
+        // Use non-streaming API
+        const result = await generateWorkflow({ prompt });
+
+        if (result.success && result.dsl) {
+          setDsl(result.dsl as DslType);
+          setDuration(result.metadata?.duration || 0);
+          setError(null);
+        } else {
+          setError(result.error || '生成失败');
+          console.error('Generation failed:', result.error);
+        }
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : '网络错误';
-      setError(message);
-      console.error('Generation error:', err);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('生成已取消');
+      } else {
+        const message = err instanceof Error ? err.message : '网络错误';
+        setError(message);
+        console.error('Generation error:', err);
+      }
+    } finally {
+      setIsGenerating(false);
+      setProgress(null);
+      setAbortController(null);
     }
+  }, [prompt, useStreaming, setIsGenerating, selectNode, setDsl, setDuration]);
 
-    setIsGenerating(false);
-  }, [prompt, setIsGenerating, selectNode, setDsl, setDuration]);
+  const handleCancelGeneration = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsGenerating(false);
+      setProgress(null);
+      setError('生成已取消');
+    }
+  }, [abortController, setIsGenerating]);
 
   const handleExampleClick = useCallback((example: string) => {
     setPrompt(example);
@@ -193,8 +254,10 @@ export default function App() {
           isGenerating={isGenerating}
           apiConnected={apiConnected}
           error={error}
+          progress={progress}
           onPromptChange={setPrompt}
           onGenerate={handleGenerate}
+          onCancelGeneration={handleCancelGeneration}
           onPromptKeyDown={handleKeyDown}
           onExampleClick={handleExampleClick}
           dsl={dsl}

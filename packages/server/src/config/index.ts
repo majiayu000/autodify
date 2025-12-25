@@ -42,6 +42,19 @@ const envSchema = z.object({
   RATE_LIMIT_GENERATE_TIME_WINDOW: z.string().default('15 minutes'),
   RATE_LIMIT_REFINE_MAX: z.coerce.number().int().positive().default(30),
   RATE_LIMIT_REFINE_TIME_WINDOW: z.string().default('15 minutes'),
+
+  // Cache Configuration
+  CACHE_ENABLED: z.string().default('true'),
+  CACHE_TEMPLATES_TTL: z.coerce.number().int().positive().default(300000), // 5 minutes in ms
+  CACHE_TEMPLATES_MAX_SIZE: z.coerce.number().int().positive().default(50),
+  TEMPLATE_CACHE_ENABLED: z.string().default('true'),
+  TEMPLATE_CACHE_MAX_SIZE: z.coerce.number().int().positive().default(100),
+  TEMPLATE_CACHE_TTL: z.coerce.number().int().positive().optional(),
+  TEMPLATE_CACHE_STATS: z.string().default('false'),
+  NODE_CACHE_ENABLED: z.string().default('true'),
+  NODE_CACHE_MAX_SIZE: z.coerce.number().int().positive().default(50),
+  NODE_CACHE_TTL: z.coerce.number().int().positive().optional(),
+  NODE_CACHE_STATS: z.string().default('false'),
 });
 
 /**
@@ -184,6 +197,15 @@ export const config = {
     refine: {
       max: env.RATE_LIMIT_REFINE_MAX,
       timeWindow: env.RATE_LIMIT_REFINE_TIME_WINDOW,
+    },
+  },
+
+  // Cache Configuration
+  cache: {
+    enabled: env.CACHE_ENABLED !== 'false',
+    templates: {
+      ttl: env.CACHE_TEMPLATES_TTL,
+      maxSize: env.CACHE_TEMPLATES_MAX_SIZE,
     },
   },
 } as const;

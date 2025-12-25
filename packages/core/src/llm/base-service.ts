@@ -9,6 +9,8 @@ import type {
   ChatMessage,
   CompletionOptions,
   CompletionResult,
+  StreamingCompletionOptions,
+  StreamChunk,
 } from './types.js';
 
 /**
@@ -48,10 +50,30 @@ export abstract class BaseLLMService implements ILLMService {
   abstract chat(messages: ChatMessage[], options?: CompletionOptions): Promise<CompletionResult>;
 
   /**
+   * Complete a chat conversation with streaming
+   */
+  async chatStream(
+    _messages: ChatMessage[],
+    _options?: StreamingCompletionOptions
+  ): Promise<AsyncGenerator<StreamChunk>> {
+    throw new Error('Streaming not implemented for this provider');
+  }
+
+  /**
    * Complete a single prompt
    */
   async complete(prompt: string, options?: CompletionOptions): Promise<CompletionResult> {
     return this.chat([{ role: 'user', content: prompt }], options);
+  }
+
+  /**
+   * Complete a single prompt with streaming
+   */
+  async completeStream(
+    prompt: string,
+    options?: StreamingCompletionOptions
+  ): Promise<AsyncGenerator<StreamChunk>> {
+    return this.chatStream([{ role: 'user', content: prompt }], options);
   }
 
   /**

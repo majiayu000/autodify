@@ -4,6 +4,7 @@
 
 import type { WorkflowTemplate, TemplateMatch, TemplateCategory } from './types.js';
 import { builtinTemplates } from './builtin/index.js';
+import { LRUCache, getCacheConfig } from '../utils/cache.js';
 
 /**
  * Template store configuration
@@ -13,6 +14,14 @@ export interface TemplateStoreConfig {
   includeBuiltin?: boolean;
   /** Custom templates to add */
   customTemplates?: WorkflowTemplate[];
+  /** Enable caching for template matching */
+  enableCache?: boolean;
+  /** Cache configuration */
+  cacheConfig?: {
+    maxSize?: number;
+    ttl?: number | null;
+    enableStats?: boolean;
+  };
 }
 
 /**
@@ -20,9 +29,26 @@ export interface TemplateStoreConfig {
  */
 export class TemplateStore {
   private templates: Map<string, WorkflowTemplate> = new Map();
+  private matchCache: LRUCache<string, TemplateMatch[]> | null = null;
 
   constructor(config: TemplateStoreConfig = {}) {
-    const { includeBuiltin = true, customTemplates = [] } = config;
+    const {
+      includeBuiltin = true,
+      customTemplates = [],
+      enableCache = true,
+      cacheConfig,
+    } = config;
+
+    // Initialize cache if enabled
+    if (enableCache) {
+      const envConfig = getCacheConfig('TEMPLATE');
+      const finalConfig = {
+        maxSize: cacheConfig?.maxSize ?? envConfig.maxSize,
+        ttl: cacheConfig?.ttl ?? envConfig.ttl,
+        enableStats: cacheConfig?.enableStats ?? envConfig.enableStats,
+      };
+      this.matchCache = new LRUCache(finalConfig);
+    }
 
     if (includeBuiltin) {
       for (const template of builtinTemplates) {
@@ -43,13 +69,20 @@ export class TemplateStore {
       console.warn(`Template "${template.metadata.id}" already exists, overwriting.`);
     }
     this.templates.set(template.metadata.id, template);
+    // Clear cache when templates change
+    this.matchCache?.clear();
   }
 
   /**
    * Unregister a template
    */
   unregister(id: string): boolean {
-    return this.templates.delete(id);
+    const result = this.templates.delete(id);
+    // Clear cache when templates change
+    if (result) {
+      this.matchCache?.clear();
+    }
+    return result;
   }
 
   /**
@@ -85,6 +118,13 @@ export class TemplateStore {
    * Returns templates sorted by relevance score
    */
   match(query: string, limit: number = 5): TemplateMatch[] {
+    // Check cache first
+    const cacheKey = `${query}:${limit}`;
+    const cached = this.matchCache?.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const normalizedQuery = this.normalizeText(query);
     const queryTokens = this.tokenize(normalizedQuery);
     const matches: TemplateMatch[] = [];
@@ -100,7 +140,12 @@ export class TemplateStore {
       }
     }
 
-    return matches.sort((a, b) => b.score - a.score).slice(0, limit);
+    const result = matches.sort((a, b) => b.score - a.score).slice(0, limit);
+
+    // Cache the result
+    this.matchCache?.set(cacheKey, result);
+
+    return result;
   }
 
   /**
@@ -233,6 +278,20 @@ export class TemplateStore {
     }
 
     return [...new Set(result)];
+  }
+
+  /**
+   * Get cache statistics (if cache is enabled)
+   */
+  getCacheStats() {
+    return this.matchCache?.getStats() ?? null;
+  }
+
+  /**
+   * Clear the match cache
+   */
+  clearCache(): void {
+    this.matchCache?.clear();
   }
 }
 

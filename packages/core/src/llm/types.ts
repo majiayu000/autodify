@@ -102,16 +102,50 @@ export interface ILLMService {
 }
 
 /**
+ * Streaming chunk type
+ */
+export type StreamChunkType = 'content' | 'progress' | 'metadata' | 'error' | 'done';
+
+/**
  * Streaming chunk
  */
 export interface StreamChunk {
-  content: string;
+  /** Chunk type */
+  type: StreamChunkType;
+  /** Content for content chunks */
+  content?: string;
+  /** Progress information */
+  progress?: {
+    stage: string;
+    percentage?: number;
+    message?: string;
+  };
+  /** Metadata for metadata chunks */
+  metadata?: {
+    model?: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+  };
+  /** Error message for error chunks */
+  error?: string;
+  /** Whether this is the final chunk */
   done: boolean;
 }
+
+/**
+ * Progress callback for streaming
+ */
+export type ProgressCallback = (chunk: StreamChunk) => void;
 
 /**
  * Streaming completion options
  */
 export interface StreamingCompletionOptions extends CompletionOptions {
-  onChunk?: (chunk: StreamChunk) => void;
+  /** Progress callback */
+  onProgress?: ProgressCallback;
+  /** Abort signal for cancellation */
+  signal?: AbortSignal;
 }

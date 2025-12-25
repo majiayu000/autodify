@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { WorkflowPlanner, createPlanner } from './planner.js';
+import { WorkflowPlanner, createPlanner } from './index.js';
 import { analyzeIntent } from './intent-analyzer.js';
 
 describe('Intent Analyzer', () => {

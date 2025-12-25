@@ -5,8 +5,14 @@ interface PromptInputProps {
   isGenerating: boolean;
   apiConnected: boolean | null;
   error: string | null;
+  progress?: {
+    stage: string;
+    percentage: number;
+    message: string;
+  } | null;
   onPromptChange: (prompt: string) => void;
   onGenerate: () => void;
+  onCancelGeneration?: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
 }
 
@@ -15,8 +21,10 @@ const PromptInput = memo(function PromptInput({
   isGenerating,
   apiConnected,
   error,
+  progress,
   onPromptChange,
   onGenerate,
+  onCancelGeneration,
   onKeyDown,
 }: PromptInputProps) {
   return (
@@ -44,21 +52,65 @@ const PromptInput = memo(function PromptInput({
         </div>
       )}
 
-      <button
-        className="btn btn-primary"
-        onClick={onGenerate}
-        disabled={!prompt.trim() || isGenerating || apiConnected === false}
-        style={{ width: '100%' }}
-      >
-        {isGenerating ? (
-          <>
-            <span className="loading-spinner" />
-            AI 生成中...
-          </>
-        ) : (
-          <>✨ 生成工作流</>
-        )}
-      </button>
+      {/* Progress indicator */}
+      {progress && isGenerating && (
+        <div
+          style={{
+            padding: '12px',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid #3b82f6',
+            borderRadius: '6px',
+            marginBottom: '12px',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 500 }}>
+              {progress.message}
+            </span>
+            <span style={{ fontSize: '11px', color: '#64748b' }}>
+              {progress.percentage}%
+            </span>
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: '4px',
+              background: 'rgba(59, 130, 246, 0.2)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${progress.percentage}%`,
+                height: '100%',
+                background: '#3b82f6',
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {isGenerating ? (
+        <button
+          className="btn btn-secondary"
+          onClick={onCancelGeneration}
+          style={{ width: '100%' }}
+        >
+          ⏹ 取消生成
+        </button>
+      ) : (
+        <button
+          className="btn btn-primary"
+          onClick={onGenerate}
+          disabled={!prompt.trim() || apiConnected === false}
+          style={{ width: '100%' }}
+        >
+          ✨ 生成工作流
+        </button>
+      )}
+
       <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center' }}>
         ⌘ + Enter 快速生成
       </div>
