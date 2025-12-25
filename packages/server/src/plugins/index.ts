@@ -4,3 +4,4 @@
 
 export { validatorPlugin, createValidationHook } from './validator.plugin.js';
 export type { ValidatorSchemas } from './validator.plugin.js';
+export { registerSwagger } from './swagger.plugin.js';

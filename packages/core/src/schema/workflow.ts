@@ -127,9 +127,16 @@ export const FeaturesSchema = z.object({
 // Graph Schema
 // ============================================================================
 
+export const ViewportSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  zoom: z.number(),
+});
+
 export const WorkflowGraphSchema = z.object({
   nodes: z.array(NodeSchema),
   edges: z.array(EdgeSchema),
+  viewport: ViewportSchema.optional(),
 });
 
 // ============================================================================

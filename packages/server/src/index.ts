@@ -5,6 +5,7 @@ import { config } from './config/index.js';
 import { workflowRoutes } from './routes/workflow.routes.js';
 import { registerErrorHandler } from './middleware/error-handler.js';
 import { initializeLogging, requestLoggingPlugin, getLogger } from './lib/logging/index.js';
+import { registerSwagger } from './plugins/index.js';
 
 async function main() {
   // 初始化结构化日志系统
@@ -51,6 +52,9 @@ async function main() {
     }),
   });
 
+  // Swagger 文档
+  await registerSwagger(fastify);
+
   // API routes
   await fastify.register(workflowRoutes, { prefix: '/api' });
 
@@ -69,6 +73,7 @@ async function main() {
       {
         server: `http://${config.host}:${config.port}`,
         api_base: `http://${config.host}:${config.port}/api`,
+        docs: `http://${config.host}:${config.port}/docs`,
         llm_provider: config.llm.provider,
         llm_base_url: config.llm.baseUrl,
         llm_model: config.llm.defaultModel,
@@ -86,6 +91,7 @@ async function main() {
 ╠═══════════════════════════════════════════════════════════╣
 ║  Server:    http://${config.host}:${config.port}                        ║
 ║  API Base:  http://${config.host}:${config.port}/api                    ║
+║  API Docs:  http://${config.host}:${config.port}/docs                   ║
 ║  LLM:       ${config.llm.provider.padEnd(10)} @ ${config.llm.baseUrl.slice(0, 30)}...
 ║  Model:     ${config.llm.defaultModel.padEnd(40)}║
 ╚═══════════════════════════════════════════════════════════╝

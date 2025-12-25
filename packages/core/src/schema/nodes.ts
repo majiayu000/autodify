@@ -488,6 +488,10 @@ export const NodeSchema = z.object({
   type: z.literal('custom'),
   data: NodeDataSchema,
   position: NodePositionSchema.optional(),
+  positionAbsolute: NodePositionSchema.optional(),
   width: z.number().optional(),
   height: z.number().optional(),
+  sourcePosition: z.enum(['right', 'left', 'top', 'bottom']).optional(),
+  targetPosition: z.enum(['right', 'left', 'top', 'bottom']).optional(),
+  selected: z.boolean().optional(),
 });
