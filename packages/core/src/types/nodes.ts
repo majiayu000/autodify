@@ -571,8 +571,12 @@ export interface Node<T extends NodeData = NodeData> {
   type: 'custom';
   data: T;
   position?: NodePosition;
+  positionAbsolute?: NodePosition;
   width?: number;
   height?: number;
+  sourcePosition?: 'right' | 'left' | 'top' | 'bottom';
+  targetPosition?: 'right' | 'left' | 'top' | 'bottom';
+  selected?: boolean;
 }
 
 // ============================================================================

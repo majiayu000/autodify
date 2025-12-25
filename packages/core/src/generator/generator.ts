@@ -4,11 +4,215 @@
  * Generates Dify workflow DSL from natural language.
  */
 
-import type { DifyDSL } from '../types/index.js';
+import type { DifyDSL, Node, NodeData } from '../types/index.js';
 import { parseYAML, stringifyYAML } from '../utils/yaml.js';
 import { validateDSL } from '../validator/index.js';
 import type { GeneratorOptions, GenerateResult } from './types.js';
 import { buildGenerationPrompt, buildFixPrompt } from './prompts.js';
+
+/**
+ * 节点布局常量
+ */
+const NODE_LAYOUT = {
+  DEFAULT_WIDTH: 244,
+  DEFAULT_HEIGHT: 54,
+  START_HEIGHT: 90,
+  END_HEIGHT: 90,
+  LLM_HEIGHT: 98,
+  ANSWER_HEIGHT: 103,
+  CODE_HEIGHT: 54,
+  HTTP_HEIGHT: 110,
+  AGENT_HEIGHT: 198,
+  HORIZONTAL_GAP: 60,
+  START_X: 80,
+  START_Y: 282,
+};
+
+/**
+ * 生成时间戳 ID
+ */
+function generateNodeId(): string {
+  return String(Date.now() + Math.floor(Math.random() * 1000));
+}
+
+/**
+ * 获取节点高度
+ */
+function getNodeHeight(nodeType: string): number {
+  switch (nodeType) {
+    case 'start':
+      return NODE_LAYOUT.START_HEIGHT;
+    case 'end':
+      return NODE_LAYOUT.END_HEIGHT;
+    case 'llm':
+      return NODE_LAYOUT.LLM_HEIGHT;
+    case 'answer':
+      return NODE_LAYOUT.ANSWER_HEIGHT;
+    case 'code':
+      return NODE_LAYOUT.CODE_HEIGHT;
+    case 'http-request':
+      return NODE_LAYOUT.HTTP_HEIGHT;
+    case 'agent':
+      return NODE_LAYOUT.AGENT_HEIGHT;
+    default:
+      return NODE_LAYOUT.DEFAULT_HEIGHT;
+  }
+}
+
+/**
+ * 为节点添加布局信息
+ */
+function addNodeLayout(nodes: Node<NodeData>[]): Node<NodeData>[] {
+  let currentX = NODE_LAYOUT.START_X;
+  const y = NODE_LAYOUT.START_Y;
+
+  return nodes.map((node) => {
+    const width = NODE_LAYOUT.DEFAULT_WIDTH;
+    const height = getNodeHeight(node.data.type);
+
+    const position = { x: currentX, y };
+    currentX += width + NODE_LAYOUT.HORIZONTAL_GAP;
+
+    return {
+      ...node,
+      position,
+      positionAbsolute: position,
+      width,
+      height,
+      sourcePosition: 'right' as const,
+      targetPosition: 'left' as const,
+      selected: false,
+    };
+  });
+}
+
+/**
+ * 规范化 DSL
+ */
+function normalizeDSL(dsl: DifyDSL): DifyDSL {
+  if (!dsl.workflow?.graph) {
+    return dsl;
+  }
+
+  // 添加节点布局
+  const nodesWithLayout = addNodeLayout(dsl.workflow.graph.nodes as Node<NodeData>[]);
+
+  // 更新节点 ID 映射
+  const idMap = new Map<string, string>();
+  const updatedNodes = nodesWithLayout.map((node) => {
+    const newId = generateNodeId();
+    idMap.set(node.id, newId);
+    return { ...node, id: newId };
+  });
+
+  // 更新边的 source/target
+  const updatedEdges = dsl.workflow.graph.edges.map((edge) => {
+    const newSource = idMap.get(edge.source) || edge.source;
+    const newTarget = idMap.get(edge.target) || edge.target;
+    return {
+      ...edge,
+      id: `${newSource}-source-${newTarget}-target`,
+      source: newSource,
+      target: newTarget,
+    };
+  });
+
+  // 更新变量引用 ({{#nodeId.var#}})
+  const updateVariableRefs = (text: string): string => {
+    return text.replace(/\{\{#([^.]+)\.([^#]+)#\}\}/g, (match, nodeId, varName) => {
+      const newId = idMap.get(nodeId);
+      return newId ? `{{#${newId}.${varName}#}}` : match;
+    });
+  };
+
+  // 遍历节点更新变量引用
+  const nodesWithUpdatedRefs = updatedNodes.map((node) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = { ...node.data };
+
+    // 更新 LLM prompt_template
+    if (data.prompt_template && Array.isArray(data.prompt_template)) {
+      data.prompt_template = data.prompt_template.map((pt: { role: string; text: string }) => ({
+        ...pt,
+        text: updateVariableRefs(pt.text),
+      }));
+    }
+
+    // 更新 answer
+    if (data.answer && typeof data.answer === 'string') {
+      data.answer = updateVariableRefs(data.answer);
+    }
+
+    // 更新 value_selector in outputs
+    if (data.outputs && Array.isArray(data.outputs)) {
+      data.outputs = data.outputs.map((output: { variable: string; value_selector?: string[] }) => {
+        if (output.value_selector && Array.isArray(output.value_selector)) {
+          return {
+            ...output,
+            value_selector: output.value_selector.map((id: string, idx: number) =>
+              idx === 0 ? (idMap.get(id) || id) : id
+            ),
+          };
+        }
+        return output;
+      });
+    }
+
+    // 更新 variables 中的 value_selector
+    if (data.variables && Array.isArray(data.variables)) {
+      data.variables = data.variables.map((v: { variable?: string; value_selector?: string[] }) => {
+        if (v.value_selector && Array.isArray(v.value_selector)) {
+          return {
+            ...v,
+            value_selector: v.value_selector.map((id: string, idx: number) =>
+              idx === 0 ? (idMap.get(id) || id) : id
+            ),
+          };
+        }
+        return v;
+      });
+    }
+
+    return { ...node, data: data as NodeData };
+  });
+
+  return {
+    ...dsl,
+    version: '0.1.3',
+    workflow: {
+      ...dsl.workflow,
+      conversation_variables: dsl.workflow.conversation_variables || [],
+      environment_variables: dsl.workflow.environment_variables || [],
+      graph: {
+        nodes: nodesWithUpdatedRefs,
+        edges: updatedEdges,
+        viewport: {
+          x: 0,
+          y: 0,
+          zoom: 1,
+        },
+      },
+      features: {
+        file_upload: {
+          enabled: false,
+          image: {
+            enabled: false,
+            number_limits: 3,
+            transfer_methods: ['local_file', 'remote_url'],
+          },
+        },
+        opening_statement: '',
+        retriever_resource: { enabled: true },
+        sensitive_word_avoidance: { enabled: false },
+        speech_to_text: { enabled: false },
+        suggested_questions: [],
+        suggested_questions_after_answer: { enabled: false },
+        text_to_speech: { enabled: false, language: '', voice: '' },
+        ...dsl.workflow.features,
+      },
+    },
+  };
+}
 
 /**
  * LLM 调用接口
@@ -122,10 +326,14 @@ export class DSLGenerator {
       };
     }
 
+    // 规范化 DSL（添加布局、更新 ID 等）
+    const normalizedDSL = normalizeDSL(dsl);
+    const normalizedYAML = stringifyYAML(normalizedDSL);
+
     return {
       success: true,
-      dsl,
-      yaml,
+      dsl: normalizedDSL,
+      yaml: normalizedYAML,
       retries,
     };
   }
@@ -173,25 +381,41 @@ export class DSLGenerator {
  * 创建一个简单的 DSL 生成器（用于测试）
  */
 export function createSimpleDSL(name: string, description: string): DifyDSL {
-  return {
-    version: '0.5.0',
+  const startId = generateNodeId();
+  const llmId = generateNodeId();
+  const endId = generateNodeId();
+
+  const baseDSL: DifyDSL = {
+    version: '0.1.3',
     kind: 'app',
     app: {
       name,
       mode: 'workflow',
       icon: '🤖',
       icon_type: 'emoji',
+      icon_background: '#FFEAD5',
       description,
+      use_icon_as_answer_icon: false,
     },
     workflow: {
+      conversation_variables: [],
+      environment_variables: [],
       graph: {
         nodes: [
           {
-            id: 'start',
+            id: startId,
             type: 'custom',
+            position: { x: 80, y: 282 },
+            positionAbsolute: { x: 80, y: 282 },
+            width: 244,
+            height: 90,
+            sourcePosition: 'right',
+            targetPosition: 'left',
+            selected: false,
             data: {
               type: 'start',
               title: '开始',
+              desc: '',
               variables: [
                 {
                   variable: 'input',
@@ -199,23 +423,31 @@ export function createSimpleDSL(name: string, description: string): DifyDSL {
                   type: 'paragraph',
                   required: true,
                   max_length: 2000,
+                  options: [],
                 },
               ],
             },
           },
           {
-            id: 'llm',
+            id: llmId,
             type: 'custom',
+            position: { x: 384, y: 282 },
+            positionAbsolute: { x: 384, y: 282 },
+            width: 244,
+            height: 98,
+            sourcePosition: 'right',
+            targetPosition: 'left',
+            selected: false,
             data: {
               type: 'llm',
               title: 'AI 处理',
+              desc: '',
               model: {
                 provider: 'openai',
                 name: 'gpt-4o',
                 mode: 'chat',
                 completion_params: {
                   temperature: 0.7,
-                  max_tokens: 2000,
                 },
               },
               prompt_template: [
@@ -225,21 +457,35 @@ export function createSimpleDSL(name: string, description: string): DifyDSL {
                 },
                 {
                   role: 'user',
-                  text: '{{#start.input#}}',
+                  text: `{{#${startId}.input#}}`,
                 },
               ],
+              context: {
+                enabled: false,
+              },
+              vision: {
+                enabled: false,
+              },
             },
           },
           {
-            id: 'end',
+            id: endId,
             type: 'custom',
+            position: { x: 688, y: 282 },
+            positionAbsolute: { x: 688, y: 282 },
+            width: 244,
+            height: 90,
+            sourcePosition: 'right',
+            targetPosition: 'left',
+            selected: false,
             data: {
               type: 'end',
               title: '结束',
+              desc: '',
               outputs: [
                 {
                   variable: 'result',
-                  value_selector: ['llm', 'text'],
+                  value_selector: [llmId, 'text'],
                 },
               ],
             },
@@ -247,10 +493,10 @@ export function createSimpleDSL(name: string, description: string): DifyDSL {
         ],
         edges: [
           {
-            id: 'start-llm',
-            source: 'start',
+            id: `${startId}-source-${llmId}-target`,
+            source: startId,
             sourceHandle: 'source',
-            target: 'llm',
+            target: llmId,
             targetHandle: 'target',
             type: 'custom',
             zIndex: 0,
@@ -258,14 +504,13 @@ export function createSimpleDSL(name: string, description: string): DifyDSL {
               sourceType: 'start',
               targetType: 'llm',
               isInIteration: false,
-              isInLoop: false,
             },
           },
           {
-            id: 'llm-end',
-            source: 'llm',
+            id: `${llmId}-source-${endId}-target`,
+            source: llmId,
             sourceHandle: 'source',
-            target: 'end',
+            target: endId,
             targetHandle: 'target',
             type: 'custom',
             zIndex: 0,
@@ -273,21 +518,36 @@ export function createSimpleDSL(name: string, description: string): DifyDSL {
               sourceType: 'llm',
               targetType: 'end',
               isInIteration: false,
-              isInLoop: false,
             },
           },
         ],
+        viewport: {
+          x: 0,
+          y: 0,
+          zoom: 1,
+        },
       },
       features: {
         file_upload: {
           enabled: false,
+          image: {
+            enabled: false,
+            number_limits: 3,
+            transfer_methods: ['local_file', 'remote_url'],
+          },
         },
-        text_to_speech: {
-          enabled: false,
-        },
+        opening_statement: '',
+        retriever_resource: { enabled: true },
+        sensitive_word_avoidance: { enabled: false },
+        speech_to_text: { enabled: false },
+        suggested_questions: [],
+        suggested_questions_after_answer: { enabled: false },
+        text_to_speech: { enabled: false, language: '', voice: '' },
       },
     },
   };
+
+  return baseDSL;
 }
 
 /**

@@ -107,10 +107,18 @@ export interface Features {
 // Graph
 // ============================================================================
 
+/** 视口配置 */
+export interface Viewport {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 /** 工作流图 */
 export interface WorkflowGraph {
   nodes: Node<NodeData>[];
   edges: Edge[];
+  viewport?: Viewport;
 }
 
 // ============================================================================
