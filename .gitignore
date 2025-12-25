@@ -31,3 +31,8 @@ pnpm-debug.log*
 tmp/
 temp/
 .cache/
+
+# Test artifacts
+screenshots/
+output/
+test-dsl-samples/
