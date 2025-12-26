@@ -82,7 +82,7 @@ export class WorkflowService {
       provider = 'openai';
     }
 
-    // 创建 Orchestrator
+    // 创建 Orchestrator - 启用多阶段生成器
     this.orchestrator = new WorkflowOrchestrator({
       provider,
       apiKey: config.llm.apiKey,
@@ -91,6 +91,7 @@ export class WorkflowService {
       generationModel: config.llm.defaultModel,
       maxRetries: config.llm.maxRetries,
       verbose: config.nodeEnv === 'development',
+      useMultiStage: true,  // 使用多阶段生成器以更好地支持复杂工作流
     });
 
     this.validator = new DSLValidator();
@@ -119,8 +120,11 @@ export class WorkflowService {
         });
       }
 
+      // 增强 DSL 为 Dify 兼容格式（添加位置信息等）
+      const enhancedDsl = this.enhanceDslForDify(result.dsl);
+
       // 转换为 YAML
-      const yamlStr = yaml.dump(result.dsl, {
+      const yamlStr = yaml.dump(enhancedDsl, {
         indent: 2,
         lineWidth: -1,
         quotingType: "'",
@@ -129,12 +133,13 @@ export class WorkflowService {
 
       return {
         success: true,
-        dsl: result.dsl,
+        dsl: enhancedDsl,
         yaml: yamlStr,
         metadata: {
           duration: Date.now() - startTime,
           model,
           templateUsed: result.metadata?.templateUsed || null,
+          generator: result.metadata?.generator || 'legacy',
         },
       };
     } catch (error) {
@@ -420,6 +425,115 @@ export class WorkflowService {
         done: true,
       };
     }
+  }
+
+  /**
+   * 增强 DSL 为 Dify 兼容格式
+   * 添加节点位置、视口、完整的 features 配置等
+   */
+  private enhanceDslForDify(dsl: DifyDSL): DifyDSL {
+    const NODE_WIDTH = 244;
+    const NODE_HEIGHT = 54;
+    const HORIZONTAL_GAP = 150;
+    const VERTICAL_GAP = 100;
+    const START_X = 80;
+    const START_Y = 282;
+
+    // 深拷贝以避免修改原对象
+    const enhanced = JSON.parse(JSON.stringify(dsl)) as DifyDSL;
+
+    // 更新版本为 Dify 兼容版本
+    enhanced.version = '0.1.2';
+
+    // 确保 app 配置完整
+    if (enhanced.app) {
+      enhanced.app.icon_background = enhanced.app.icon_background || '#FFEAD5';
+    }
+
+    // 增强 workflow 配置
+    if (enhanced.workflow?.graph) {
+      // 计算节点层级
+      const nodes = enhanced.workflow.graph.nodes || [];
+      const levels = this.calculateNodeLevels(nodes);
+
+      // 添加节点位置信息
+      enhanced.workflow.graph.nodes = nodes.map((node) => {
+        const level = levels.get(node.id) || 0;
+        const nodesAtLevel = [...levels.entries()].filter(([_, l]) => l === level).map(([id]) => id);
+        const indexInLevel = nodesAtLevel.indexOf(node.id);
+
+        const x = START_X + level * (NODE_WIDTH + HORIZONTAL_GAP);
+        const y = START_Y + indexInLevel * (NODE_HEIGHT + VERTICAL_GAP);
+
+        return {
+          ...node,
+          position: { x, y },
+          positionAbsolute: { x, y },
+          width: NODE_WIDTH,
+          height: NODE_HEIGHT,
+          sourcePosition: 'right',
+          targetPosition: 'left',
+          selected: false,
+        };
+      });
+
+      // 添加视口信息
+      enhanced.workflow.graph.viewport = enhanced.workflow.graph.viewport || {
+        x: 0,
+        y: 0,
+        zoom: 1,
+      };
+    }
+
+    // 确保 features 完整
+    if (enhanced.workflow) {
+      enhanced.workflow.features = {
+        file_upload: {
+          enabled: false,
+          image: { enabled: false, number_limits: 3, transfer_methods: ['local_file', 'remote_url'] },
+        },
+        opening_statement: '',
+        retriever_resource: { enabled: false },
+        sensitive_word_avoidance: { enabled: false },
+        speech_to_text: { enabled: false },
+        suggested_questions: [],
+        suggested_questions_after_answer: { enabled: false },
+        text_to_speech: { enabled: false, language: '', voice: '' },
+        ...enhanced.workflow.features,
+      };
+    }
+
+    return enhanced;
+  }
+
+  /**
+   * 计算节点层级（用于布局）
+   */
+  private calculateNodeLevels(nodes: Array<{ id: string; data: { type: string } }>): Map<string, number> {
+    const levels = new Map<string, number>();
+
+    // 找到 start 节点
+    const startNode = nodes.find(n => n.data.type === 'start');
+    if (startNode) {
+      levels.set(startNode.id, 0);
+    }
+
+    // 简单线性布局
+    let currentLevel = 1;
+    for (const node of nodes) {
+      if (node.data.type !== 'start' && !levels.has(node.id)) {
+        if (node.data.type === 'question-classifier' || node.data.type === 'if-else') {
+          levels.set(node.id, currentLevel);
+        } else if (node.data.type === 'variable-aggregator' || node.data.type === 'end') {
+          levels.set(node.id, Math.max(currentLevel, 3));
+        } else {
+          levels.set(node.id, currentLevel);
+        }
+        currentLevel++;
+      }
+    }
+
+    return levels;
   }
 }
 

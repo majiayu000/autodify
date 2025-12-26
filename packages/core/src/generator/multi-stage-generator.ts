@@ -503,27 +503,116 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     nodes: Node<NodeData>[],
     edges: Edge[]
   ): DifyDSL {
+    // Add Dify-required positioning and UI fields to nodes
+    const positionedNodes = this.addNodePositions(nodes);
+
     return {
-      version: '0.5.0',
+      version: '0.1.2',
       kind: 'app',
       app: {
         name: plan.name,
         mode: 'workflow',
         icon: '🤖',
         icon_type: 'emoji',
+        icon_background: '#FFEAD5',
         description: plan.description,
       },
       workflow: {
         graph: {
-          nodes,
+          nodes: positionedNodes,
           edges,
+          viewport: {
+            x: 0,
+            y: 0,
+            zoom: 1,
+          },
         },
         features: {
-          file_upload: { enabled: false },
-          text_to_speech: { enabled: false },
+          file_upload: {
+            enabled: false,
+            image: { enabled: false, number_limits: 3, transfer_methods: ['local_file', 'remote_url'] },
+          },
+          opening_statement: '',
+          retriever_resource: { enabled: false },
+          sensitive_word_avoidance: { enabled: false },
+          speech_to_text: { enabled: false },
+          suggested_questions: [],
+          suggested_questions_after_answer: { enabled: false },
+          text_to_speech: { enabled: false, language: '', voice: '' },
         },
       },
     };
+  }
+
+  /**
+   * Add Dify-compatible positioning and UI fields to nodes
+   */
+  private addNodePositions(nodes: Node<NodeData>[]): Node<NodeData>[] {
+    const NODE_WIDTH = 244;
+    const NODE_HEIGHT = 54;
+    const HORIZONTAL_GAP = 150;
+    const VERTICAL_GAP = 100;
+    const START_X = 80;
+    const START_Y = 282;
+
+    // Calculate levels for layout
+    const levels = this.calculateNodeLevels(nodes);
+
+    return nodes.map((node) => {
+      const level = levels.get(node.id) || 0;
+
+      // Calculate position based on level and index within level
+      const nodesAtLevel = [...levels.entries()].filter(([_, l]) => l === level).map(([id]) => id);
+      const indexInLevel = nodesAtLevel.indexOf(node.id);
+
+      const x = START_X + level * (NODE_WIDTH + HORIZONTAL_GAP);
+      const y = START_Y + indexInLevel * (NODE_HEIGHT + VERTICAL_GAP);
+
+      return {
+        ...node,
+        position: { x, y },
+        positionAbsolute: { x, y },
+        width: NODE_WIDTH,
+        height: NODE_HEIGHT,
+        sourcePosition: 'right',
+        targetPosition: 'left',
+        selected: false,
+      };
+    });
+  }
+
+  /**
+   * Calculate node levels for horizontal layout
+   * Start node = level 0, then increment based on dependencies
+   */
+  private calculateNodeLevels(nodes: Node<NodeData>[]): Map<string, number> {
+    const levels = new Map<string, number>();
+
+    // Find start node
+    const startNode = nodes.find(n => n.data.type === 'start');
+    if (startNode) {
+      levels.set(startNode.id, 0);
+    }
+
+    // Simple linear layout based on node order
+    // (A more sophisticated algorithm could use topological sort)
+    let currentLevel = 1;
+    for (const node of nodes) {
+      if (node.data.type !== 'start' && !levels.has(node.id)) {
+        // Special handling for branching nodes
+        if (node.data.type === 'question-classifier' || node.data.type === 'if-else') {
+          levels.set(node.id, currentLevel);
+        } else if (node.data.type === 'variable-aggregator' || node.data.type === 'end') {
+          // Aggregators and end nodes go at later levels
+          levels.set(node.id, Math.max(currentLevel, 3));
+        } else {
+          levels.set(node.id, currentLevel);
+        }
+        currentLevel++;
+      }
+    }
+
+    return levels;
   }
 
   /**

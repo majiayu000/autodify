@@ -36,3 +36,8 @@ temp/
 screenshots/
 output/
 test-dsl-samples/
+test-screenshots/
+test-exports/
+test-*.mjs
+export-*.mjs
+setup-*.mjs
