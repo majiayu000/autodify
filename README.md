@@ -2,68 +2,96 @@
 
 > 通过自然语言生成和编辑 Dify 工作流
 
-Autodify 是一个 CLI 工具，让你可以使用自然语言描述来生成 [Dify](https://dify.ai/) 工作流 DSL，并支持验证和编辑。
+Autodify 让你可以使用自然语言描述来生成 [Dify](https://dify.ai/) 工作流 DSL，支持 Web 界面、API 服务和命令行工具。
 
 ## 特性
 
+- 🎨 **可视化界面** - Web 界面实时预览生成的工作流
 - 🚀 **自然语言生成** - 用一句话描述你想要的工作流
 - ✅ **DSL 验证** - 验证工作流配置的正确性
-- 🔧 **多模型支持** - 支持 OpenAI、Anthropic、DeepSeek、智谱 AI 等多种 LLM
-- 📦 **完整类型定义** - TypeScript 类型定义，支持 IDE 智能提示
-
-## 安装
-
-```bash
-# 克隆项目
-git clone https://github.com/your-username/autodify.git
-cd autodify
-
-# 安装依赖
-pnpm install
-
-# 构建
-pnpm build
-```
+- 📤 **Dify 兼容导出** - 导出的 YAML 可直接导入 Dify
+- 🔧 **多模型支持** - 支持 OpenAI、Anthropic、DeepSeek 等多种 LLM
 
 ## 快速开始
 
-### 生成工作流
+### 1. 安装依赖
 
 ```bash
-# 设置 API Key
-export OPENAI_API_KEY=sk-xxx
-
-# 使用自然语言生成工作流
-pnpm --filter @autodify/cli start create "创建一个中英互译的工作流" -o translation.yml
-
-# 简单模式（不调用 LLM，直接创建基础工作流）
-pnpm --filter @autodify/cli start create "翻译助手" --simple -o simple.yml
+git clone https://github.com/your-username/autodify.git
+cd autodify
+pnpm install
 ```
 
-### 验证工作流
+### 2. 配置环境变量
 
 ```bash
-# 验证 DSL 文件
-pnpm --filter @autodify/cli start validate translation.yml
-
-# JSON 格式输出
-pnpm --filter @autodify/cli start validate translation.yml --json
+cp .env.example .env
 ```
 
-### 查看帮助
+编辑 `.env` 文件，配置你的 LLM API：
 
 ```bash
-# 查看所有命令
+# 方式一：直接使用 OpenRouter（推荐，简单）
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=sk-or-your-openrouter-key
+LLM_DEFAULT_MODEL=anthropic/claude-3.5-sonnet
+
+# 方式二：直接使用 OpenAI
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=sk-your-openai-key
+LLM_DEFAULT_MODEL=gpt-4o
+```
+
+### 3. 构建并启动
+
+```bash
+# 构建项目
+pnpm build
+
+# 启动 Web 界面 + API 服务
+pnpm start
+
+# 或分别启动
+pnpm dev:server  # API 服务 (http://localhost:3001)
+pnpm dev:web     # Web 界面 (http://localhost:3000)
+```
+
+### 4. 打开浏览器
+
+访问 http://localhost:3000 ，输入描述即可生成工作流！
+
+## 使用方式
+
+### Web 界面（推荐）
+
+最简单的方式，打开浏览器访问 http://localhost:3000
+
+```
+输入：创建一个智能客服系统，根据用户问题类型分类后给出不同回答
+输出：可视化工作流 + 可导出的 YAML
+```
+
+### API 调用
+
+```bash
+curl -X POST http://localhost:3001/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "创建一个中英互译的工作流"}'
+```
+
+### 命令行
+
+```bash
+# 生成工作流
+pnpm --filter @autodify/cli start create "创建一个翻译工作流" -o output.yml
+
+# 验证工作流
+pnpm --filter @autodify/cli start validate output.yml
+
+# 查看帮助
 pnpm --filter @autodify/cli start --help
-
-# 查看可用节点类型
-pnpm --filter @autodify/cli start info --nodes
-
-# 查看可用模型
-pnpm --filter @autodify/cli start info --models
-
-# 查看特定节点详情
-pnpm --filter @autodify/cli start info --node llm
 ```
 
 ## 项目结构
@@ -71,30 +99,12 @@ pnpm --filter @autodify/cli start info --node llm
 ```
 autodify/
 ├── packages/
-│   ├── core/                 # 核心引擎
-│   │   ├── src/
-│   │   │   ├── types/        # TypeScript 类型定义
-│   │   │   ├── schema/       # Zod Schema 验证
-│   │   │   ├── utils/        # 工具函数（YAML 解析等）
-│   │   │   ├── registry/     # 节点和模型注册表
-│   │   │   ├── validator/    # DSL 验证器
-│   │   │   └── generator/    # DSL 生成器
-│   │   └── package.json
-│   │
-│   └── cli/                  # 命令行工具
-│       ├── src/
-│       │   ├── commands/     # CLI 命令
-│       │   └── index.ts
-│       └── package.json
-│
-├── docs/
-│   ├── design/               # 设计文档
-│   │   └── ARCHITECTURE.md   # 架构设计
-│   ├── reference/            # 参考文档
-│   │   └── DIFY_DSL_SPEC.md  # Dify DSL 规范
-│   └── ROADMAP.md            # 实施计划
-│
-└── README.md
+│   ├── core/       # 核心引擎（类型定义、验证、生成）
+│   ├── server/     # API 服务（Fastify）
+│   ├── web/        # Web 前端（React + ReactFlow）
+│   └── cli/        # 命令行工具
+├── docker-compose.yml
+└── .env.example
 ```
 
 ## 开发
@@ -103,10 +113,12 @@ autodify/
 # 安装依赖
 pnpm install
 
-# 开发模式（监听变化）
-pnpm dev
+# 开发模式（热重载）
+pnpm dev:all      # 同时启动 server + web
+pnpm dev:server   # 只启动 API 服务
+pnpm dev:web      # 只启动 Web 前端
 
-# 运行测试
+# 测试
 pnpm test
 
 # 类型检查
@@ -116,46 +128,36 @@ pnpm typecheck
 pnpm format
 ```
 
+## 导出到 Dify
+
+生成的工作流可以直接导入 Dify：
+
+1. 在 Web 界面点击「导出 YAML」
+2. 打开 Dify Studio → 导入 DSL 文件
+3. 选择导出的 YAML 文件
+
 ## 支持的节点类型
 
-| 类型 | 名称 | 说明 |
-|------|------|------|
-| `start` | 开始 | 工作流入口 |
-| `end` | 结束 | 工作流出口 |
-| `llm` | LLM | 大语言模型调用 |
-| `knowledge-retrieval` | 知识检索 | 知识库检索 |
-| `question-classifier` | 问题分类 | LLM 驱动的分类 |
-| `if-else` | 条件分支 | 条件判断 |
-| `code` | 代码执行 | Python/JavaScript |
-| `http-request` | HTTP 请求 | 外部 API 调用 |
-| `template-transform` | 模板转换 | Jinja2 模板 |
-| `variable-aggregator` | 变量聚合 | 合并变量 |
+| 类型 | 说明 |
+|------|------|
+| `start` | 工作流入口 |
+| `end` | 工作流出口 |
+| `llm` | LLM 对话/生成 |
+| `knowledge-retrieval` | 知识库检索 |
+| `question-classifier` | 问题分类 |
+| `if-else` | 条件分支 |
+| `code` | 代码执行 |
+| `http-request` | HTTP 请求 |
+| `variable-aggregator` | 变量聚合 |
 
 ## 支持的 LLM
 
 | Provider | Models |
 |----------|--------|
-| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4, gpt-3.5-turbo, o1, o1-preview, o1-mini |
-| Anthropic | claude-3-5-sonnet-20241022, claude-3-opus-20240229, claude-3-sonnet-20240229, claude-3-haiku-20240307 |
+| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, o1 |
+| Anthropic | claude-3.5-sonnet, claude-3-opus, claude-3-haiku |
 | DeepSeek | deepseek-chat, deepseek-coder |
-| 智谱 AI | glm-4, glm-4-plus, glm-4-air, glm-4-flash, glm-4v |
-
-## 路线图
-
-- [x] Phase 1: 基础框架与核心生成
-  - [x] 项目结构初始化
-  - [x] TypeScript 类型定义
-  - [x] YAML 解析与验证
-  - [x] DSL 验证器
-  - [x] 核心生成器 MVP
-  - [x] CLI 工具 V1
-
-- [x] Phase 2: 完整节点支持与模板系统
-- [ ] Phase 3: 编辑能力与上下文管理
-- [ ] Phase 4: API 服务与 Dify 集成
-- [ ] Phase 5: 智能化增强
-
-详见 [ROADMAP.md](./docs/ROADMAP.md)
+| OpenRouter | 所有支持的模型 |
 
 ## 相关链接
 

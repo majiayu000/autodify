@@ -8,6 +8,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "start": "pnpm --filter @autodify/server --filter @autodify/web --parallel dev",
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
     "dev:web": "pnpm --filter @autodify/web dev",
