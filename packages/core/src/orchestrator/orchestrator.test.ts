@@ -92,7 +92,8 @@ describe('WorkflowOrchestrator', () => {
     mockLLM = new MockLLMService();
     mockLLMInstance = mockLLM;
 
-    const config = createMockConfig();
+    // 使用单阶段模式以兼容旧测试的 mock 响应
+    const config = createMockConfig({ useMultiStage: false });
     orchestrator = new WorkflowOrchestrator(config);
 
     // Replace the LLM service with our mock
@@ -131,33 +132,13 @@ describe('WorkflowOrchestrator', () => {
   });
 
   describe('Generate Workflow', () => {
+    // Note: planner uses rule-based planning (not LLM), so only generator YAML response is needed
     it('should generate a simple workflow successfully', async () => {
       const dsl = createSimpleDSL('QA Workflow', 'Simple QA');
       const yaml = dslToYAML(dsl);
-
-      // Mock planner response (plan)
-      const planResponse = JSON.stringify({
-        success: true,
-        plan: {
-          nodes: [
-            { id: 'start', type: 'start', title: '开始' },
-            { id: 'llm', type: 'llm', title: 'AI处理' },
-            { id: 'end', type: 'end', title: '结束' },
-          ],
-          edges: [
-            { source: 'start', target: 'llm' },
-            { source: 'llm', target: 'end' },
-          ],
-          inputVariables: [{ name: 'input', type: 'string' }],
-          outputs: [{ name: 'result', type: 'string' }],
-          confidence: 0.9,
-        },
-      });
-
-      // Mock generation response (DSL YAML)
       const wrappedYaml = `\`\`\`yaml\n${yaml}\n\`\`\``;
 
-      mockLLM.setResponses([planResponse, wrappedYaml]);
+      mockLLM.setResponses([wrappedYaml]);
 
       const request: GenerationRequest = {
         prompt: '创建一个简单的问答工作流',
@@ -177,14 +158,10 @@ describe('WorkflowOrchestrator', () => {
         skipTemplates: false,
       };
 
-      // Even if template doesn't match well, should fallback to generation
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.8 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const result = await orchestrator.generate(request);
 
@@ -200,10 +177,7 @@ describe('WorkflowOrchestrator', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const result = await orchestrator.generate(request);
 
@@ -214,10 +188,7 @@ describe('WorkflowOrchestrator', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const request: GenerationRequest = {
         prompt: '创建工作流',
@@ -233,10 +204,7 @@ describe('WorkflowOrchestrator', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const request: GenerationRequest = {
         prompt: '创建工作流',
@@ -253,10 +221,7 @@ describe('WorkflowOrchestrator', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const request: GenerationRequest = {
         prompt: '创建知识库问答工作流',
@@ -270,26 +235,11 @@ describe('WorkflowOrchestrator', () => {
   });
 
   describe('Generate Error Handling', () => {
-    it('should return error when planning fails', async () => {
-      mockLLM.setResponses([
-        JSON.stringify({ success: false, error: 'Planning failed' }),
-      ]);
-
-      const request: GenerationRequest = {
-        prompt: '创建工作流',
-      };
-
-      const result = await orchestrator.generate(request);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
+    // Note: planner uses rule-based planning which always succeeds,
+    // so we only test generation-level errors
 
     it('should handle YAML extraction failure', async () => {
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        'This is not YAML at all, just random text',
-      ]);
+      mockLLM.setResponses(['This is not YAML at all, just random text']);
 
       const request: GenerationRequest = {
         prompt: '创建工作流',
@@ -302,10 +252,7 @@ describe('WorkflowOrchestrator', () => {
     });
 
     it('should handle YAML parse errors', async () => {
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        '```yaml\ninvalid: yaml: content: {{{\n```',
-      ]);
+      mockLLM.setResponses(['```yaml\ninvalid: yaml: content: {{{\n```']);
 
       const request: GenerationRequest = {
         prompt: '创建工作流',
@@ -342,7 +289,6 @@ describe('WorkflowOrchestrator', () => {
       const validYaml = dslToYAML(validDsl);
 
       mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
         `\`\`\`yaml\n${validYaml}\n\`\`\``,
       ]);
@@ -369,7 +315,6 @@ describe('WorkflowOrchestrator', () => {
       const invalidYaml = dslToYAML(invalidDsl);
 
       mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
@@ -558,15 +503,14 @@ describe('WorkflowOrchestrator', () => {
   });
 
   describe('YAML Extraction', () => {
+    // Note: planner uses rule-based planning, not LLM, so only generator response is needed
     it('should extract YAML from code blocks with yaml marker', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
       const content = `\`\`\`yaml\n${yaml}\n\`\`\``;
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        content,
-      ]);
+      // Only one response needed - generator will use this
+      mockLLM.setResponses([content]);
 
       const request: GenerationRequest = { prompt: 'test' };
 
@@ -580,10 +524,7 @@ describe('WorkflowOrchestrator', () => {
       const yaml = dslToYAML(dsl);
       const content = `\`\`\`yml\n${yaml}\n\`\`\``;
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        content,
-      ]);
+      mockLLM.setResponses([content]);
 
       const request: GenerationRequest = { prompt: 'test' };
 
@@ -596,10 +537,7 @@ describe('WorkflowOrchestrator', () => {
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        yaml,
-      ]);
+      mockLLM.setResponses([yaml]);
 
       const request: GenerationRequest = { prompt: 'test' };
 
@@ -613,10 +551,7 @@ describe('WorkflowOrchestrator', () => {
       const yaml = dslToYAML(dsl);
       const content = `Here is your workflow:\n\n${yaml}\n\nLet me know if you need changes.`;
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        content,
-      ]);
+      mockLLM.setResponses([content]);
 
       const request: GenerationRequest = { prompt: 'test' };
 
@@ -668,9 +603,8 @@ describe('WorkflowOrchestrator', () => {
 
       const invalidYaml = dslToYAML(invalidDsl);
 
-      // Should detect and try to fix
+      // Should detect and try to fix (planner is rule-based, only YAML responses needed)
       mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
         `\`\`\`yaml\n${invalidYaml}\n\`\`\``,
@@ -689,17 +623,14 @@ describe('WorkflowOrchestrator', () => {
     it('should log when verbose is enabled', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      const verboseConfig = createMockConfig({ verbose: true });
+      const verboseConfig = createMockConfig({ verbose: true, useMultiStage: false });
       const verboseOrch = new WorkflowOrchestrator(verboseConfig);
       (verboseOrch as any).llm = mockLLM;
 
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const request: GenerationRequest = { prompt: 'test' };
 
@@ -713,17 +644,14 @@ describe('WorkflowOrchestrator', () => {
     it('should not log when verbose is disabled', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      const config = createMockConfig({ verbose: false });
+      const config = createMockConfig({ verbose: false, useMultiStage: false });
       const orch = new WorkflowOrchestrator(config);
       (orch as any).llm = mockLLM;
 
       const dsl = createSimpleDSL('Test', 'Test');
       const yaml = dslToYAML(dsl);
 
-      mockLLM.setResponses([
-        JSON.stringify({ success: true, plan: { nodes: [], edges: [], inputVariables: [], outputs: [], confidence: 0.9 } }),
-        `\`\`\`yaml\n${yaml}\n\`\`\``,
-      ]);
+      mockLLM.setResponses([`\`\`\`yaml\n${yaml}\n\`\`\``]);
 
       const request: GenerationRequest = { prompt: 'test' };
 

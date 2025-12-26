@@ -34,21 +34,21 @@ import {
  * Workflow Orchestrator
  */
 export class WorkflowOrchestrator {
-  private config: OrchestratorConfig & { useMultiStage?: boolean };
+  private config: OrchestratorConfig;
   private llm: ILLMService;
   private planner: WorkflowPlanner;
   private validator: DSLValidator;
   private exampleStore: ExampleStore;
   private multiStageGenerator: MultiStageGenerator;
 
-  constructor(config: OrchestratorConfig & { useMultiStage?: boolean }) {
+  constructor(config: OrchestratorConfig) {
     this.config = {
+      ...config,
       planningModel: config.planningModel ?? 'gpt-4o',
       generationModel: config.generationModel ?? 'gpt-4o',
       maxRetries: config.maxRetries ?? 3,
       verbose: config.verbose ?? false,
       useMultiStage: config.useMultiStage ?? true, // Default to new multi-stage generator
-      ...config,
     };
 
     this.llm = createLLMService({
@@ -385,10 +385,16 @@ export class WorkflowOrchestrator {
       return codeBlockMatch[1]!.trim();
     }
 
-    // Try to find YAML without code blocks (starts with version:)
-    const directMatch = content.match(/^(version:\s*['"]?0\.5\.0['"]?[\s\S]*)/m);
-    if (directMatch) {
-      return directMatch[1]!.trim();
+    // Try to find YAML without code blocks (starts with app: or version:)
+    // Match from 'app:' or 'version:' to end or until a line that doesn't look like YAML
+    const appMatch = content.match(/^(app:\s*[\s\S]*)/m);
+    if (appMatch) {
+      return this.extractUntilNonYAML(appMatch[1]!);
+    }
+
+    const versionMatch = content.match(/^(version:\s*['"]?[\d.]+['"]?[\s\S]*)/m);
+    if (versionMatch) {
+      return this.extractUntilNonYAML(versionMatch[1]!);
     }
 
     // Assume entire content is YAML if it looks like it
@@ -397,6 +403,35 @@ export class WorkflowOrchestrator {
     }
 
     return null;
+  }
+
+  /**
+   * Extract YAML content until we hit non-YAML lines
+   */
+  private extractUntilNonYAML(content: string): string {
+    const lines = content.split('\n');
+    const yamlLines: string[] = [];
+
+    for (const line of lines) {
+      // Stop at lines that look like natural language (not YAML)
+      // YAML lines are either empty, start with spaces/indent, or are key: value or - item
+      const trimmed = line.trim();
+      if (trimmed.length === 0 ||
+          line.startsWith(' ') ||
+          line.startsWith('\t') ||
+          /^[a-z_-]+:/.test(trimmed) ||
+          /^- /.test(trimmed) ||
+          /^['"]/.test(trimmed)) {
+        yamlLines.push(line);
+      } else if (trimmed.match(/^(Let me|Here|I |The |This |Note|Please|Feel free)/i)) {
+        // Stop at common natural language markers
+        break;
+      } else {
+        yamlLines.push(line);
+      }
+    }
+
+    return yamlLines.join('\n').trim();
   }
 
   /**

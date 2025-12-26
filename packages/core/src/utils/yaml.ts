@@ -132,6 +132,7 @@ function orderAppFields(app: any): any {
   if (app.description !== undefined) ordered.description = app.description;
   if (app.icon !== undefined) ordered.icon = app.icon;
   if (app.icon_background !== undefined) ordered.icon_background = app.icon_background;
+  if (app.icon_type !== undefined) ordered.icon_type = app.icon_type;
   if (app.mode !== undefined) ordered.mode = app.mode;
   if (app.name !== undefined) ordered.name = app.name;
   if (app.use_icon_as_answer_icon !== undefined) ordered.use_icon_as_answer_icon = app.use_icon_as_answer_icon;
@@ -151,11 +152,16 @@ function orderFeaturesFields(features: any): any {
   if (!features) return {};
   const ordered: any = {};
 
-  // file_upload: 只保留 image 子字段，不输出顶层 enabled
+  // file_upload: 保留所有字段
   if (features.file_upload) {
     const fu = features.file_upload;
     const orderedFu: any = {};
+    if (fu.enabled !== undefined) orderedFu.enabled = fu.enabled;
     if (fu.image) orderedFu.image = fu.image;
+    if (fu.allowed_file_types) orderedFu.allowed_file_types = fu.allowed_file_types;
+    if (fu.allowed_file_extensions) orderedFu.allowed_file_extensions = fu.allowed_file_extensions;
+    if (fu.allowed_file_upload_methods) orderedFu.allowed_file_upload_methods = fu.allowed_file_upload_methods;
+    if (fu.number_limits !== undefined) orderedFu.number_limits = fu.number_limits;
     ordered.file_upload = orderedFu;
   }
 

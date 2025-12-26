@@ -23,6 +23,8 @@ export interface OrchestratorConfig {
   verbose?: boolean;
   /** Max retries */
   maxRetries?: number;
+  /** Use multi-stage generator (default: true) */
+  useMultiStage?: boolean;
 }
 
 /**
