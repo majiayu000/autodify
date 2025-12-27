@@ -12,6 +12,7 @@
     "@autodify/core": "workspace:*",
     "@xyflow/react": "^12.0.0",
     "dagre": "^0.8.5",
+    "framer-motion": "^12.23.26",
     "js-yaml": "^4.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

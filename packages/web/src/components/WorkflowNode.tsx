@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { NODE_ANIMATION, TIMING } from '../constants/animations';
 
 // Node type icons
 const nodeIcons: Record<string, string> = {
@@ -36,6 +38,10 @@ export interface WorkflowNodeData {
   type: string;
   title: string;
   description?: string;
+  /** Animation index for stagger effect */
+  _animationIndex?: number;
+  /** Whether this is a newly added node */
+  _isNew?: boolean;
 }
 
 interface WorkflowNodeProps {
@@ -48,15 +54,30 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
   const colors = nodeColors[nodeType] || nodeColors.llm;
   const icon = nodeIcons[nodeType] || '⚙️';
 
+  // Calculate animation delay based on index
+  const animationIndex = data._animationIndex ?? 0;
+  const animationDelay = animationIndex * TIMING.stagger;
+
   return (
-    <div
+    <motion.div
+      initial={NODE_ANIMATION.initial}
+      animate={NODE_ANIMATION.animate}
+      transition={{
+        ...NODE_ANIMATION.transition,
+        delay: animationDelay,
+      }}
+      whileHover={{
+        scale: 1.02,
+        boxShadow: `0 0 20px ${colors.border}40`,
+      }}
+      whileTap={NODE_ANIMATION.tap}
       className={cn(
-        'rounded-lg px-4 py-3 min-w-[180px] transition-shadow',
-        selected && 'ring-2 ring-indigo-500/30'
+        'rounded-lg px-4 py-3 min-w-[180px] cursor-pointer shadow-md',
+        selected && 'ring-2 ring-blue-500/40'
       )}
       style={{
         background: colors.bg,
-        border: `2px solid ${selected ? '#6366f1' : colors.border}`,
+        border: `2px solid ${selected ? '#2563eb' : colors.border}`,
       }}
     >
       {/* Input Handle */}
@@ -113,7 +134,7 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
           />
         </>
       )}
-    </div>
+    </motion.div>
   );
 });
 

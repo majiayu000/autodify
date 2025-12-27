@@ -15,6 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import WorkflowNode from './WorkflowNode';
+import AnimatedEdge from './AnimatedEdge';
 
 interface WorkflowCanvasProps {
   dsl: {
@@ -78,13 +79,19 @@ const nodeTypes: any = {
   workflowNode: WorkflowNode,
 };
 
+// Edge types with animated edge
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const edgeTypes: any = {
+  animatedEdge: AnimatedEdge,
+};
+
 const defaultEdgeOptions = {
-  type: 'smoothstep',
+  type: 'animatedEdge',
   animated: true,
-  style: { stroke: '#475569', strokeWidth: 2 },
+  style: { stroke: '#3b82f6', strokeWidth: 2 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: '#475569',
+    color: '#3b82f6',
   },
 };
 
@@ -237,6 +244,7 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
       onNodeClick={onNodeClick}
       onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       defaultEdgeOptions={defaultEdgeOptions}
       fitView
       fitViewOptions={{ padding: 0.2 }}

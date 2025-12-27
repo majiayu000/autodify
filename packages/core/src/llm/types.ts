@@ -104,7 +104,48 @@ export interface ILLMService {
 /**
  * Streaming chunk type
  */
-export type StreamChunkType = 'content' | 'progress' | 'metadata' | 'error' | 'done';
+export type StreamChunkType =
+  | 'content'
+  | 'progress'
+  | 'metadata'
+  | 'error'
+  | 'done'
+  | 'thinking'      // AI 思考过程
+  | 'node_created'  // 节点创建
+  | 'edges_created' // 边创建
+  | 'complete';     // 生成完成
+
+/**
+ * Node info for streaming
+ */
+export interface StreamNodeInfo {
+  /** Node ID */
+  id: string;
+  /** Node type */
+  type: string;
+  /** Node title */
+  title: string;
+  /** Node position (optional, for layout) */
+  position?: { x: number; y: number };
+  /** Node data */
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Edge info for streaming
+ */
+export interface StreamEdgeInfo {
+  /** Edge ID */
+  id: string;
+  /** Source node ID */
+  source: string;
+  /** Target node ID */
+  target: string;
+  /** Source handle */
+  sourceHandle?: string;
+  /** Target handle */
+  targetHandle?: string;
+}
 
 /**
  * Streaming chunk
@@ -133,6 +174,27 @@ export interface StreamChunk {
   error?: string;
   /** Whether this is the final chunk */
   done: boolean;
+
+  // === New fields for animation support ===
+
+  /** Thinking step message (for 'thinking' type) */
+  thinking?: {
+    step: string;
+    message: string;
+  };
+  /** Node info (for 'node_created' type) */
+  node?: StreamNodeInfo;
+  /** Node index and total (for 'node_created' type) */
+  nodeProgress?: {
+    current: number;
+    total: number;
+  };
+  /** Edges info (for 'edges_created' type) */
+  edges?: StreamEdgeInfo[];
+  /** Complete DSL (for 'complete' type) */
+  dsl?: unknown;
+  /** YAML string (for 'complete' type) */
+  yaml?: string;
 }
 
 /**

@@ -37,6 +37,7 @@ export interface GenerateApiResult {
     tokens?: { input: number; output: number };
     templateUsed?: string | null;
     confidence?: number;
+    generator?: 'multi-stage' | 'legacy';
   };
 }
 
@@ -260,6 +261,7 @@ export class WorkflowService {
 
   /**
    * Generate workflow with streaming support
+   * Enhanced with node-level events for animation
    */
   async *generateStream(
     request: GenerateApiRequest,
@@ -268,79 +270,48 @@ export class WorkflowService {
     const startTime = Date.now();
     const model = request.options?.model || config.llm.defaultModel;
 
+    // Helper to check cancellation
+    const checkCancelled = (): StreamChunk | null => {
+      if (signal?.aborted) {
+        return { type: 'error', error: 'Generation cancelled', done: true };
+      }
+      return null;
+    };
+
+    // Helper for delay (for animation pacing)
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     try {
-      // Send initial progress
+      // === Phase 1: Thinking animation ===
       yield {
-        type: 'progress',
-        progress: {
-          stage: 'initializing',
-          percentage: 0,
-          message: 'Starting workflow generation...',
-        },
+        type: 'thinking',
+        thinking: { step: 'analyzing', message: '正在分析需求...' },
         done: false,
       };
+      await delay(300);
 
-      // Check if cancelled
-      if (signal?.aborted) {
-        yield {
-          type: 'error',
-          error: 'Generation cancelled',
-          done: true,
-        };
-        return;
-      }
+      const cancelled1 = checkCancelled();
+      if (cancelled1) { yield cancelled1; return; }
 
-      // Send progress: analyzing prompt
       yield {
-        type: 'progress',
-        progress: {
-          stage: 'analyzing',
-          percentage: 10,
-          message: 'Analyzing your requirements...',
-        },
+        type: 'thinking',
+        thinking: { step: 'planning', message: '规划工作流结构...' },
         done: false,
       };
+      await delay(200);
 
-      // Check if cancelled
-      if (signal?.aborted) {
-        yield {
-          type: 'error',
-          error: 'Generation cancelled',
-          done: true,
-        };
-        return;
-      }
-
-      // Send progress: generating DSL
-      yield {
-        type: 'progress',
-        progress: {
-          stage: 'generating',
-          percentage: 30,
-          message: 'Generating workflow structure...',
-        },
-        done: false,
-      };
-
-      // Build generation request
+      // === Phase 2: Generate workflow ===
       const genRequest: GenerationRequest = {
         prompt: request.prompt,
         skipTemplates: request.options?.useTemplate === false,
         preferredModel: model,
       };
 
-      // Generate workflow (using non-streaming for now)
+      // Generate workflow
       const result = await this.orchestrator.generate(genRequest);
 
-      // Check if cancelled
-      if (signal?.aborted) {
-        yield {
-          type: 'error',
-          error: 'Generation cancelled',
-          done: true,
-        };
-        return;
-      }
+      const cancelled2 = checkCancelled();
+      if (cancelled2) { yield cancelled2; return; }
 
       if (!result.success || !result.dsl) {
         yield {
@@ -351,56 +322,92 @@ export class WorkflowService {
         return;
       }
 
-      // Send progress: converting to YAML
+      // Enhance DSL for Dify compatibility
+      const enhancedDsl = this.enhanceDslForDify(result.dsl);
+      const nodes = enhancedDsl.workflow?.graph?.nodes || [];
+      const edges = enhancedDsl.workflow?.graph?.edges || [];
+
+      // Send thinking: nodes planned
       yield {
-        type: 'progress',
-        progress: {
-          stage: 'converting',
-          percentage: 80,
-          message: 'Converting to YAML format...',
+        type: 'thinking',
+        thinking: {
+          step: 'nodes_planned',
+          message: `已规划 ${nodes.length} 个节点`,
         },
         done: false,
       };
+      await delay(200);
 
-      // Convert to YAML
-      const yamlStr = yaml.dump(result.dsl, {
+      yield {
+        type: 'thinking',
+        thinking: { step: 'generating', message: '开始生成工作流...' },
+        done: false,
+      };
+      await delay(150);
+
+      // === Phase 3: Stream nodes one by one ===
+      for (let i = 0; i < nodes.length; i++) {
+        const cancelled = checkCancelled();
+        if (cancelled) { yield cancelled; return; }
+
+        const node = nodes[i];
+        const nodeData = node.data || {};
+
+        yield {
+          type: 'node_created',
+          node: {
+            id: node.id,
+            type: String(nodeData.type || 'unknown'),
+            title: String(nodeData.title || node.id),
+            position: node.position as { x: number; y: number } | undefined,
+            data: nodeData as unknown as Record<string, unknown>,
+          },
+          nodeProgress: {
+            current: i + 1,
+            total: nodes.length,
+          },
+          done: false,
+        };
+
+        // Delay between nodes for animation effect
+        await delay(150);
+      }
+
+      // === Phase 4: Stream edges ===
+      if (edges.length > 0) {
+        yield {
+          type: 'edges_created',
+          edges: edges.map((edge: { id: string; source: string; target: string; sourceHandle?: string; targetHandle?: string }) => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            sourceHandle: edge.sourceHandle,
+            targetHandle: edge.targetHandle,
+          })),
+          done: false,
+        };
+        await delay(200);
+      }
+
+      // === Phase 5: Send complete DSL ===
+      const yamlStr = yaml.dump(enhancedDsl, {
         indent: 2,
         lineWidth: -1,
         quotingType: "'",
         forceQuotes: false,
       });
 
-      // Send progress: finalizing
       yield {
-        type: 'progress',
-        progress: {
-          stage: 'finalizing',
-          percentage: 90,
-          message: 'Finalizing workflow...',
-        },
-        done: false,
-      };
-
-      // Send the complete DSL as content
-      yield {
-        type: 'content',
-        content: JSON.stringify({
-          dsl: result.dsl,
-          yaml: yamlStr,
-        }),
-        done: false,
-      };
-
-      // Send metadata
-      yield {
-        type: 'metadata',
+        type: 'complete',
+        dsl: enhancedDsl,
+        yaml: yamlStr,
         metadata: {
           model,
         },
         done: false,
       };
 
-      // Send completion
+      // Final done signal
       yield {
         type: 'done',
         done: true,

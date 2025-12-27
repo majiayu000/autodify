@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PromptInputProps {
   prompt: string;
@@ -34,85 +35,87 @@ const PromptInput = memo(function PromptInput({
         onChange={(e) => onPromptChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder="用自然语言描述你想要的工作流...&#10;&#10;例如：创建一个智能客服工作流，根据用户问题类型分类后，分别从不同知识库检索并回答"
+        aria-label="工作流描述"
+        aria-describedby={error ? 'prompt-error' : undefined}
       />
 
       {/* Error message */}
-      {error && (
-        <div
-          style={{
-            padding: '10px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid #ef4444',
-            borderRadius: '6px',
-            color: '#ef4444',
-            fontSize: '12px',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            id="prompt-error"
+            role="alert"
+            className="alert alert-error"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <span>⚠️</span>
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Progress indicator */}
-      {progress && isGenerating && (
-        <div
-          style={{
-            padding: '12px',
-            background: 'rgba(59, 130, 246, 0.1)',
-            border: '1px solid #3b82f6',
-            borderRadius: '6px',
-            marginBottom: '12px',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 500 }}>
-              {progress.message}
-            </span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>
-              {progress.percentage}%
-            </span>
-          </div>
-          <div
-            style={{
-              width: '100%',
-              height: '4px',
-              background: 'rgba(59, 130, 246, 0.2)',
-              borderRadius: '2px',
-              overflow: 'hidden',
-            }}
+      <AnimatePresence>
+        {progress && isGenerating && (
+          <motion.div
+            className="progress-container"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
-            <div
-              style={{
-                width: `${progress.percentage}%`,
-                height: '100%',
-                background: '#3b82f6',
-                transition: 'width 0.3s ease',
-              }}
-            />
-          </div>
-        </div>
-      )}
+            <div className="progress-header">
+              <span className="progress-message">
+                {progress.message}
+              </span>
+              <span className="progress-percentage">
+                {progress.percentage}%
+              </span>
+            </div>
+            <div className="progress-bar">
+              <motion.div
+                className="progress-bar-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress.percentage}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isGenerating ? (
-        <button
+        <motion.button
           className="btn btn-secondary"
           onClick={onCancelGeneration}
           style={{ width: '100%' }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
-          ⏹ 取消生成
-        </button>
+          <span className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+          取消生成
+        </motion.button>
       ) : (
-        <button
+        <motion.button
           className="btn btn-primary"
           onClick={onGenerate}
           disabled={!prompt.trim() || apiConnected === false}
           style={{ width: '100%' }}
+          whileHover={{ scale: 1.01, y: -1 }}
+          whileTap={{ scale: 0.99 }}
         >
           ✨ 生成工作流
-        </button>
+        </motion.button>
       )}
 
-      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center' }}>
-        ⌘ + Enter 快速生成
+      <div className="keyboard-hint">
+        <kbd className="kbd">⌘</kbd>
+        <span>+</span>
+        <kbd className="kbd">Enter</kbd>
+        <span>快速生成</span>
       </div>
     </div>
   );
