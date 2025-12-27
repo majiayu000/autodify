@@ -79,6 +79,10 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
         background: colors.bg,
         border: `2px solid ${selected ? '#2563eb' : colors.border}`,
       }}
+      role="button"
+      aria-label={`${data.title} (${nodeType} 节点)`}
+      aria-selected={selected}
+      tabIndex={0}
     >
       {/* Input Handle */}
       {nodeType !== 'start' && (
@@ -88,12 +92,13 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
           id="target"
           className="!w-2.5 !h-2.5 !border-2 !border-slate-800"
           style={{ background: colors.border }}
+          aria-label="输入连接点"
         />
       )}
 
       {/* Node Content */}
       <div className="flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
+        <span className="text-lg" aria-hidden="true">{icon}</span>
         <div>
           <div className="font-semibold text-[13px] text-slate-100">
             {data.title}
@@ -112,6 +117,7 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
           id="source"
           className="!w-2.5 !h-2.5 !border-2 !border-slate-800"
           style={{ background: colors.border }}
+          aria-label="输出连接点"
         />
       )}
 
@@ -124,6 +130,7 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
             id="branch-1"
             className="!w-2 !h-2 !border-2 !border-slate-800 !top-[30%]"
             style={{ background: colors.border }}
+            aria-label="分支 1 连接点"
           />
           <Handle
             type="source"
@@ -131,6 +138,7 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
             id="branch-2"
             className="!w-2 !h-2 !border-2 !border-slate-800 !top-[70%]"
             style={{ background: colors.border }}
+            aria-label="分支 2 连接点"
           />
         </>
       )}

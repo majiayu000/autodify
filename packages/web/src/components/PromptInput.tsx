@@ -89,21 +89,19 @@ const PromptInput = memo(function PromptInput({
 
       {isGenerating ? (
         <motion.button
-          className="btn btn-secondary"
+          className="btn btn-secondary w-full"
           onClick={onCancelGeneration}
-          style={{ width: '100%' }}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
-          <span className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+          <span className="loading-spinner w-3.5 h-3.5 border-2" />
           取消生成
         </motion.button>
       ) : (
         <motion.button
-          className="btn btn-primary"
+          className="btn btn-primary w-full"
           onClick={onGenerate}
           disabled={!prompt.trim() || apiConnected === false}
-          style={{ width: '100%' }}
           whileHover={{ scale: 1.01, y: -1 }}
           whileTap={{ scale: 0.99 }}
         >

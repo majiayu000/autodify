@@ -67,7 +67,7 @@ const Sidebar = memo(function Sidebar({
   onCopyYaml,
 }: SidebarProps) {
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="工作流编辑器侧边栏" role="complementary">
       <div className="sidebar-header">
         <h2>工作流描述</h2>
       </div>
@@ -105,8 +105,8 @@ const Sidebar = memo(function Sidebar({
 
         {/* 节点编辑器 */}
         {selectedNodeData && (
-          <div style={{ marginTop: '16px' }}>
-            <Suspense fallback={<div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>加载中...</div>}>
+          <div className="mt-4">
+            <Suspense fallback={<div className="p-4 text-center text-slate-500">加载中...</div>}>
               <NodeEditor
                 node={{ id: selectedNodeId!, data: selectedNodeData.data }}
                 onUpdate={onNodeUpdate}
@@ -118,7 +118,7 @@ const Sidebar = memo(function Sidebar({
 
         {/* YAML 预览 */}
         {dsl && (
-          <Suspense fallback={<div style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>加载中...</div>}>
+          <Suspense fallback={<div className="p-4 text-center text-slate-500">加载中...</div>}>
             <YamlPreview yamlOutput={yamlOutput} onCopy={onCopyYaml} />
           </Suspense>
         )}

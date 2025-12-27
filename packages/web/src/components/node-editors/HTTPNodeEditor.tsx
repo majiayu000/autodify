@@ -11,7 +11,7 @@ export default function HTTPNodeEditor({ data, onChange }: HTTPNodeEditorProps) 
       <h4>HTTP 请求配置</h4>
 
       <div className="form-row">
-        <div className="form-group" style={{ width: '100px' }}>
+        <div className="form-group w-[100px]">
           <label>方法</label>
           <select value={data.method || 'GET'} onChange={(e) => onChange('method', e.target.value)}>
             <option value="GET">GET</option>
@@ -20,7 +20,7 @@ export default function HTTPNodeEditor({ data, onChange }: HTTPNodeEditorProps) 
             <option value="DELETE">DELETE</option>
           </select>
         </div>
-        <div className="form-group" style={{ flex: 1 }}>
+        <div className="form-group flex-1">
           <label>URL</label>
           <input
             type="text"

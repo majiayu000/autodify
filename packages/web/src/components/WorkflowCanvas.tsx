@@ -201,25 +201,19 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
     return (
       <div
         ref={reactFlowWrapper}
-        style={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#64748b',
-          flexDirection: 'column',
-          gap: '16px',
-        }}
-        className={isDragOver ? 'drag-over' : ''}
+        className={`h-full flex items-center justify-center text-slate-500 flex-col gap-4 ${isDragOver ? 'drag-over' : ''}`}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        role="region"
+        aria-label="工作流画布"
+        aria-describedby="canvas-empty-hint"
       >
-        <div style={{ fontSize: '48px' }}>🎨</div>
-        <div style={{ fontSize: '16px' }}>
+        <div className="text-5xl" aria-hidden="true">🎨</div>
+        <div className="text-base" id="canvas-empty-hint">
           {isDragOver ? '释放以添加节点' : '输入描述后生成工作流'}
         </div>
-        <div style={{ fontSize: '13px', color: '#475569' }}>
+        <div className="text-[13px] text-slate-600">
           {isDragOver ? '' : '或从左侧节点库拖拽节点到此处'}
         </div>
       </div>
@@ -229,11 +223,13 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
   return (
     <div
       ref={reactFlowWrapper}
-      style={{ width: '100%', height: '100%' }}
-      className={isDragOver ? 'drag-over' : ''}
+      className={`w-full h-full ${isDragOver ? 'drag-over' : ''}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      role="application"
+      aria-label="工作流编辑画布"
+      aria-roledescription="可交互的工作流图表编辑区域"
     >
     <ReactFlow
       nodes={nodes}

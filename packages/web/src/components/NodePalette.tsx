@@ -59,32 +59,36 @@ const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
   };
 
   return (
-    <div className="node-palette">
+    <nav className="node-palette" aria-label="节点库">
       <div className="palette-header">
         <h3>🧩 节点库</h3>
         <span className="palette-hint">拖拽到画布添加</span>
       </div>
 
-      <div className="palette-content">
+      <div className="palette-content" role="list" aria-label="可用节点类型">
         {CATEGORIES.map((category) => {
           const nodes = NODE_TYPES.filter((n) => n.category === category.key);
           if (nodes.length === 0) return null;
 
           return (
-            <div key={category.key} className="palette-category">
-              <div className="category-title">
-                <span>{category.icon}</span>
+            <div key={category.key} className="palette-category" role="group" aria-labelledby={`category-${category.key}`}>
+              <div className="category-title" id={`category-${category.key}`}>
+                <span aria-hidden="true">{category.icon}</span>
                 <span>{category.title}</span>
               </div>
-              <div className="category-nodes">
+              <div className="category-nodes" role="list">
                 {nodes.map((node) => (
                   <div
                     key={node.type}
                     className={`palette-node ${disabled ? 'disabled' : ''}`}
                     draggable={!disabled}
                     onDragStart={(e) => handleDragStart(e, node)}
+                    role="listitem"
+                    aria-label={`${node.title}: ${node.description}`}
+                    aria-disabled={disabled}
+                    tabIndex={disabled ? -1 : 0}
                   >
-                    <span className="node-icon">{node.icon}</span>
+                    <span className="node-icon" aria-hidden="true">{node.icon}</span>
                     <div className="node-info">
                       <span className="node-title">{node.title}</span>
                       <span className="node-desc">{node.description}</span>
@@ -96,7 +100,7 @@ const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 });
 
