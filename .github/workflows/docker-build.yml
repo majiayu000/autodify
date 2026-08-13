@@ -23,8 +23,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       packages: write
+      security-events: write
 
     strategy:
       matrix:
