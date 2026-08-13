@@ -154,18 +154,13 @@ export class DependencyAnalyzer {
   /**
    * Extract references from variable_selector fields
    */
-  private extractSelectorReferences(
-    obj: unknown,
-    references: VariableReference[]
-  ): void {
+  private extractSelectorReferences(obj: unknown, references: VariableReference[]): void {
     if (!obj || typeof obj !== 'object') return;
 
     if (Array.isArray(obj)) {
       // Check if this looks like a variable selector [nodeId, varName]
       if (obj.length === 2 && typeof obj[0] === 'string' && typeof obj[1] === 'string') {
-        const existing = references.find(
-          (r) => r.nodeId === obj[0] && r.variable === obj[1]
-        );
+        const existing = references.find((r) => r.nodeId === obj[0] && r.variable === obj[1]);
         if (!existing) {
           references.push({
             nodeId: obj[0],
@@ -192,9 +187,7 @@ export class DependencyAnalyzer {
         if (Array.isArray(selector) && selector.length >= 2) {
           const [nodeId, varName] = selector as [string, string];
           if (typeof nodeId === 'string' && typeof varName === 'string') {
-            const existing = references.find(
-              (r) => r.nodeId === nodeId && r.variable === varName
-            );
+            const existing = references.find((r) => r.nodeId === nodeId && r.variable === varName);
             if (!existing) {
               references.push({
                 nodeId,
@@ -239,7 +232,7 @@ export class DependencyAnalyzer {
     const type = node.data.type;
 
     switch (type) {
-      case 'start':
+      case 'start': {
         // Start node provides input variables
         const startData = node.data as { variables?: Array<{ variable: string }> };
         if (startData.variables) {
@@ -248,6 +241,7 @@ export class DependencyAnalyzer {
           }
         }
         break;
+      }
 
       case 'llm':
         variables.push('text');
@@ -257,7 +251,7 @@ export class DependencyAnalyzer {
         variables.push('result');
         break;
 
-      case 'code':
+      case 'code': {
         const codeData = node.data as { outputs?: Array<{ variable: string }> };
         if (codeData.outputs) {
           for (const o of codeData.outputs) {
@@ -265,6 +259,7 @@ export class DependencyAnalyzer {
           }
         }
         break;
+      }
 
       case 'http-request':
         variables.push('body', 'status_code', 'headers');
@@ -282,7 +277,7 @@ export class DependencyAnalyzer {
         variables.push('output');
         break;
 
-      case 'parameter-extractor':
+      case 'parameter-extractor': {
         const extractorData = node.data as { parameters?: Array<{ name: string }> };
         if (extractorData.parameters) {
           for (const p of extractorData.parameters) {
@@ -290,6 +285,7 @@ export class DependencyAnalyzer {
           }
         }
         break;
+      }
 
       default:
         // Default output for unknown types
@@ -332,9 +328,7 @@ export class DependencyAnalyzer {
     }
 
     // Find unused variables
-    const referencedKeys = new Set(
-      referencedVariables.map((r) => `${r.nodeId}.${r.variable}`)
-    );
+    const referencedKeys = new Set(referencedVariables.map((r) => `${r.nodeId}.${r.variable}`));
 
     for (const [key, info] of definedVariables) {
       // Skip start node inputs (they're used as workflow inputs)
@@ -357,9 +351,10 @@ export class DependencyAnalyzer {
   /**
    * Topological sort with cycle detection (Kahn's algorithm)
    */
-  private topologicalSort(
-    nodes: Map<string, NodeDependency>
-  ): { order: string[]; cycles: string[][] } {
+  private topologicalSort(nodes: Map<string, NodeDependency>): {
+    order: string[];
+    cycles: string[][];
+  } {
     const order: string[] = [];
     const cycles: string[][] = [];
 

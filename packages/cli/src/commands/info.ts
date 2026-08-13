@@ -6,11 +6,7 @@
 
 import { Command } from 'commander';
 import pc from 'picocolors';
-import {
-  nodeMetaRegistry,
-  modelProviders,
-  type NodeMeta,
-} from '@autodify/core';
+import { nodeMetaRegistry, modelProviders } from '@autodify/core';
 
 interface InfoOptions {
   nodes?: boolean;
@@ -73,9 +69,7 @@ function listNodes() {
   };
 
   for (const category of categories) {
-    const nodes = Object.values(nodeMetaRegistry).filter(
-      (n) => n.category === category
-    );
+    const nodes = Object.values(nodeMetaRegistry).filter((n) => n.category === category);
 
     if (nodes.length > 0) {
       console.log(pc.cyan(`${categoryNames[category] ?? category}:`));

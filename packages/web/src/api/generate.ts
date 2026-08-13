@@ -170,7 +170,7 @@ export async function generateWorkflowStream(
         let buffer = '';
 
         try {
-          while (true) {
+          for (;;) {
             const { done, value } = await reader.read();
 
             if (done) break;

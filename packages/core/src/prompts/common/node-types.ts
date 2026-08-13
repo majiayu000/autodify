@@ -246,7 +246,7 @@ export const ALL_NODE_TYPES = [
 /**
  * 获取完整的节点类型文档
  */
-export function getNodeTypesDocumentation(types?: string[]): string {
+export function getNodeTypesDocumentation(_types?: string[]): string {
   const docs = [
     NODE_TYPE_START,
     NODE_TYPE_END,

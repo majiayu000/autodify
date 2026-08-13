@@ -31,8 +31,12 @@ const NODE_LAYOUT = {
 /**
  * 生成时间戳 ID
  */
+let lastGeneratedNodeId = 0;
+
 function generateNodeId(): string {
-  return String(Date.now() + Math.floor(Math.random() * 1000));
+  const candidate = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  lastGeneratedNodeId = Math.max(candidate, lastGeneratedNodeId + 1);
+  return String(lastGeneratedNodeId);
 }
 
 /**
@@ -150,7 +154,7 @@ function normalizeDSL(dsl: DifyDSL): DifyDSL {
           return {
             ...output,
             value_selector: output.value_selector.map((id: string, idx: number) =>
-              idx === 0 ? (idMap.get(id) || id) : id
+              idx === 0 ? idMap.get(id) || id : id
             ),
           };
         }
@@ -165,7 +169,7 @@ function normalizeDSL(dsl: DifyDSL): DifyDSL {
           return {
             ...v,
             value_selector: v.value_selector.map((id: string, idx: number) =>
-              idx === 0 ? (idMap.get(id) || id) : id
+              idx === 0 ? idMap.get(id) || id : id
             ),
           };
         }
@@ -308,11 +312,7 @@ export class DSLGenerator {
   /**
    * 验证并返回结果
    */
-  private validateAndReturn(
-    dsl: DifyDSL,
-    yaml: string,
-    retries: number
-  ): GenerateResult {
+  private validateAndReturn(dsl: DifyDSL, yaml: string, retries: number): GenerateResult {
     const validation = validateDSL(dsl);
 
     if (!validation.valid) {

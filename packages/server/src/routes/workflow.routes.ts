@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { createHash } from 'crypto';
 import { getWorkflowService } from '../services/workflow.service.js';
 import { config } from '../config/index.js';
@@ -159,7 +159,8 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           200: {
             description: '流式响应（Server-Sent Events）',
             type: 'string',
-            example: 'data: {"type":"progress","progress":{"stage":"initializing","percentage":0,"message":"Starting..."},"done":false}\n\n',
+            example:
+              'data: {"type":"progress","progress":{"stage":"initializing","percentage":0,"message":"Starting..."},"done":false}\n\n',
           },
           400: {
             description: '请求参数错误',
@@ -186,7 +187,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
         'Access-Control-Allow-Origin': '*',
       });
 
@@ -218,11 +219,13 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        reply.raw.write(`data: ${JSON.stringify({
-          type: 'error',
-          error: errorMessage,
-          done: true,
-        })}\n\n`);
+        reply.raw.write(
+          `data: ${JSON.stringify({
+            type: 'error',
+            error: errorMessage,
+            done: true,
+          })}\n\n`
+        );
       } finally {
         reply.raw.end();
       }
@@ -420,9 +423,10 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         }
 
         // Otherwise, return cached data with ETag
-        reply.header('ETag', templatesCache.etag);
-        reply.header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`);
-        return reply.send(templatesCache.data);
+        return reply
+          .header('ETag', templatesCache.etag)
+          .header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`)
+          .send(templatesCache.data);
       }
 
       // Fetch fresh data
@@ -438,10 +442,10 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       };
 
       // Set response headers
-      reply.header('ETag', etag);
-      reply.header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`);
-
-      return reply.send(data);
+      return reply
+        .header('ETag', etag)
+        .header('Cache-Control', `public, max-age=${config.cache.templates.ttl / 1000}`)
+        .send(data);
     }
   );
 
@@ -496,7 +500,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
 
       return reply.send({
         success: true,
-        dsl
+        dsl,
       });
     }
   );

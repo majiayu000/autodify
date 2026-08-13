@@ -3,27 +3,38 @@
  * 统一处理所有错误并返回一致的响应格式
  */
 
-import { FastifyInstance, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
 import { ZodError } from 'zod';
-import { AppError, ValidationError, ErrorResponse, isOperationalError, InternalError } from '../errors/custom-errors.js';
+import type { ErrorResponse } from '../errors/custom-errors.js';
+import {
+  AppError,
+  ValidationError,
+  isOperationalError,
+  InternalError,
+} from '../errors/custom-errors.js';
 
 /**
  * 注册全局错误处理器
  */
-export function registerErrorHandler(fastify: FastifyInstance, options: { isDevelopment: boolean }) {
+export function registerErrorHandler(
+  fastify: FastifyInstance,
+  options: { isDevelopment: boolean }
+) {
   const { isDevelopment } = options;
 
   // 设置自定义错误处理器
-  fastify.setErrorHandler(async (error: FastifyError | Error, request: FastifyRequest, reply: FastifyReply) => {
-    // 记录错误
-    logError(fastify, error, request);
+  fastify.setErrorHandler(
+    async (error: FastifyError | Error, request: FastifyRequest, reply: FastifyReply) => {
+      // 记录错误
+      logError(fastify, error, request);
 
-    // 处理不同类型的错误
-    const errorResponse = handleError(error, isDevelopment);
+      // 处理不同类型的错误
+      const errorResponse = handleError(error, isDevelopment);
 
-    // 发送响应
-    return reply.status(errorResponse.statusCode).send(errorResponse);
-  });
+      // 发送响应
+      return reply.status(errorResponse.statusCode).send(errorResponse);
+    }
+  );
 
   // 添加 onError 钩子用于额外的错误监控
   fastify.addHook('onError', async (request, _reply, error) => {
@@ -138,13 +149,7 @@ function logError(fastify: FastifyInstance, error: Error, request: FastifyReques
 export function asyncHandler<T = unknown>(
   handler: (request: FastifyRequest, reply: FastifyReply) => Promise<T>
 ) {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      return await handler(request, reply);
-    } catch (error) {
-      throw error; // 让 Fastify 的错误处理器处理
-    }
-  };
+  return (request: FastifyRequest, reply: FastifyReply) => handler(request, reply);
 }
 
 /**

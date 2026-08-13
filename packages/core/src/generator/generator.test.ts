@@ -3,12 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  DSLGenerator,
-  type LLMClient,
-  createSimpleDSL,
-  dslToYAML,
-} from './generator.js';
+import { DSLGenerator, type LLMClient, createSimpleDSL, dslToYAML } from './generator.js';
 import type { DifyDSL } from '../types/index.js';
 import { parseYAML } from '../utils/yaml.js';
 
@@ -165,6 +160,21 @@ describe('DSLGenerator', () => {
   });
 
   describe('Generate Method', () => {
+    it('should generate unique node IDs when time and entropy repeat', () => {
+      const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      try {
+        const dsl = createSimpleDSL('Test', 'Test');
+        const nodeIds = dsl.workflow?.graph.nodes.map((node) => node.id) || [];
+
+        expect(new Set(nodeIds).size).toBe(nodeIds.length);
+      } finally {
+        nowSpy.mockRestore();
+        randomSpy.mockRestore();
+      }
+    });
+
     it('should successfully generate DSL from valid YAML response', async () => {
       const simpleDsl = createSimpleDSL('Test', 'Test workflow');
       const validYaml = dslToYAML(simpleDsl);
@@ -318,7 +328,10 @@ describe('DSLGenerator', () => {
             viewport: { x: 0, y: 0, zoom: 1 },
           },
           features: {
-            file_upload: { enabled: false, image: { enabled: false, number_limits: 3, transfer_methods: [] } },
+            file_upload: {
+              enabled: false,
+              image: { enabled: false, number_limits: 3, transfer_methods: [] },
+            },
             opening_statement: '',
             retriever_resource: { enabled: true },
             sensitive_word_avoidance: { enabled: false },
@@ -354,7 +367,10 @@ describe('DSLGenerator', () => {
           environment_variables: [],
           graph: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
           features: {
-            file_upload: { enabled: false, image: { enabled: false, number_limits: 3, transfer_methods: [] } },
+            file_upload: {
+              enabled: false,
+              image: { enabled: false, number_limits: 3, transfer_methods: [] },
+            },
             opening_statement: '',
             retriever_resource: { enabled: true },
             sensitive_word_avoidance: { enabled: false },
@@ -396,10 +412,7 @@ describe('DSLGenerator', () => {
       const validDsl = createSimpleDSL('Test', 'Test');
       mockClient.setResponses([dslToYAML(validDsl)]);
 
-      const result = await generator.generateSimpleWorkflow(
-        'Test',
-        'System prompt'
-      );
+      const result = await generator.generateSimpleWorkflow('Test', 'System prompt');
 
       expect(result.success).toBe(true);
     });

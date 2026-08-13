@@ -31,8 +31,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 
-# 复制 workspace 配置
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+# 复制 workspace 配置和共享 TypeScript 配置
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.json ./
 
 # 复制源代码
 COPY packages/core ./packages/core

@@ -4,7 +4,7 @@ import rateLimit from '@fastify/rate-limit';
 import { config } from './config/index.js';
 import { workflowRoutes } from './routes/workflow.routes.js';
 import { registerErrorHandler } from './middleware/error-handler.js';
-import { initializeLogging, requestLoggingPlugin, getLogger } from './lib/logging/index.js';
+import { initializeLogging, requestLoggingPlugin } from './lib/logging/index.js';
 import { registerSwagger } from './plugins/index.js';
 
 async function main() {
@@ -19,14 +19,17 @@ async function main() {
   const fastify = Fastify({
     logger: {
       level: config.logging.level,
-      transport: config.nodeEnv === 'development' ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss.l',
-          ignore: 'pid,hostname',
-        },
-      } : undefined,
+      transport:
+        config.nodeEnv === 'development'
+          ? {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'HH:MM:ss.l',
+                ignore: 'pid,hostname',
+              },
+            }
+          : undefined,
     },
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'request_id',
@@ -119,4 +122,7 @@ async function main() {
   }
 }
 
-main();
+void main().catch((error: unknown) => {
+  console.error('Failed to initialize server:', error);
+  process.exit(1);
+});

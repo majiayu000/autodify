@@ -23,7 +23,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md,yml,yaml}\"",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm --filter @autodify/core build && pnpm -r typecheck",
     "clean": "pnpm -r clean && rm -rf node_modules",
     "litellm:start": "docker-compose up litellm -d",
     "litellm:stop": "docker-compose down"
