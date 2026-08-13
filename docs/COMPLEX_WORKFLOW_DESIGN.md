@@ -52,7 +52,7 @@
 ```typescript
 // 使用 LLM 的 JSON mode 或 response_format
 const response = await llm.chat(messages, {
-  responseFormat: { type: 'json_object' }
+  responseFormat: { type: 'json_object' },
 });
 ```
 
@@ -89,11 +89,11 @@ const IF_ELSE_TEMPLATE = {
         {
           variable_selector: ['{{source_node}}', '{{variable}}'],
           comparison_operator: '{{operator}}',
-          value: '{{value}}'
-        }
-      ]
-    }
-  ]
+          value: '{{value}}',
+        },
+      ],
+    },
+  ],
 };
 ```
 
@@ -129,31 +129,35 @@ function inferEdges(nodes: Node[]): Edge[] {
 
 ## 节点类型分级
 
-| 复杂度 | 节点类型 | 生成策略 |
-|--------|----------|----------|
-| 简单 | start, end, answer | 直接生成 |
-| 中等 | llm, knowledge-retrieval | JSON 模式 + 验证 |
-| 复杂 | if-else, question-classifier | 模板填充 |
-| 高级 | code, http-request, iteration | 分步生成 + 严格验证 |
+| 复杂度 | 节点类型                      | 生成策略            |
+| ------ | ----------------------------- | ------------------- |
+| 简单   | start, end, answer            | 直接生成            |
+| 中等   | llm, knowledge-retrieval      | JSON 模式 + 验证    |
+| 复杂   | if-else, question-classifier  | 模板填充            |
+| 高级   | code, http-request, iteration | 分步生成 + 严格验证 |
 
 ## 实现计划
 
 ### Phase 1: 结构化输出生成器
+
 - 实现 JSON 模式调用
 - 节点级 Zod 验证
 - 智能重试机制
 
 ### Phase 2: 节点模板系统
+
 - 复杂节点骨架模板
 - 变量提取与填充
 - 模板验证
 
 ### Phase 3: 边自动推断
+
 - 数据流分析
 - Handle 映射规则
 - 分支节点特殊处理
 
 ### Phase 4: 集成与优化
+
 - 完整 Pipeline 集成
 - 性能优化
 - 错误恢复

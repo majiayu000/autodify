@@ -21,5 +21,6 @@ export const apiCallerExample: FewShotExample = {
     method: 'get',
     processPrompt: '请分析以下 API 返回的数据，并生成简洁的总结：',
   }),
-  explanation: '这个工作流展示了如何集成外部 API：HTTP 请求节点调用外部接口获取数据，LLM 节点对 API 返回的数据进行分析和处理。适合需要获取实时数据并进行智能分析的场景，如天气查询、新闻摘要等。',
+  explanation:
+    '这个工作流展示了如何集成外部 API：HTTP 请求节点调用外部接口获取数据，LLM 节点对 API 返回的数据进行分析和处理。适合需要获取实时数据并进行智能分析的场景，如天气查询、新闻摘要等。',
 };

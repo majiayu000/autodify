@@ -4,11 +4,7 @@
  * 测试 LLM 生成带条件分支的复杂工作流（不使用模板）
  */
 
-import {
-  createOrchestrator,
-  DependencyAnalyzer,
-  stringifyYAML,
-} from '../src/index.js';
+import { createOrchestrator, DependencyAnalyzer } from '../src/index.js';
 
 // GLM-4 配置
 const GLM_CONFIG = {
@@ -66,7 +62,7 @@ async function generateComplexWorkflow() {
     prompt,
     preferredProvider: 'openai',
     preferredModel: 'gpt-4o',
-    skipTemplates: true,  // 强制使用 LLM 生成，不使用模板
+    skipTemplates: true, // 强制使用 LLM 生成，不使用模板
   });
   const duration = Date.now() - startTime;
 
@@ -102,7 +98,7 @@ async function generateComplexWorkflow() {
       // 显示节点类型统计
       const nodes = result.dsl.workflow?.graph.nodes ?? [];
       const typeCount: Record<string, number> = {};
-      nodes.forEach(n => {
+      nodes.forEach((n) => {
         const type = n.data.type;
         typeCount[type] = (typeCount[type] ?? 0) + 1;
       });
@@ -113,7 +109,7 @@ async function generateComplexWorkflow() {
 
       if (analysis.issues.length > 0) {
         console.log('\n  ⚠️ 分析发现的问题:');
-        analysis.issues.forEach(issue => {
+        analysis.issues.forEach((issue) => {
           const icon = issue.type === 'error' ? '❌' : issue.type === 'warning' ? '⚠️' : 'ℹ️';
           console.log(`    ${icon} [${issue.code}] ${issue.message}`);
         });
@@ -138,4 +134,4 @@ async function main() {
   }
 }
 
-main();
+void main();

@@ -89,7 +89,7 @@ export class OpenAIService extends BaseLLMService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
           model: opts.model,
@@ -103,9 +103,7 @@ export class OpenAIService extends BaseLLMService {
           frequency_penalty: opts.frequencyPenalty,
           presence_penalty: opts.presencePenalty,
           stop: opts.stop,
-          response_format: opts.responseFormat === 'json'
-            ? { type: 'json_object' }
-            : undefined,
+          response_format: opts.responseFormat === 'json' ? { type: 'json_object' } : undefined,
         }),
         signal: AbortSignal.timeout(this.config.timeout ?? 60000),
       });
@@ -115,7 +113,7 @@ export class OpenAIService extends BaseLLMService {
         throw new Error(`OpenAI API error: ${response.status} - ${error}`);
       }
 
-      const data = await response.json() as OpenAIResponse;
+      const data = (await response.json()) as OpenAIResponse;
       const choice = data.choices[0];
 
       if (!choice) {
@@ -124,13 +122,19 @@ export class OpenAIService extends BaseLLMService {
 
       return {
         content: choice.message.content,
-        finishReason: choice.finish_reason === 'stop' ? 'stop' :
-          choice.finish_reason === 'length' ? 'length' : 'error',
-        usage: data.usage ? {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens,
-        } : undefined,
+        finishReason:
+          choice.finish_reason === 'stop'
+            ? 'stop'
+            : choice.finish_reason === 'length'
+              ? 'length'
+              : 'error',
+        usage: data.usage
+          ? {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: data.usage.completion_tokens,
+              totalTokens: data.usage.total_tokens,
+            }
+          : undefined,
         model: data.model,
       };
     });
@@ -158,7 +162,6 @@ export class OpenAIService extends BaseLLMService {
     signal?: AbortSignal,
     onProgress?: (chunk: StreamChunk) => void
   ): AsyncGenerator<StreamChunk> {
-    let accumulatedContent = '';
     let streamModel = '';
 
     try {
@@ -179,7 +182,7 @@ export class OpenAIService extends BaseLLMService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
           model: opts.model,
@@ -251,8 +254,6 @@ export class OpenAIService extends BaseLLMService {
 
               const delta = data.choices[0]?.delta;
               if (delta?.content) {
-                accumulatedContent += delta.content;
-
                 const contentChunk: StreamChunk = {
                   type: 'content',
                   content: delta.content,
@@ -303,10 +304,13 @@ export class OpenAIService extends BaseLLMService {
 /**
  * Create an OpenAI service
  */
-export function createOpenAIService(apiKey: string, options?: {
-  model?: string;
-  baseUrl?: string;
-}): OpenAIService {
+export function createOpenAIService(
+  apiKey: string,
+  options?: {
+    model?: string;
+    baseUrl?: string;
+  }
+): OpenAIService {
   return new OpenAIService({
     apiKey,
     defaultModel: options?.model,

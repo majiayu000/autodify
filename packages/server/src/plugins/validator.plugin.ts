@@ -1,5 +1,5 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
-import { z, ZodError, ZodSchema } from 'zod';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import type { z, ZodError, ZodSchema } from 'zod';
 import { ValidationError } from '../errors/custom-errors.js';
 
 /**
@@ -35,7 +35,7 @@ function formatZodError(error: ZodError): ValidationErrorDetail[] {
  * 创建验证 Hook
  */
 export function createValidationHook(schemas: ValidatorSchemas) {
-  return async (request: FastifyRequest, reply: FastifyReply) => {
+  return async (request: FastifyRequest, _reply: FastifyReply) => {
     const errors: ValidationErrorDetail[] = [];
 
     // 验证请求体
@@ -70,9 +70,8 @@ export function createValidationHook(schemas: ValidatorSchemas) {
 
     // 如果有验证错误，抛出 ValidationError
     if (errors.length > 0) {
-      const errorMessage = errors.length === 1
-        ? errors[0].message
-        : `验证失败: ${errors.length} 个字段存在错误`;
+      const errorMessage =
+        errors.length === 1 ? errors[0].message : `验证失败: ${errors.length} 个字段存在错误`;
       throw new ValidationError(errorMessage, { fields: errors });
     }
   };
@@ -84,16 +83,12 @@ export function createValidationHook(schemas: ValidatorSchemas) {
  */
 export const validatorPlugin: FastifyPluginAsync = async (fastify) => {
   // 定义验证函数
-  const validateFn = <T extends ZodSchema>(
-    schema: T,
-    data: unknown
-  ): z.infer<T> => {
+  const validateFn = <T extends ZodSchema>(schema: T, data: unknown): z.infer<T> => {
     const result = schema.safeParse(data);
     if (!result.success) {
       const errors = formatZodError(result.error);
-      const errorMessage = errors.length === 1
-        ? errors[0].message
-        : `验证失败: ${errors.length} 个字段存在错误`;
+      const errorMessage =
+        errors.length === 1 ? errors[0].message : `验证失败: ${errors.length} 个字段存在错误`;
       throw new ValidationError(errorMessage, { fields: errors });
     }
     return result.data;

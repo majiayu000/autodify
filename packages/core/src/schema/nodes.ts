@@ -107,14 +107,18 @@ export const AnswerNodeDataSchema = z.object({
 // ============================================================================
 
 export const MemoryConfigSchema = z.object({
-  role_prefix: z.object({
-    user: z.string(),
-    assistant: z.string(),
-  }).optional(),
-  window: z.object({
-    enabled: z.boolean(),
-    size: z.number().positive(),
-  }).optional(),
+  role_prefix: z
+    .object({
+      user: z.string(),
+      assistant: z.string(),
+    })
+    .optional(),
+  window: z
+    .object({
+      enabled: z.boolean(),
+      size: z.number().positive(),
+    })
+    .optional(),
 });
 
 export const ContextConfigSchema = z.object({
@@ -124,10 +128,12 @@ export const ContextConfigSchema = z.object({
 
 export const VisionConfigSchema = z.object({
   enabled: z.boolean(),
-  configs: z.object({
-    variable_selector: VariableSelectorSchema,
-    detail: VisionDetailSchema.optional(),
-  }).optional(),
+  configs: z
+    .object({
+      variable_selector: VariableSelectorSchema,
+      detail: VisionDetailSchema.optional(),
+    })
+    .optional(),
 });
 
 export const LLMNodeDataSchema = z.object({
@@ -157,10 +163,12 @@ export const MultipleRetrievalConfigSchema = z.object({
   score_threshold: z.number().min(0).max(1).optional(),
   score_threshold_enabled: z.boolean().optional(),
   reranking_enable: z.boolean().optional(),
-  reranking_model: z.object({
-    provider: z.string(),
-    model: z.string(),
-  }).optional(),
+  reranking_model: z
+    .object({
+      provider: z.string(),
+      model: z.string(),
+    })
+    .optional(),
 });
 
 export const KnowledgeRetrievalNodeDataSchema = z.object({
@@ -267,10 +275,12 @@ export const VariableAggregatorNodeDataSchema = z.object({
   desc: z.string().optional(),
   variables: z.array(VariableSelectorSchema).min(1),
   output_type: OutputTypeSchema,
-  advanced_settings: z.object({
-    group_enabled: z.boolean(),
-    groups: z.array(AggregatorGroupSchema).optional(),
-  }).optional(),
+  advanced_settings: z
+    .object({
+      group_enabled: z.boolean(),
+      groups: z.array(AggregatorGroupSchema).optional(),
+    })
+    .optional(),
 });
 
 // ============================================================================
@@ -347,13 +357,15 @@ export const ParameterExtractorNodeDataSchema = z.object({
 
 export const AuthorizationConfigSchema = z.object({
   type: AuthorizationTypeSchema,
-  config: z.object({
-    type: ApiKeyTypeSchema.optional(),
-    api_key: z.string().optional(),
-    header: z.string().optional(),
-    username: z.string().optional(),
-    password: z.string().optional(),
-  }).optional(),
+  config: z
+    .object({
+      type: ApiKeyTypeSchema.optional(),
+      api_key: z.string().optional(),
+      header: z.string().optional(),
+      username: z.string().optional(),
+      password: z.string().optional(),
+    })
+    .optional(),
 });
 
 export const BodyConfigSchema = z.object({
@@ -422,9 +434,12 @@ export const AgentNodeDataSchema = z.object({
   desc: z.string().optional(),
   agent_strategy_provider: z.string().optional(),
   agent_strategy_name: z.string().optional(),
-  agent_parameters: z.object({
-    max_iterations: z.number().positive().optional(),
-  }).passthrough().optional(),
+  agent_parameters: z
+    .object({
+      max_iterations: z.number().positive().optional(),
+    })
+    .passthrough()
+    .optional(),
   model: ModelConfigSchema,
   prompt_template: z.array(PromptTemplateSchema).optional(),
   tools: z.array(AgentToolSchema),

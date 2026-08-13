@@ -267,9 +267,7 @@ export function createCodeNode(options: CodeNodeOptions): Node<CodeNodeData> {
 /**
  * 创建 HTTP Request 节点
  */
-export function createHttpRequestNode(
-  options: HttpRequestNodeOptions
-): Node<HttpRequestNodeData> {
+export function createHttpRequestNode(options: HttpRequestNodeOptions): Node<HttpRequestNodeData> {
   const id = options.id ?? generateNodeId('http');
 
   const data: HttpRequestNodeData = {
@@ -317,9 +315,7 @@ export function createHttpRequestNode(
 /**
  * 创建 Template Transform 节点
  */
-export function createTemplateNode(
-  options: TemplateNodeOptions
-): Node<TemplateTransformNodeData> {
+export function createTemplateNode(options: TemplateNodeOptions): Node<TemplateTransformNodeData> {
   const id = options.id ?? generateNodeId('template');
 
   return {

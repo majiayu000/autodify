@@ -11,10 +11,14 @@ export const ErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.string(),
   statusCode: z.number().optional(),
-  details: z.array(z.object({
-    field: z.string(),
-    message: z.string(),
-  })).optional(),
+  details: z
+    .array(
+      z.object({
+        field: z.string(),
+        message: z.string(),
+      })
+    )
+    .optional(),
 });
 
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>

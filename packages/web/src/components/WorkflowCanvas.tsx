@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useRef, useState, DragEvent } from 'react';
+import type { DragEvent } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -42,11 +43,7 @@ interface WorkflowCanvasProps {
 }
 
 // Layout nodes using dagre
-function layoutNodes(
-  nodes: Node[],
-  edges: Edge[],
-  direction: 'TB' | 'LR' = 'TB'
-): Node[] {
+function layoutNodes(nodes: Node[], edges: Edge[], direction: 'TB' | 'LR' = 'TB'): Node[] {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction, nodesep: 80, ranksep: 100 });
@@ -95,7 +92,11 @@ const defaultEdgeOptions = {
   },
 };
 
-const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, onAddNode }: WorkflowCanvasProps) {
+const WorkflowCanvas = React.memo(function WorkflowCanvas({
+  dsl,
+  onNodeSelect,
+  onAddNode,
+}: WorkflowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -186,7 +187,7 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
         // 计算放置位置（相对于画布）
         const position = {
           x: event.clientX - bounds.left - 100, // 偏移节点宽度的一半
-          y: event.clientY - bounds.top - 30,   // 偏移节点高度的一半
+          y: event.clientY - bounds.top - 30, // 偏移节点高度的一半
         };
 
         onAddNode(type, title, position);
@@ -209,7 +210,9 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
         aria-label="工作流画布"
         aria-describedby="canvas-empty-hint"
       >
-        <div className="text-5xl" aria-hidden="true">🎨</div>
+        <div className="text-5xl" aria-hidden="true">
+          🎨
+        </div>
         <div className="text-base" id="canvas-empty-hint">
           {isDragOver ? '释放以添加节点' : '输入描述后生成工作流'}
         </div>
@@ -231,42 +234,37 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({ dsl, onNodeSelect, o
       aria-label="工作流编辑画布"
       aria-roledescription="可交互的工作流图表编辑区域"
     >
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      onNodeClick={onNodeClick}
-      onPaneClick={onPaneClick}
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
-      defaultEdgeOptions={defaultEdgeOptions}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
-      proOptions={{ hideAttribution: true }}
-      nodesDraggable={true}
-      nodesConnectable={true}
-      nodesFocusable={true}
-      edgesFocusable={true}
-      elementsSelectable={true}
-      minZoom={0.2}
-      maxZoom={4}
-    >
-      <Controls
-        style={{
-          background: '#1e293b',
-          border: '1px solid #475569',
-          borderRadius: '8px',
-        }}
-      />
-      <Background
-        variant={BackgroundVariant.Dots}
-        gap={20}
-        size={1}
-        color="#334155"
-      />
-    </ReactFlow>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        proOptions={{ hideAttribution: true }}
+        nodesDraggable={true}
+        nodesConnectable={true}
+        nodesFocusable={true}
+        edgesFocusable={true}
+        elementsSelectable={true}
+        minZoom={0.2}
+        maxZoom={4}
+      >
+        <Controls
+          style={{
+            background: '#1e293b',
+            border: '1px solid #475569',
+            borderRadius: '8px',
+          }}
+        />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#334155" />
+      </ReactFlow>
     </div>
   );
 });

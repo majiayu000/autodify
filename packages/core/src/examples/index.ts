@@ -25,8 +25,4 @@ export {
 } from './builtin/index.js';
 
 // Example store
-export {
-  ExampleStore,
-  createExampleStore,
-  type ExampleStoreConfig,
-} from './example-store.js';
+export { ExampleStore, createExampleStore, type ExampleStoreConfig } from './example-store.js';

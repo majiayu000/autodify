@@ -75,9 +75,7 @@ const GenerationComplete = memo(function GenerationComplete({
             </motion.span>
 
             {/* Text */}
-            <span className="text-white font-semibold text-sm">
-              工作流生成完成
-            </span>
+            <span className="text-white font-semibold text-sm">工作流生成完成</span>
 
             {/* Export button */}
             {onExport && (

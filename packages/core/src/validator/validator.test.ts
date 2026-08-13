@@ -108,7 +108,7 @@ describe('DSLValidator', () => {
                 },
               },
               {
-                id: 'start',  // Duplicate!
+                id: 'start', // Duplicate!
                 type: 'custom',
                 data: {
                   type: 'end',
@@ -163,7 +163,7 @@ describe('DSLValidator', () => {
             edges: [
               {
                 id: 'e1',
-                source: 'nonexistent',  // Invalid!
+                source: 'nonexistent', // Invalid!
                 sourceHandle: 'source',
                 target: 'end',
                 targetHandle: 'target',
@@ -208,7 +208,7 @@ describe('DSLValidator', () => {
                 },
               },
               {
-                id: 'isolated',  // Not connected
+                id: 'isolated', // Not connected
                 type: 'custom',
                 data: {
                   type: 'llm',
@@ -292,7 +292,7 @@ describe('DSLValidator', () => {
                 id: 'e1',
                 source: 'start',
                 sourceHandle: 'source',
-                target: 'start',  // Self-reference!
+                target: 'start', // Self-reference!
                 targetHandle: 'target',
                 type: 'custom',
                 data: {

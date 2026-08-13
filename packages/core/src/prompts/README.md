@@ -31,21 +31,25 @@ prompts/
 ## 设计原则
 
 ### 1. DRY（Don't Repeat Yourself）
+
 - 将公共的 prompt 片段提取到 `common/` 目录
 - 避免在多个地方重复相同的内容
 - 使用函数组合来构建完整的 prompts
 
 ### 2. 模块化
+
 - 每个模块（generator, planner, orchestrator）有独立的目录
 - 按功能分类：系统提示词、示例、构建函数
 - 清晰的导出层次
 
 ### 3. 可组合性
+
 - 提供构建函数而不是硬编码的字符串
 - 支持参数化配置
 - 便于扩展和定制
 
 ### 4. 向后兼容
+
 - 原有的 `*/prompts.ts` 文件保留为重新导出
 - 不影响现有代码的使用
 - 逐步迁移到新的导入路径
@@ -55,11 +59,7 @@ prompts/
 ### 直接使用公共组件
 
 ```typescript
-import {
-  buildDSLFormatDoc,
-  buildNodeTypesDoc,
-  buildRulesDoc
-} from '@autodify/core/prompts/common';
+import { buildDSLFormatDoc, buildNodeTypesDoc, buildRulesDoc } from '@autodify/core/prompts/common';
 
 // 获取完整的 DSL 格式文档
 const dslDoc = buildDSLFormatDoc();
@@ -71,10 +71,7 @@ const nodeDoc = buildNodeTypesDoc(['llm', 'knowledge-retrieval']);
 ### 使用 Generator Prompts
 
 ```typescript
-import {
-  buildGenerationPrompt,
-  buildFixPrompt
-} from '@autodify/core/prompts/generator';
+import { buildGenerationPrompt, buildFixPrompt } from '@autodify/core/prompts/generator';
 
 // 构建生成提示词
 const prompt = buildGenerationPrompt('创建一个翻译工作流');
@@ -89,7 +86,7 @@ const fixPrompt = buildFixPrompt(yamlContent, ['错误1', '错误2']);
 import {
   PLANNER_SYSTEM_PROMPT,
   buildPlanningPrompt,
-  buildFewShotPrompt
+  buildFewShotPrompt,
 } from '@autodify/core/prompts/planner';
 
 // 使用系统提示词
@@ -108,14 +105,14 @@ const fewShot = buildFewShotPrompt();
 import {
   buildGenerationPromptFromPlan,
   buildOrchestratorFixPrompt,
-  buildEditPrompt
+  buildEditPrompt,
 } from '@autodify/core/prompts/orchestrator';
 
 // 从规划构建生成提示
 const genPrompt = buildGenerationPromptFromPlan(plan, {
   preferredProvider: 'openai',
   preferredModel: 'gpt-4o',
-  datasetIds: ['dataset-123']
+  datasetIds: ['dataset-123'],
 });
 
 // 构建修复提示
@@ -184,12 +181,14 @@ export function buildCustomPrompt(userInput: string, options: CustomOptions): st
 ### 从旧的导入路径迁移
 
 **旧方式：**
+
 ```typescript
 import { SYSTEM_PROMPT } from '../generator/prompts.js';
 import { PLANNER_SYSTEM_PROMPT } from '../planner/prompts.js';
 ```
 
 **新方式：**
+
 ```typescript
 import { SYSTEM_PROMPT } from '../prompts/generator/index.js';
 import { PLANNER_SYSTEM_PROMPT } from '../prompts/planner/index.js';
@@ -198,6 +197,7 @@ import { PLANNER_SYSTEM_PROMPT } from '../prompts/planner/index.js';
 ### 复用公共组件
 
 **旧方式：**
+
 ```typescript
 // 在多个文件中重复相同的 DSL 格式说明
 const PROMPT = `...
@@ -210,6 +210,7 @@ version: "0.1.3"
 ```
 
 **新方式：**
+
 ```typescript
 import { buildDSLFormatDoc } from '../prompts/common/index.js';
 

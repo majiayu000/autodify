@@ -31,7 +31,9 @@ export const validateCommand = new Command('validate')
     try {
       content = readFileSync(file, 'utf-8');
     } catch (error) {
-      console.error(pc.red(`Failed to read file: ${error instanceof Error ? error.message : String(error)}`));
+      console.error(
+        pc.red(`Failed to read file: ${error instanceof Error ? error.message : String(error)}`)
+      );
       process.exit(1);
     }
 
@@ -39,11 +41,17 @@ export const validateCommand = new Command('validate')
     const parseResult = parseYAML(content);
     if (!parseResult.success) {
       if (options.json) {
-        console.log(JSON.stringify({
-          valid: false,
-          stage: 'parse',
-          error: parseResult.error,
-        }, null, 2));
+        console.log(
+          JSON.stringify(
+            {
+              valid: false,
+              stage: 'parse',
+              error: parseResult.error,
+            },
+            null,
+            2
+          )
+        );
       } else {
         console.error(pc.red(`✗ YAML Parse Error: ${parseResult.error}`));
       }
@@ -56,12 +64,18 @@ export const validateCommand = new Command('validate')
     });
 
     if (options.json) {
-      console.log(JSON.stringify({
-        valid: validationResult.valid,
-        stage: 'validate',
-        errors: validationResult.errors,
-        warnings: validationResult.warnings,
-      }, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            valid: validationResult.valid,
+            stage: 'validate',
+            errors: validationResult.errors,
+            warnings: validationResult.warnings,
+          },
+          null,
+          2
+        )
+      );
     } else {
       if (validationResult.valid) {
         console.log(pc.green(`✓ ${file} is valid`));
@@ -78,9 +92,7 @@ export const validateCommand = new Command('validate')
         const dsl = parseResult.data!;
         const nodeCount = dsl.workflow?.graph.nodes.length ?? 0;
         const edgeCount = dsl.workflow?.graph.edges.length ?? 0;
-        const nodeTypes = new Set(
-          dsl.workflow?.graph.nodes.map((n) => n.data.type) ?? []
-        );
+        const nodeTypes = new Set(dsl.workflow?.graph.nodes.map((n) => n.data.type) ?? []);
 
         console.log(pc.dim(`\n📊 Statistics:`));
         console.log(pc.dim(`   Nodes: ${nodeCount}`));

@@ -67,7 +67,8 @@ async function demo1_builderApi() {
       title: '翻译',
       provider: 'openai',
       model: 'gpt-4o',
-      systemPrompt: '你是一个专业的翻译专家。将用户提供的文本翻译成指定的目标语言，保持原意和语气。',
+      systemPrompt:
+        '你是一个专业的翻译专家。将用户提供的文本翻译成指定的目标语言，保持原意和语气。',
       userPrompt: '请将以下文本翻译成{{#start.target_lang#}}：\n\n{{#start.text#}}',
     })
     .addEnd({
@@ -234,4 +235,4 @@ async function main() {
   }
 }
 
-main();
+void main();

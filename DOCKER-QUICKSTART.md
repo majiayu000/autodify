@@ -371,6 +371,7 @@ cp docker-compose.yml docker-compose.override.yml
 ### CI/CD 集成
 
 已配置 GitHub Actions：
+
 - 自动构建 Docker 镜像
 - 推送到 GitHub Container Registry
 - 安全扫描（Trivy）
@@ -379,16 +380,19 @@ cp docker-compose.yml docker-compose.override.yml
 ## 常见问题
 
 **Q: 如何查看实时日志？**
+
 ```bash
 docker-compose logs -f
 ```
 
 **Q: 如何进入容器调试？**
+
 ```bash
 docker-compose exec autodify-server sh
 ```
 
 **Q: 如何重置所有数据？**
+
 ```bash
 docker-compose down -v
 ```

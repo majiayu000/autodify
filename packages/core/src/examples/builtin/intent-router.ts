@@ -15,7 +15,8 @@ export const intentRouterExample: FewShotExample = {
     nodeTypes: ['start', 'question-classifier', 'llm', 'variable-aggregator', 'end'],
     complexity: 3,
   },
-  prompt: '创建一个智能客服工作流，能自动识别用户问题类型（产品咨询/技术支持/其他），并分别由专门的处理节点回答',
+  prompt:
+    '创建一个智能客服工作流，能自动识别用户问题类型（产品咨询/技术支持/其他），并分别由专门的处理节点回答',
   dsl: intentRouterTemplate.build({
     classes: [
       { id: 'product', name: '产品咨询' },
@@ -23,5 +24,6 @@ export const intentRouterExample: FewShotExample = {
       { id: 'other', name: '其他问题' },
     ],
   }),
-  explanation: '这个工作流使用问题分类器节点识别用户意图，将问题分为三类：产品咨询、技术支持和其他问题。每类问题都有专门的 LLM 节点处理，使用针对性的系统提示。最后通过聚合节点汇总各分支结果。这种设计使得不同类型的问题能得到专业的回答。',
+  explanation:
+    '这个工作流使用问题分类器节点识别用户意图，将问题分为三类：产品咨询、技术支持和其他问题。每类问题都有专门的 LLM 节点处理，使用针对性的系统提示。最后通过聚合节点汇总各分支结果。这种设计使得不同类型的问题能得到专业的回答。',
 };

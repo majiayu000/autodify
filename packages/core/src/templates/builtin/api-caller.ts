@@ -13,8 +13,16 @@ export const apiCallerTemplate: WorkflowTemplate = {
     category: 'automation',
     tags: ['API', 'HTTP', '自动化', '集成'],
     keywords: [
-      'API', 'HTTP', '接口', '调用', '请求', '集成',
-      '外部服务', 'webhook', 'REST', '数据获取',
+      'API',
+      'HTTP',
+      '接口',
+      '调用',
+      '请求',
+      '集成',
+      '外部服务',
+      'webhook',
+      'REST',
+      '数据获取',
     ],
     nodeTypes: ['start', 'http-request', 'llm', 'end'],
     complexity: 2,
@@ -25,8 +33,8 @@ export const apiCallerTemplate: WorkflowTemplate = {
     const method = (params['method'] as 'get' | 'post') ?? 'get';
     const model = (params['model'] as string) ?? 'gpt-4o';
     const provider = (params['provider'] as string) ?? 'openai';
-    const processPrompt = (params['processPrompt'] as string) ??
-      '请分析以下 API 返回的数据，并生成简洁的总结：';
+    const processPrompt =
+      (params['processPrompt'] as string) ?? '请分析以下 API 返回的数据，并生成简洁的总结：';
 
     return createWorkflow({
       name: 'API 调用',
@@ -49,9 +57,7 @@ export const apiCallerTemplate: WorkflowTemplate = {
         title: 'API 请求',
         method,
         url: apiUrl,
-        headers: [
-          { key: 'Content-Type', value: 'application/json' },
-        ],
+        headers: [{ key: 'Content-Type', value: 'application/json' }],
         timeout: {
           connect: 10,
           read: 30,

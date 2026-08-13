@@ -20,7 +20,7 @@ export function buildPlannerSystemPrompt(): string {
 
 ## 可用的节点类型
 
-${ALL_NODE_TYPES.map(type => `- **${type}**`).join('\n')}
+${ALL_NODE_TYPES.map((type) => `- **${type}**`).join('\n')}
 
 ${DESIGN_PRINCIPLES}
 

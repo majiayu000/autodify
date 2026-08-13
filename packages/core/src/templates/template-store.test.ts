@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { TemplateStore, createTemplateStore, defaultTemplateStore } from './template-store.js';
-import { simpleQATemplate, ragQATemplate, conditionalTemplate } from './builtin/index.js';
+import { simpleQATemplate } from './builtin/index.js';
 
 describe('TemplateStore', () => {
   describe('Registration', () => {

@@ -5,6 +5,7 @@
 ## 新增模板列表
 
 ### 1. 智能客服对话 (customer-support.ts)
+
 - **分类**: agent
 - **复杂度**: 4/5
 - **节点数**: 10 个
@@ -17,6 +18,7 @@
   - 结果聚合输出
 
 ### 2. 数据分析助手 (data-analysis.ts)
+
 - **分类**: analysis
 - **复杂度**: 3/5
 - **节点数**: 9 个
@@ -30,6 +32,7 @@
   - 失败时提供错误分析和建议
 
 ### 3. 内容创作助手 (content-generation.ts)
+
 - **分类**: writing
 - **复杂度**: 3/5
 - **节点数**: 7 个
@@ -44,6 +47,7 @@
   - SEO 关键词整合
 
 ### 4. 代码审查助手 (code-review.ts)
+
 - **分类**: analysis
 - **复杂度**: 4/5
 - **节点数**: 9 个
@@ -59,6 +63,7 @@
   - 综合报告输出
 
 ### 5. 文档问答系统 (document-qa.ts)
+
 - **分类**: rag
 - **复杂度**: 3/5
 - **节点数**: 11 个
@@ -122,6 +127,7 @@ const analysisTemplates = defaultTemplateStore.getByCategory('analysis');
 ## 文件变更
 
 ### 新增文件
+
 - `src/templates/builtin/customer-support.ts`
 - `src/templates/builtin/data-analysis.ts`
 - `src/templates/builtin/content-generation.ts`
@@ -129,6 +135,7 @@ const analysisTemplates = defaultTemplateStore.getByCategory('analysis');
 - `src/templates/builtin/document-qa.ts`
 
 ### 修改文件
+
 - `src/templates/builtin/index.ts` - 导出新模板并添加到 builtinTemplates 数组
 - `src/utils/cache.ts` - 修复 TypeScript 类型错误
 
@@ -138,10 +145,10 @@ const analysisTemplates = defaultTemplateStore.getByCategory('analysis');
 ✓ 所有模板都能正确生成 Dify DSL
 ✓ 节点数量和结构符合预期
 
-| 模板 | 节点数 | 状态 |
-|-----|-------|------|
-| 智能客服对话 | 10 | ✓ |
-| 数据分析助手 | 9 | ✓ |
-| 内容创作助手 | 7 | ✓ |
-| 代码审查助手 | 9 | ✓ |
-| 文档问答系统 | 11 | ✓ |
+| 模板         | 节点数 | 状态 |
+| ------------ | ------ | ---- |
+| 智能客服对话 | 10     | ✓    |
+| 数据分析助手 | 9      | ✓    |
+| 内容创作助手 | 7      | ✓    |
+| 代码审查助手 | 9      | ✓    |
+| 文档问答系统 | 11     | ✓    |

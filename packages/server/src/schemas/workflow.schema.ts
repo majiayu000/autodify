@@ -6,43 +6,35 @@ import { z } from 'zod';
 
 // POST /api/generate - 生成工作流
 export const GenerateRequestBodySchema = z.object({
-  prompt: z.string()
-    .min(1, '请输入工作流描述')
-    .max(10000, '工作流描述不能超过 10000 字符'),
-  options: z.object({
-    model: z.string().optional(),
-    temperature: z.number()
-      .min(0, '温度参数不能小于 0')
-      .max(2, '温度参数不能大于 2')
-      .optional(),
-    useTemplate: z.boolean().optional(),
-  }).optional(),
+  prompt: z.string().min(1, '请输入工作流描述').max(10000, '工作流描述不能超过 10000 字符'),
+  options: z
+    .object({
+      model: z.string().optional(),
+      temperature: z.number().min(0, '温度参数不能小于 0').max(2, '温度参数不能大于 2').optional(),
+      useTemplate: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // POST /api/refine - 迭代优化工作流
 export const RefineRequestBodySchema = z.object({
-  dsl: z.record(z.unknown())
-    .refine(
-      (val) => typeof val === 'object' && val !== null,
-      { message: 'DSL 必须是一个有效的对象' }
-    ),
-  instruction: z.string()
-    .min(1, '请输入修改指令')
-    .max(5000, '修改指令不能超过 5000 字符'),
+  dsl: z.record(z.unknown()).refine((val) => typeof val === 'object' && val !== null, {
+    message: 'DSL 必须是一个有效的对象',
+  }),
+  instruction: z.string().min(1, '请输入修改指令').max(5000, '修改指令不能超过 5000 字符'),
 });
 
 // POST /api/validate - 验证 DSL
 export const ValidateRequestBodySchema = z.object({
-  dsl: z.record(z.unknown())
-    .refine(
-      (val) => typeof val === 'object' && val !== null,
-      { message: 'DSL 必须是一个有效的对象' }
-    ),
+  dsl: z.record(z.unknown()).refine((val) => typeof val === 'object' && val !== null, {
+    message: 'DSL 必须是一个有效的对象',
+  }),
 });
 
 // GET /api/templates/:id - 获取模板详情
 export const TemplateParamsSchema = z.object({
-  id: z.string()
+  id: z
+    .string()
     .min(1, '模板 ID 不能为空')
     .regex(/^[a-zA-Z0-9_-]+$/, '模板 ID 只能包含字母、数字、下划线和短横线'),
 });
@@ -55,10 +47,12 @@ export const TemplateParamsSchema = z.object({
 const MetadataSchema = z.object({
   duration: z.number(),
   model: z.string(),
-  tokens: z.object({
-    input: z.number(),
-    output: z.number(),
-  }).optional(),
+  tokens: z
+    .object({
+      input: z.number(),
+      output: z.number(),
+    })
+    .optional(),
   templateUsed: z.string().nullable().optional(),
   confidence: z.number().optional(),
 });

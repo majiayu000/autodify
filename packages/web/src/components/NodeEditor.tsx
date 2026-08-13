@@ -1,5 +1,5 @@
 import { useState, useEffect, memo, useCallback } from 'react';
-import { NodeData } from '../types/nodeData';
+import type { NodeData } from '../types/nodeData';
 import { NODE_ICONS } from '../constants/nodeConfig';
 import StartNodeEditor from './node-editors/StartNodeEditor';
 import LLMNodeEditor from './node-editors/LLMNodeEditor';
@@ -27,10 +27,13 @@ const NodeEditor = memo(function NodeEditor({ node, onUpdate, onClose }: NodeEdi
     setLocalData(node.data);
   }, [node.id, node.data]);
 
-  const handleChange = useCallback((field: keyof NodeData, value: unknown) => {
-    setLocalData(prev => ({ ...prev, [field]: value }));
-    onUpdate(node.id, { [field]: value });
-  }, [node.id, onUpdate]);
+  const handleChange = useCallback(
+    (field: keyof NodeData, value: unknown) => {
+      setLocalData((prev) => ({ ...prev, [field]: value }));
+      onUpdate(node.id, { [field]: value });
+    },
+    [node.id, onUpdate]
+  );
 
   const icon = NODE_ICONS[node.data.type] || '⚙️';
 

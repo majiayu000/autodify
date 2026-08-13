@@ -8,12 +8,13 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+    project: './tsconfig.eslint.json',
+    tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint'],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
   ],
   rules: {
     '@typescript-eslint/no-unused-vars': [

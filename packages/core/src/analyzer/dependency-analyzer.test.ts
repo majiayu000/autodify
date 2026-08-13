@@ -34,9 +34,11 @@ describe('DependencyAnalyzer', () => {
       const result = analyzer.analyze(dsl);
 
       expect(result.variables.referencedVariables.length).toBeGreaterThan(0);
-      expect(result.variables.referencedVariables.some(
-        (r) => r.nodeId === 'start' && r.variable === 'input'
-      )).toBe(true);
+      expect(
+        result.variables.referencedVariables.some(
+          (r) => r.nodeId === 'start' && r.variable === 'input'
+        )
+      ).toBe(true);
     });
 
     it('should detect undefined variable references', () => {
@@ -63,9 +65,9 @@ describe('DependencyAnalyzer', () => {
       const result = analyzer.analyze(dsl);
 
       expect(result.variables.undefinedReferences.length).toBeGreaterThan(0);
-      expect(result.variables.undefinedReferences.some(
-        (r) => r.nodeId === 'nonexistent'
-      )).toBe(true);
+      expect(result.variables.undefinedReferences.some((r) => r.nodeId === 'nonexistent')).toBe(
+        true
+      );
 
       expect(result.issues.some((i) => i.code === 'UNDEFINED_VARIABLE')).toBe(true);
     });
@@ -109,8 +111,9 @@ describe('DependencyAnalyzer', () => {
       expect(llmDeps?.dependsOn).toContain('start');
 
       // Check topological order
-      expect(result.dependencies.topologicalOrder.indexOf('start'))
-        .toBeLessThan(result.dependencies.topologicalOrder.indexOf('llm'));
+      expect(result.dependencies.topologicalOrder.indexOf('start')).toBeLessThan(
+        result.dependencies.topologicalOrder.indexOf('llm')
+      );
     });
 
     it('should detect circular dependencies', () => {

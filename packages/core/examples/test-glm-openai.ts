@@ -4,7 +4,7 @@
 
 const GLM_CONFIG = {
   apiKey: process.env.GLM_API_KEY,
-  baseUrl: 'https://open.bigmodel.cn/api/paas/v4',  // OpenAI 兼容端点
+  baseUrl: 'https://open.bigmodel.cn/api/paas/v4', // OpenAI 兼容端点
   model: 'glm-4',
 };
 
@@ -15,7 +15,7 @@ async function testGLMOpenAI() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${GLM_CONFIG.apiKey}`,
+      Authorization: `Bearer ${GLM_CONFIG.apiKey}`,
     },
     body: JSON.stringify({
       model: GLM_CONFIG.model,

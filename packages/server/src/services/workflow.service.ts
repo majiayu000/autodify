@@ -92,7 +92,7 @@ export class WorkflowService {
       generationModel: config.llm.defaultModel,
       maxRetries: config.llm.maxRetries,
       verbose: config.nodeEnv === 'development',
-      useMultiStage: true,  // 使用多阶段生成器以更好地支持复杂工作流
+      useMultiStage: true, // 使用多阶段生成器以更好地支持复杂工作流
     });
 
     this.validator = new DSLValidator();
@@ -152,7 +152,10 @@ export class WorkflowService {
       // 检查是否是 LLM 相关错误
       const message = error instanceof Error ? error.message : '未知错误';
       if (message.toLowerCase().includes('api') || message.toLowerCase().includes('llm')) {
-        throw new LLMError('LLM 服务调用失败', { originalError: message, duration: Date.now() - startTime });
+        throw new LLMError('LLM 服务调用失败', {
+          originalError: message,
+          duration: Date.now() - startTime,
+        });
       }
 
       // 其他未知错误
@@ -167,7 +170,10 @@ export class WorkflowService {
         },
         'Workflow generation failed with unexpected error'
       );
-      throw new InternalError('工作流生成过程中发生错误', { originalError: message, duration: Date.now() - startTime });
+      throw new InternalError('工作流生成过程中发生错误', {
+        originalError: message,
+        duration: Date.now() - startTime,
+      });
     }
   }
 
@@ -279,7 +285,7 @@ export class WorkflowService {
     };
 
     // Helper for delay (for animation pacing)
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     try {
       // === Phase 1: Thinking animation ===
@@ -291,7 +297,10 @@ export class WorkflowService {
       await delay(300);
 
       const cancelled1 = checkCancelled();
-      if (cancelled1) { yield cancelled1; return; }
+      if (cancelled1) {
+        yield cancelled1;
+        return;
+      }
 
       yield {
         type: 'thinking',
@@ -311,7 +320,10 @@ export class WorkflowService {
       const result = await this.orchestrator.generate(genRequest);
 
       const cancelled2 = checkCancelled();
-      if (cancelled2) { yield cancelled2; return; }
+      if (cancelled2) {
+        yield cancelled2;
+        return;
+      }
 
       if (!result.success || !result.dsl) {
         yield {
@@ -348,7 +360,10 @@ export class WorkflowService {
       // === Phase 3: Stream nodes one by one ===
       for (let i = 0; i < nodes.length; i++) {
         const cancelled = checkCancelled();
-        if (cancelled) { yield cancelled; return; }
+        if (cancelled) {
+          yield cancelled;
+          return;
+        }
 
         const node = nodes[i];
         const nodeData = node.data || {};
@@ -377,13 +392,21 @@ export class WorkflowService {
       if (edges.length > 0) {
         yield {
           type: 'edges_created',
-          edges: edges.map((edge: { id: string; source: string; target: string; sourceHandle?: string; targetHandle?: string }) => ({
-            id: edge.id,
-            source: edge.source,
-            target: edge.target,
-            sourceHandle: edge.sourceHandle,
-            targetHandle: edge.targetHandle,
-          })),
+          edges: edges.map(
+            (edge: {
+              id: string;
+              source: string;
+              target: string;
+              sourceHandle?: string;
+              targetHandle?: string;
+            }) => ({
+              id: edge.id,
+              source: edge.source,
+              target: edge.target,
+              sourceHandle: edge.sourceHandle,
+              targetHandle: edge.targetHandle,
+            })
+          ),
           done: false,
         };
         await delay(200);
@@ -466,7 +489,9 @@ export class WorkflowService {
       // 添加节点位置信息
       enhanced.workflow.graph.nodes = nodes.map((node) => {
         const level = levels.get(node.id) || 0;
-        const nodesAtLevel = [...levels.entries()].filter(([_, l]) => l === level).map(([id]) => id);
+        const nodesAtLevel = [...levels.entries()]
+          .filter(([_, l]) => l === level)
+          .map(([id]) => id);
         const indexInLevel = nodesAtLevel.indexOf(node.id);
 
         const x = START_X + level * (NODE_WIDTH + HORIZONTAL_GAP);
@@ -497,7 +522,11 @@ export class WorkflowService {
       enhanced.workflow.features = {
         file_upload: {
           enabled: false,
-          image: { enabled: false, number_limits: 3, transfer_methods: ['local_file', 'remote_url'] },
+          image: {
+            enabled: false,
+            number_limits: 3,
+            transfer_methods: ['local_file', 'remote_url'],
+          },
         },
         opening_statement: '',
         retriever_resource: { enabled: false },
@@ -516,11 +545,13 @@ export class WorkflowService {
   /**
    * 计算节点层级（用于布局）
    */
-  private calculateNodeLevels(nodes: Array<{ id: string; data: { type: string } }>): Map<string, number> {
+  private calculateNodeLevels(
+    nodes: Array<{ id: string; data: { type: string } }>
+  ): Map<string, number> {
     const levels = new Map<string, number>();
 
     // 找到 start 节点
-    const startNode = nodes.find(n => n.data.type === 'start');
+    const startNode = nodes.find((n) => n.data.type === 'start');
     if (startNode) {
       levels.set(startNode.id, 0);
     }

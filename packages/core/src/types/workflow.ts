@@ -2,7 +2,14 @@
  * Workflow and DSL type definitions for Dify
  */
 
-import type { DSLVersion, AppMode, IconType, VariableValueType, TransferMethod, AllowedFileType } from './base.js';
+import type {
+  DSLVersion,
+  AppMode,
+  IconType,
+  VariableValueType,
+  TransferMethod,
+  AllowedFileType,
+} from './base.js';
 import type { Node, NodeData } from './nodes.js';
 import type { Edge } from './edge.js';
 
@@ -208,6 +215,8 @@ export function isWorkflowDSL(dsl: DifyDSL): dsl is DifyDSL & { workflow: Workfl
 /**
  * 检查 DSL 是否为 Chat/Completion 模式
  */
-export function isModelConfigDSL(dsl: DifyDSL): dsl is DifyDSL & { model_config: ModelConfigSection } {
+export function isModelConfigDSL(
+  dsl: DifyDSL
+): dsl is DifyDSL & { model_config: ModelConfigSection } {
   return dsl.app.mode === 'chat' || dsl.app.mode === 'completion' || dsl.app.mode === 'agent-chat';
 }

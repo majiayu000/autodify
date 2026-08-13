@@ -32,6 +32,7 @@
 - ✅ 提供 `getCacheStats()` 和 `clearCache()` 方法
 
 **环境变量**：
+
 - `TEMPLATE_CACHE_ENABLED` - 启用/禁用缓存（默认：true）
 - `TEMPLATE_CACHE_MAX_SIZE` - 最大缓存条目数（默认：100）
 - `TEMPLATE_CACHE_TTL` - TTL 毫秒数（默认：null，永久缓存）
@@ -48,6 +49,7 @@
 - ✅ 提供 `getNodeCacheStats()` 和 `clearNodeCache()` 函数
 
 **环境变量**：
+
 - `NODE_CACHE_ENABLED` - 启用/禁用缓存（默认：true）
 - `NODE_CACHE_MAX_SIZE` - 最大缓存条目数（默认：50）
 - `NODE_CACHE_TTL` - TTL 毫秒数（默认：null，永久缓存）
@@ -65,13 +67,14 @@
 cache: {
   enabled: boolean;
   templates: {
-    ttl: number;      // 默认 300000ms (5分钟)
-    maxSize: number;  // 默认 50
-  };
+    ttl: number; // 默认 300000ms (5分钟)
+    maxSize: number; // 默认 50
+  }
 }
 ```
 
 **环境变量**：
+
 - `CACHE_ENABLED` - 全局缓存开关（默认：true）
 - `CACHE_TEMPLATES_TTL` - 模板列表缓存 TTL（默认：300000ms）
 - `CACHE_TEMPLATES_MAX_SIZE` - 最大缓存条目数（默认：50）
@@ -89,6 +92,7 @@ cache: {
 - ✅ 可通过环境变量配置启用/禁用
 
 **工作流程**：
+
 1. 首次请求返回数据和 ETag
 2. 后续请求检查 `If-None-Match` 头
 3. ETag 匹配时返回 304
@@ -161,6 +165,7 @@ Test Files  1 passed (1)
 ```
 
 所有缓存功能的测试用例都已通过，包括：
+
 - 基本操作（get, set, delete, has, clear）
 - LRU 淘汰策略
 - TTL 过期
@@ -172,11 +177,11 @@ Test Files  1 passed (1)
 
 根据缓存策略，预期性能提升：
 
-| 功能 | 命中率 | 响应时间减少 | 带宽节省 |
-|------|--------|--------------|----------|
-| 模板匹配 | 90%+ | 80% | N/A |
-| 节点查询 | 95%+ | 85% | N/A |
-| HTTP 响应 | 70%+ | 50% | 60%+ |
+| 功能      | 命中率 | 响应时间减少 | 带宽节省 |
+| --------- | ------ | ------------ | -------- |
+| 模板匹配  | 90%+   | 80%          | N/A      |
+| 节点查询  | 95%+   | 85%          | N/A      |
+| HTTP 响应 | 70%+   | 50%          | 60%+     |
 
 ## 使用方式
 
@@ -212,8 +217,8 @@ clearNodeCache();
 // 使用 ETag 进行条件请求
 const response = await fetch('/api/templates', {
   headers: {
-    'If-None-Match': previousETag
-  }
+    'If-None-Match': previousETag,
+  },
 });
 
 if (response.status === 304) {

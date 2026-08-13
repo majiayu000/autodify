@@ -4,7 +4,7 @@ import ExamplePrompts from './ExamplePrompts';
 import NodePalette from './NodePalette';
 import WorkflowInfo from './WorkflowInfo';
 import { type DslType } from '../store/workflowStore';
-import { NodeData } from '../types/nodeData';
+import type { NodeData } from '../types/nodeData';
 
 // 懒加载不常用的组件
 const NodeEditor = lazy(() => import('./NodeEditor'));

@@ -2,12 +2,7 @@
  * Branching Workflow Planner - Plans workflows with classification and branching
  */
 
-import type {
-  WorkflowPlan,
-  PlannedNode,
-  PlannedEdge,
-  WorkflowIntent,
-} from './types.js';
+import type { WorkflowPlan, PlannedNode, PlannedEdge, WorkflowIntent } from './types.js';
 import { extractBranches } from './branch-extractor.js';
 import { generateWorkflowName, inferInputVariables } from './workflow-helpers.js';
 
@@ -30,7 +25,7 @@ export function planBranchingWorkflow(
     title: '问题分类',
     description: '对用户问题进行智能分类',
     configHints: {
-      classes: branches.map(b => ({ id: b.id, name: b.name })),
+      classes: branches.map((b) => ({ id: b.id, name: b.name })),
     },
   });
   edges.push({ source: 'start', target: 'classifier' });

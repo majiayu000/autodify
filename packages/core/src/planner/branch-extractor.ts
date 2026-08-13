@@ -25,18 +25,26 @@ export function extractBranches(userRequest: string): BranchInfo[] {
     branches.push({
       id: 'tech',
       name: '技术支持',
-      needsRetrieval: userRequest.includes('知识') || userRequest.includes('检索') || userRequest.includes('文档'),
+      needsRetrieval:
+        userRequest.includes('知识') ||
+        userRequest.includes('检索') ||
+        userRequest.includes('文档'),
       datasetId: 'tech-docs',
       datasetName: '技术文档库',
     });
   }
 
   // Pattern: "账单/付款/退款" -> billing branch
-  if (userRequest.includes('账单') || userRequest.includes('付款') || userRequest.includes('退款')) {
+  if (
+    userRequest.includes('账单') ||
+    userRequest.includes('付款') ||
+    userRequest.includes('退款')
+  ) {
     branches.push({
       id: 'billing',
       name: '账单咨询',
-      needsRetrieval: userRequest.includes('知识') || userRequest.includes('检索') || userRequest.includes('FAQ'),
+      needsRetrieval:
+        userRequest.includes('知识') || userRequest.includes('检索') || userRequest.includes('FAQ'),
       datasetId: 'billing-faq',
       datasetName: '账单FAQ库',
     });

@@ -2,10 +2,7 @@
  * Workflow Planner - Main planner class
  */
 
-import type {
-  PlannerOptions,
-  PlanningResult,
-} from './types.js';
+import type { PlannerOptions, PlanningResult } from './types.js';
 import { analyzeIntent } from './intent-analyzer.js';
 import { planFromRules } from './rule-based-planner.js';
 import { planWithLLM, planFromTemplate } from './llm-planner.js';
@@ -43,8 +40,8 @@ export class WorkflowPlanner {
 
       // Step 2: Try to match existing template (only for simple intents with high confidence)
       // Skip template for complex workflows (complexity >= 4 or conditional/classification features)
-      const hasComplexFeatures = intent.features.some(f =>
-        f.type === 'conditional' || f.type === 'classification' || f.type === 'iteration'
+      const hasComplexFeatures = intent.features.some(
+        (f) => f.type === 'conditional' || f.type === 'classification' || f.type === 'iteration'
       );
       const isComplex = intent.complexity >= 4 || hasComplexFeatures;
 

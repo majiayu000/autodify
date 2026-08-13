@@ -12,13 +12,7 @@ export type AppMode = 'workflow' | 'advanced-chat' | 'chat' | 'agent-chat' | 'co
 export type IconType = 'emoji' | 'image' | 'link';
 
 /** 变量类型 */
-export type VariableType =
-  | 'text-input'
-  | 'paragraph'
-  | 'select'
-  | 'number'
-  | 'file'
-  | 'file-list';
+export type VariableType = 'text-input' | 'paragraph' | 'select' | 'number' | 'file' | 'file-list';
 
 /** 输出变量类型 */
 export type OutputType =

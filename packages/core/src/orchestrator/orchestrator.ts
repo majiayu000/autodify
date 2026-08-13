@@ -119,13 +119,15 @@ export class WorkflowOrchestrator {
               metadata: {
                 duration: Date.now() - startTime,
                 generator: 'multi-stage',
-                warnings: validation.warnings.map(w => w.message),
+                warnings: validation.warnings.map((w) => w.message),
               },
             };
           }
 
           // Fall through to legacy generator if multi-stage fails validation
-          this.log(`Multi-stage validation failed: ${validation.errors.length} errors, falling back to legacy`);
+          this.log(
+            `Multi-stage validation failed: ${validation.errors.length} errors, falling back to legacy`
+          );
         } else {
           this.log(`Multi-stage generation failed: ${result.error}, falling back to legacy`);
         }
@@ -248,7 +250,9 @@ export class WorkflowOrchestrator {
    * Generate DSL from a plan
    */
   private async generateFromPlan(
-    plan: ReturnType<typeof WorkflowPlanner.prototype['plan']> extends Promise<infer R> ? NonNullable<(R extends { plan?: infer P } ? P : never)> : never,
+    plan: ReturnType<(typeof WorkflowPlanner.prototype)['plan']> extends Promise<infer R>
+      ? NonNullable<R extends { plan?: infer P } ? P : never>
+      : never,
     request: GenerationRequest
   ): Promise<GenerationResult> {
     // Get relevant examples
@@ -263,9 +267,7 @@ export class WorkflowOrchestrator {
     });
 
     // Full prompt with examples
-    const fullPrompt = exampleContext
-      ? `${exampleContext}\n\n${userPrompt}`
-      : userPrompt;
+    const fullPrompt = exampleContext ? `${exampleContext}\n\n${userPrompt}` : userPrompt;
 
     // Call LLM
     const result = await this.llm.chat(
@@ -416,12 +418,14 @@ export class WorkflowOrchestrator {
       // Stop at lines that look like natural language (not YAML)
       // YAML lines are either empty, start with spaces/indent, or are key: value or - item
       const trimmed = line.trim();
-      if (trimmed.length === 0 ||
-          line.startsWith(' ') ||
-          line.startsWith('\t') ||
-          /^[a-z_-]+:/.test(trimmed) ||
-          /^- /.test(trimmed) ||
-          /^['"]/.test(trimmed)) {
+      if (
+        trimmed.length === 0 ||
+        line.startsWith(' ') ||
+        line.startsWith('\t') ||
+        /^[a-z_-]+:/.test(trimmed) ||
+        /^- /.test(trimmed) ||
+        /^['"]/.test(trimmed)
+      ) {
         yamlLines.push(line);
       } else if (trimmed.match(/^(Let me|Here|I |The |This |Note|Please|Feel free)/i)) {
         // Stop at common natural language markers
@@ -462,10 +466,22 @@ export class WorkflowOrchestrator {
    * Detect changes between two DSLs
    */
   private detectChanges(
-    oldDsl: { workflow?: { graph: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> } } },
+    oldDsl: {
+      workflow?: { graph: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> } };
+    },
     newDsl: { workflow?: { graph: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> } } }
-  ): Array<{ type: 'add' | 'remove' | 'modify'; target: 'node' | 'edge' | 'config'; id?: string; description: string }> {
-    const changes: Array<{ type: 'add' | 'remove' | 'modify'; target: 'node' | 'edge' | 'config'; id?: string; description: string }> = [];
+  ): Array<{
+    type: 'add' | 'remove' | 'modify';
+    target: 'node' | 'edge' | 'config';
+    id?: string;
+    description: string;
+  }> {
+    const changes: Array<{
+      type: 'add' | 'remove' | 'modify';
+      target: 'node' | 'edge' | 'config';
+      id?: string;
+      description: string;
+    }> = [];
 
     const oldNodes = new Set(oldDsl.workflow?.graph.nodes.map((n) => n.id) ?? []);
     const newNodes = new Set(newDsl.workflow?.graph.nodes.map((n) => n.id) ?? []);

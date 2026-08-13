@@ -3,6 +3,19 @@
  * 导出所有 API 端点的请求和响应类型，供客户端和服务端使用
  */
 
+import type {
+  GenerateRequestBody,
+  GenerateResponse,
+  HealthResponse,
+  RefineRequestBody,
+  RefineResponse,
+  TemplateDetailResponse,
+  TemplateParams,
+  TemplatesResponse,
+  ValidateRequestBody,
+  ValidateResponse,
+} from '../schemas/workflow.schema.js';
+
 // 从 schemas 导出所有类型
 export type {
   // 通用类型
@@ -33,9 +46,7 @@ export type {
 } from '../schemas/index.js';
 
 // 从 errors 导出错误类型
-export type {
-  ErrorResponse as ApiErrorResponse,
-} from '../errors/custom-errors.js';
+export type { ErrorResponse as ApiErrorResponse } from '../errors/custom-errors.js';
 
 export {
   ErrorCode,
@@ -88,28 +99,10 @@ export interface ApiEndpoint<TRequest = unknown, TResponse = unknown> {
  * 所有 API 端点的类型定义
  */
 export interface ApiEndpoints {
-  generate: ApiEndpoint<
-    import('../schemas/workflow.schema.js').GenerateRequestBody,
-    import('../schemas/workflow.schema.js').GenerateResponse
-  >;
-  refine: ApiEndpoint<
-    import('../schemas/workflow.schema.js').RefineRequestBody,
-    import('../schemas/workflow.schema.js').RefineResponse
-  >;
-  validate: ApiEndpoint<
-    import('../schemas/workflow.schema.js').ValidateRequestBody,
-    import('../schemas/workflow.schema.js').ValidateResponse
-  >;
-  templates: ApiEndpoint<
-    void,
-    import('../schemas/workflow.schema.js').TemplatesResponse
-  >;
-  templateById: ApiEndpoint<
-    { params: import('../schemas/workflow.schema.js').TemplateParams },
-    import('../schemas/workflow.schema.js').TemplateDetailResponse
-  >;
-  health: ApiEndpoint<
-    void,
-    import('../schemas/workflow.schema.js').HealthResponse
-  >;
+  generate: ApiEndpoint<GenerateRequestBody, GenerateResponse>;
+  refine: ApiEndpoint<RefineRequestBody, RefineResponse>;
+  validate: ApiEndpoint<ValidateRequestBody, ValidateResponse>;
+  templates: ApiEndpoint<void, TemplatesResponse>;
+  templateById: ApiEndpoint<{ params: TemplateParams }, TemplateDetailResponse>;
+  health: ApiEndpoint<void, HealthResponse>;
 }

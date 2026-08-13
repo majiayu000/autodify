@@ -24,9 +24,7 @@ async function testGLMApi() {
       model: GLM_CONFIG.model,
       max_tokens: 1000,
       system: '你是一个助手',
-      messages: [
-        { role: 'user', content: '你好，请用一句话介绍自己' },
-      ],
+      messages: [{ role: 'user', content: '你好，请用一句话介绍自己' }],
       temperature: 0.7,
     }),
   });

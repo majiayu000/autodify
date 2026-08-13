@@ -2,12 +2,7 @@
  * Example Store - Few-shot Example Management
  */
 
-import type {
-  FewShotExample,
-  ExampleMatch,
-  ExampleCategory,
-  SerializedExample,
-} from './types.js';
+import type { FewShotExample, ExampleMatch, ExampleCategory, SerializedExample } from './types.js';
 import { parseYAML, stringifyYAML } from '../utils/yaml.js';
 
 /**
@@ -91,9 +86,7 @@ export class ExampleStore {
       }
     }
 
-    return matches
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit ?? this.config.maxResults);
+    return matches.sort((a, b) => b.score - a.score).slice(0, limit ?? this.config.maxResults);
   }
 
   /**

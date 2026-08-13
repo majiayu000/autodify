@@ -32,12 +32,7 @@ export class TemplateStore {
   private matchCache: LRUCache<string, TemplateMatch[]> | null = null;
 
   constructor(config: TemplateStoreConfig = {}) {
-    const {
-      includeBuiltin = true,
-      customTemplates = [],
-      enableCache = true,
-      cacheConfig,
-    } = config;
+    const { includeBuiltin = true, customTemplates = [], enableCache = true, cacheConfig } = config;
 
     // Initialize cache if enabled
     if (enableCache) {
@@ -213,7 +208,11 @@ export class TemplateStore {
 
     for (const keyword of meta.keywords) {
       const normalizedKeyword = this.normalizeText(keyword);
-      if (queryTokens.some((token) => normalizedKeyword.includes(token) || token.includes(normalizedKeyword))) {
+      if (
+        queryTokens.some(
+          (token) => normalizedKeyword.includes(token) || token.includes(normalizedKeyword)
+        )
+      ) {
         matched.push(keyword);
       }
     }
@@ -229,13 +228,30 @@ export class TemplateStore {
 
     // Check for complexity indicators
     const complexIndicators = [
-      '条件', '分支', 'if', 'else', '判断',
-      '循环', '迭代', 'loop', '遍历',
-      '知识库', 'rag', '检索',
-      '分类', '路由', 'router',
-      '并行', 'parallel',
-      '代码', 'code', 'python', 'javascript',
-      'api', 'http', '请求',
+      '条件',
+      '分支',
+      'if',
+      'else',
+      '判断',
+      '循环',
+      '迭代',
+      'loop',
+      '遍历',
+      '知识库',
+      'rag',
+      '检索',
+      '分类',
+      '路由',
+      'router',
+      '并行',
+      'parallel',
+      '代码',
+      'code',
+      'python',
+      'javascript',
+      'api',
+      'http',
+      '请求',
     ];
 
     for (const indicator of complexIndicators) {

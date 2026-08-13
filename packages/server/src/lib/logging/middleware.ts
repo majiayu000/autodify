@@ -1,7 +1,12 @@
 import type { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import type { FastifyPluginAsync } from 'fastify';
 import { getLogger } from './logger.js';
-import { setRequestContext, generateRequestId, generateTraceId, extractTraceId } from './context.js';
+import {
+  setRequestContext,
+  generateRequestId,
+  generateTraceId,
+  extractTraceId,
+} from './context.js';
 
 /**
  * 请求日志中间件配置
@@ -39,7 +44,9 @@ export const requestLoggingPlugin: FastifyPluginAsync<RequestLoggingOptions> = a
 
     // 生成或提取请求 ID 和追踪 ID
     const requestId = generateRequestId();
-    const traceId = extractTraceId(request.headers as Record<string, string | string[] | undefined>) || generateTraceId();
+    const traceId =
+      extractTraceId(request.headers as Record<string, string | string[] | undefined>) ||
+      generateTraceId();
 
     // 设置请求上下文
     setRequestContext({
@@ -113,37 +120,52 @@ export const requestLoggingPlugin: FastifyPluginAsync<RequestLoggingOptions> = a
     const isSlow = duration >= slowRequestThreshold;
 
     if (isError) {
-      logger.error(logData, `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
+      logger.error(
+        logData,
+        `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`
+      );
     } else if (isClientError) {
-      logger.warn(logData, `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
+      logger.warn(
+        logData,
+        `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`
+      );
     } else if (isSlow) {
-      logger.warn({ ...logData, slow_request: true }, `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms (SLOW)`);
+      logger.warn(
+        { ...logData, slow_request: true },
+        `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms (SLOW)`
+      );
     } else {
-      logger.info(logData, `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`);
+      logger.info(
+        logData,
+        `← ${request.method} ${request.url} ${reply.statusCode} - ${duration}ms`
+      );
     }
   });
 
   // 错误处理
-  fastify.addHook('onError', async (request: FastifyRequest, _reply: FastifyReply, error: Error) => {
-    const requestId = (request as any).requestId;
-    const traceId = (request as any).traceId;
-    const startTime = (request as any).startTime || Date.now();
-    const duration = Date.now() - startTime;
+  fastify.addHook(
+    'onError',
+    async (request: FastifyRequest, _reply: FastifyReply, error: Error) => {
+      const requestId = (request as any).requestId;
+      const traceId = (request as any).traceId;
+      const startTime = (request as any).startTime || Date.now();
+      const duration = Date.now() - startTime;
 
-    logger.error(
-      {
-        request_id: requestId,
-        trace_id: traceId,
-        http_method: request.method,
-        http_path: request.url,
-        duration_ms: duration,
-        err: error,
-        error_message: error.message,
-        error_stack: error.stack,
-      },
-      `✗ ${request.method} ${request.url} - Error: ${error.message}`
-    );
-  });
+      logger.error(
+        {
+          request_id: requestId,
+          trace_id: traceId,
+          http_method: request.method,
+          http_path: request.url,
+          duration_ms: duration,
+          err: error,
+          error_message: error.message,
+          error_stack: error.stack,
+        },
+        `✗ ${request.method} ${request.url} - Error: ${error.message}`
+      );
+    }
+  );
 };
 
 /**

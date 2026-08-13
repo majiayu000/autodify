@@ -138,26 +138,26 @@ pnpm format
 
 ## 支持的节点类型
 
-| 类型 | 说明 |
-|------|------|
-| `start` | 工作流入口 |
-| `end` | 工作流出口 |
-| `llm` | LLM 对话/生成 |
-| `knowledge-retrieval` | 知识库检索 |
-| `question-classifier` | 问题分类 |
-| `if-else` | 条件分支 |
-| `code` | 代码执行 |
-| `http-request` | HTTP 请求 |
-| `variable-aggregator` | 变量聚合 |
+| 类型                  | 说明          |
+| --------------------- | ------------- |
+| `start`               | 工作流入口    |
+| `end`                 | 工作流出口    |
+| `llm`                 | LLM 对话/生成 |
+| `knowledge-retrieval` | 知识库检索    |
+| `question-classifier` | 问题分类      |
+| `if-else`             | 条件分支      |
+| `code`                | 代码执行      |
+| `http-request`        | HTTP 请求     |
+| `variable-aggregator` | 变量聚合      |
 
 ## 支持的 LLM
 
-| Provider | Models |
-|----------|--------|
-| OpenAI | gpt-4o, gpt-4o-mini, gpt-4-turbo, o1 |
-| Anthropic | claude-3.5-sonnet, claude-3-opus, claude-3-haiku |
-| DeepSeek | deepseek-chat, deepseek-coder |
-| OpenRouter | 所有支持的模型 |
+| Provider   | Models                                           |
+| ---------- | ------------------------------------------------ |
+| OpenAI     | gpt-4o, gpt-4o-mini, gpt-4-turbo, o1             |
+| Anthropic  | claude-3.5-sonnet, claude-3-opus, claude-3-haiku |
+| DeepSeek   | deepseek-chat, deepseek-coder                    |
+| OpenRouter | 所有支持的模型                                   |
 
 ## 相关链接
 

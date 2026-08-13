@@ -256,6 +256,7 @@ docker system prune -a --volumes
 ### 构建优化
 
 1. **使用构建缓存**:
+
    ```bash
    docker-compose build --parallel
    ```
@@ -268,12 +269,13 @@ docker system prune -a --volumes
 ### 运行优化
 
 1. **限制日志大小**:
+
    ```yaml
    logging:
-     driver: "json-file"
+     driver: 'json-file'
      options:
-       max-size: "10m"
-       max-file: "3"
+       max-size: '10m'
+       max-file: '3'
    ```
 
 2. **使用只读卷**:
@@ -330,12 +332,12 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - '9090:9090'
 
   grafana:
     image: grafana/grafana
     ports:
-      - "3000:3000"
+      - '3000:3000'
 ```
 
 ## 参考资源

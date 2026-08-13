@@ -6,7 +6,12 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import StatusBar from './components/StatusBar';
 import { useWorkflowStore, useTemporalStore, type DslType } from './store/workflowStore';
-import { generateWorkflow, generateWorkflowStream, checkHealth, type StreamChunk } from './api/generate';
+import {
+  generateWorkflow,
+  generateWorkflowStream,
+  checkHealth,
+  type StreamChunk,
+} from './api/generate';
 import yaml from 'js-yaml';
 
 export default function App() {
@@ -59,7 +64,7 @@ export default function App() {
       setApiConnected(connected);
     };
 
-    checkConnection();
+    void checkConnection();
     // 每 30 秒检查一次
     const interval = setInterval(checkConnection, 30000);
     return () => clearInterval(interval);
@@ -88,7 +93,11 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT'
+      ) {
         return;
       }
 
@@ -198,7 +207,7 @@ export default function App() {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && e.metaKey) {
-        handleGenerate();
+        void handleGenerate();
       }
     },
     [handleGenerate]
@@ -218,7 +227,7 @@ export default function App() {
 
   const handleCopyYaml = useCallback(() => {
     if (!yamlOutput) return;
-    navigator.clipboard.writeText(yamlOutput);
+    void navigator.clipboard.writeText(yamlOutput);
   }, [yamlOutput]);
 
   const handleAddNode = useCallback(
@@ -228,14 +237,22 @@ export default function App() {
     [addNode]
   );
 
-  const selectedNodeData = useMemo(() =>
-    selectedNodeId && dsl?.workflow?.graph?.nodes
-      ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNodeId)
-      : null
-  , [selectedNodeId, dsl?.workflow?.graph?.nodes]);
+  const selectedNodeData = useMemo(
+    () =>
+      selectedNodeId && dsl?.workflow?.graph?.nodes
+        ? dsl.workflow.graph.nodes.find((n) => n.id === selectedNodeId)
+        : null,
+    [selectedNodeId, dsl?.workflow?.graph?.nodes]
+  );
 
-  const nodeCount = useMemo(() => dsl?.workflow?.graph?.nodes?.length || 0, [dsl?.workflow?.graph?.nodes]);
-  const edgeCount = useMemo(() => dsl?.workflow?.graph?.edges?.length || 0, [dsl?.workflow?.graph?.edges]);
+  const nodeCount = useMemo(
+    () => dsl?.workflow?.graph?.nodes?.length || 0,
+    [dsl?.workflow?.graph?.nodes]
+  );
+  const edgeCount = useMemo(
+    () => dsl?.workflow?.graph?.edges?.length || 0,
+    [dsl?.workflow?.graph?.edges]
+  );
 
   return (
     <ReactFlowProvider>

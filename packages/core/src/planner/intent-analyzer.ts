@@ -20,80 +20,77 @@ const FEATURE_RULES: FeatureRule[] = [
   {
     type: 'llm',
     keywords: [
-      '回答', '生成', '对话', '聊天', '问答', 'qa', 'chat',
-      '分析', '总结', '翻译', '写', '创作', 'ai', 'gpt',
+      '回答',
+      '生成',
+      '对话',
+      '聊天',
+      '问答',
+      'qa',
+      'chat',
+      '分析',
+      '总结',
+      '翻译',
+      '写',
+      '创作',
+      'ai',
+      'gpt',
     ],
     description: 'LLM 对话/生成',
   },
   {
     type: 'rag',
     keywords: [
-      '知识库', '检索', '文档', 'rag', '向量', '搜索文档',
-      '知识', '资料', '数据库查询', '文献',
+      '知识库',
+      '检索',
+      '文档',
+      'rag',
+      '向量',
+      '搜索文档',
+      '知识',
+      '资料',
+      '数据库查询',
+      '文献',
     ],
     description: '知识库检索',
   },
   {
     type: 'classification',
-    keywords: [
-      '分类', '识别', '判断类型', '意图', '路由', 'classify',
-      '归类', '分辨', '区分',
-    ],
+    keywords: ['分类', '识别', '判断类型', '意图', '路由', 'classify', '归类', '分辨', '区分'],
     description: '意图/问题分类',
   },
   {
     type: 'conditional',
-    keywords: [
-      '条件', '如果', '否则', 'if', 'else', '分支',
-      '判断', '选择', '根据',
-    ],
+    keywords: ['条件', '如果', '否则', 'if', 'else', '分支', '判断', '选择', '根据'],
     description: '条件分支',
   },
   {
     type: 'iteration',
-    keywords: [
-      '循环', '迭代', '遍历', '批量', 'loop', 'iterate',
-      '逐个', '每个', '列表处理',
-    ],
+    keywords: ['循环', '迭代', '遍历', '批量', 'loop', 'iterate', '逐个', '每个', '列表处理'],
     description: '循环迭代',
   },
   {
     type: 'code',
-    keywords: [
-      '代码', 'python', 'javascript', '脚本', '计算',
-      '处理', '转换', '格式化', '解析',
-    ],
+    keywords: ['代码', 'python', 'javascript', '脚本', '计算', '处理', '转换', '格式化', '解析'],
     description: '代码执行',
   },
   {
     type: 'api',
-    keywords: [
-      'api', 'http', '接口', '请求', 'webhook', 'rest',
-      '调用', '获取数据', '外部服务',
-    ],
+    keywords: ['api', 'http', '接口', '请求', 'webhook', 'rest', '调用', '获取数据', '外部服务'],
     description: 'API 调用',
   },
   {
     type: 'agent',
-    keywords: [
-      '智能体', 'agent', '工具', '自主', '规划',
-      '多步骤', '自动执行',
-    ],
+    keywords: ['智能体', 'agent', '工具', '自主', '规划', '多步骤', '自动执行'],
     description: '智能体',
   },
   {
     type: 'multi-model',
-    keywords: [
-      '多模型', '并行', '对比', '多个ai', '多个llm',
-      '同时', '比较结果',
-    ],
+    keywords: ['多模型', '并行', '对比', '多个ai', '多个llm', '同时', '比较结果'],
     description: '多模型并行',
   },
   {
     type: 'streaming',
-    keywords: [
-      '流式', 'streaming', '实时', '逐字', '打字效果',
-    ],
+    keywords: ['流式', 'streaming', '实时', '逐字', '打字效果'],
     description: '流式输出',
   },
 ];
@@ -307,8 +304,5 @@ function extractRequirements(input: string): string[] {
  * Normalize text for analysis
  */
 function normalizeText(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim();
+  return text.toLowerCase().replace(/\s+/g, ' ').trim();
 }

@@ -13,9 +13,18 @@ export const dataAnalysisTemplate: WorkflowTemplate = {
     category: 'analysis',
     tags: ['数据分析', 'Python', '可视化', '统计'],
     keywords: [
-      '数据分析', '数据处理', '统计', '可视化', 'python',
-      'data analysis', 'statistics', 'visualization', 'pandas',
-      '分析数据', '数据统计', '图表',
+      '数据分析',
+      '数据处理',
+      '统计',
+      '可视化',
+      'python',
+      'data analysis',
+      'statistics',
+      'visualization',
+      'pandas',
+      '分析数据',
+      '数据统计',
+      '图表',
     ],
     nodeTypes: ['start', 'code', 'llm', 'if-else', 'end'],
     complexity: 3,
@@ -33,37 +42,38 @@ export const dataAnalysisTemplate: WorkflowTemplate = {
       'sklearn',
     ];
 
-    return createWorkflow({
-      name: '数据分析助手',
-      description: '自动化数据分析和可视化工作流',
-      icon: '📊',
-    })
-      .addStart({
-        variables: [
-          {
-            name: 'analysis_request',
-            label: '分析需求',
-            type: 'paragraph',
-            required: true,
-            maxLength: 2000,
-          },
-          {
-            name: 'data',
-            label: '数据（CSV/JSON 格式）',
-            type: 'paragraph',
-            required: true,
-            maxLength: 50000,
-          },
-        ],
+    return (
+      createWorkflow({
+        name: '数据分析助手',
+        description: '自动化数据分析和可视化工作流',
+        icon: '📊',
       })
-      // 分析需求理解
-      .addLLM({
-        id: 'understand-request',
-        title: '理解分析需求',
-        provider,
-        model,
-        temperature: 0.3,
-        systemPrompt: `你是数据分析专家。分析用户的需求，输出结构化的分析计划。
+        .addStart({
+          variables: [
+            {
+              name: 'analysis_request',
+              label: '分析需求',
+              type: 'paragraph',
+              required: true,
+              maxLength: 2000,
+            },
+            {
+              name: 'data',
+              label: '数据（CSV/JSON 格式）',
+              type: 'paragraph',
+              required: true,
+              maxLength: 50000,
+            },
+          ],
+        })
+        // 分析需求理解
+        .addLLM({
+          id: 'understand-request',
+          title: '理解分析需求',
+          provider,
+          model,
+          temperature: 0.3,
+          systemPrompt: `你是数据分析专家。分析用户的需求，输出结构化的分析计划。
 
 输出格式（JSON）：
 {
@@ -72,16 +82,16 @@ export const dataAnalysisTemplate: WorkflowTemplate = {
   "visualization_needed": true/false,
   "steps": ["步骤1", "步骤2"]
 }`,
-        userPrompt: '分析需求：{{#start.analysis_request#}}',
-      })
-      // 生成分析代码
-      .addLLM({
-        id: 'generate-code',
-        title: '生成分析代码',
-        provider,
-        model,
-        temperature: 0.2,
-        systemPrompt: `你是 Python 数据分析专家。根据分析计划生成完整的 Python 代码。
+          userPrompt: '分析需求：{{#start.analysis_request#}}',
+        })
+        // 生成分析代码
+        .addLLM({
+          id: 'generate-code',
+          title: '生成分析代码',
+          provider,
+          model,
+          temperature: 0.2,
+          systemPrompt: `你是 Python 数据分析专家。根据分析计划生成完整的 Python 代码。
 
 要求：
 1. 使用 pandas, numpy 等标准库
@@ -94,50 +104,46 @@ export const dataAnalysisTemplate: WorkflowTemplate = {
 可用库：${allowedLibraries.join(', ')}
 
 只输出 Python 代码，不要其他解释。`,
-        userPrompt: `分析计划：{{#understand-request.text#}}
+          userPrompt: `分析计划：{{#understand-request.text#}}
 
 数据预览：
 {{#start.data#}}`,
-      })
-      // 执行代码
-      .addCode({
-        id: 'execute-analysis',
-        title: '执行数据分析',
-        language: 'python3',
-        code: '{{#generate-code.text#}}',
-        inputs: [
-          { name: 'data', source: ['start', 'data'] },
-        ],
-        outputs: [
-          { name: 'result', type: 'object' },
-        ],
-      })
-      // 检查执行结果
-      .addIfElse({
-        id: 'check-result',
-        title: '检查执行结果',
-        conditions: [
-          {
-            id: 'success',
-            logicalOperator: 'and',
-            rules: [
-              {
-                variableSelector: ['execute-analysis', 'result'],
-                operator: 'is not empty',
-                value: '',
-              },
-            ],
-          },
-        ],
-      })
-      // 成功：生成分析报告
-      .addLLM({
-        id: 'generate-report',
-        title: '生成分析报告',
-        provider,
-        model,
-        temperature: 0.5,
-        systemPrompt: `你是数据分析师。根据代码执行结果，生成易懂的分析报告。
+        })
+        // 执行代码
+        .addCode({
+          id: 'execute-analysis',
+          title: '执行数据分析',
+          language: 'python3',
+          code: '{{#generate-code.text#}}',
+          inputs: [{ name: 'data', source: ['start', 'data'] }],
+          outputs: [{ name: 'result', type: 'object' }],
+        })
+        // 检查执行结果
+        .addIfElse({
+          id: 'check-result',
+          title: '检查执行结果',
+          conditions: [
+            {
+              id: 'success',
+              logicalOperator: 'and',
+              rules: [
+                {
+                  variableSelector: ['execute-analysis', 'result'],
+                  operator: 'is not empty',
+                  value: '',
+                },
+              ],
+            },
+          ],
+        })
+        // 成功：生成分析报告
+        .addLLM({
+          id: 'generate-report',
+          title: '生成分析报告',
+          provider,
+          model,
+          temperature: 0.5,
+          systemPrompt: `你是数据分析师。根据代码执行结果，生成易懂的分析报告。
 
 报告应包括：
 1. 数据概况
@@ -146,55 +152,56 @@ export const dataAnalysisTemplate: WorkflowTemplate = {
 4. 建议和洞察
 
 使用 Markdown 格式，结构清晰。`,
-        userPrompt: `原始需求：{{#start.analysis_request#}}
+          userPrompt: `原始需求：{{#start.analysis_request#}}
 
 分析计划：{{#understand-request.text#}}
 
 执行结果：
 {{#execute-analysis.result#}}`,
-      })
-      // 失败：错误分析
-      .addLLM({
-        id: 'analyze-error',
-        title: '错误分析',
-        provider,
-        model,
-        temperature: 0.3,
-        systemPrompt: '你是 Python 专家。分析代码执行错误，提供解决建议。',
-        userPrompt: `代码：
+        })
+        // 失败：错误分析
+        .addLLM({
+          id: 'analyze-error',
+          title: '错误分析',
+          provider,
+          model,
+          temperature: 0.3,
+          systemPrompt: '你是 Python 专家。分析代码执行错误，提供解决建议。',
+          userPrompt: `代码：
 {{#generate-code.text#}}
 
 错误信息：代码执行失败
 
 请说明可能的问题原因和解决方案。`,
-      })
-      // 聚合结果
-      .addAggregator({
-        id: 'result-aggregator',
-        title: '结果聚合',
-        variables: [
-          ['generate-report', 'text'],
-          ['analyze-error', 'text'],
-        ],
-        outputType: 'string',
-      })
-      .addEnd({
-        id: 'end',
-        outputs: [
-          { name: 'report', source: ['result-aggregator', 'output'] },
-          { name: 'code', source: ['generate-code', 'text'] },
-          { name: 'execution_result', source: ['execute-analysis', 'result'] },
-        ],
-      })
-      .connect('start', 'understand-request')
-      .connect('understand-request', 'generate-code')
-      .connect('generate-code', 'execute-analysis')
-      .connect('execute-analysis', 'check-result')
-      .connect('check-result', 'generate-report', { sourceHandle: 'true' })
-      .connect('check-result', 'analyze-error', { sourceHandle: 'false' })
-      .connect('generate-report', 'result-aggregator')
-      .connect('analyze-error', 'result-aggregator')
-      .connect('result-aggregator', 'end')
-      .build();
+        })
+        // 聚合结果
+        .addAggregator({
+          id: 'result-aggregator',
+          title: '结果聚合',
+          variables: [
+            ['generate-report', 'text'],
+            ['analyze-error', 'text'],
+          ],
+          outputType: 'string',
+        })
+        .addEnd({
+          id: 'end',
+          outputs: [
+            { name: 'report', source: ['result-aggregator', 'output'] },
+            { name: 'code', source: ['generate-code', 'text'] },
+            { name: 'execution_result', source: ['execute-analysis', 'result'] },
+          ],
+        })
+        .connect('start', 'understand-request')
+        .connect('understand-request', 'generate-code')
+        .connect('generate-code', 'execute-analysis')
+        .connect('execute-analysis', 'check-result')
+        .connect('check-result', 'generate-report', { sourceHandle: 'true' })
+        .connect('check-result', 'analyze-error', { sourceHandle: 'false' })
+        .connect('generate-report', 'result-aggregator')
+        .connect('analyze-error', 'result-aggregator')
+        .connect('result-aggregator', 'end')
+        .build()
+    );
   },
 };

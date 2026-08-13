@@ -16,7 +16,10 @@ const envSchema = z.object({
 
   // LLM Configuration - 必需字段
   LLM_API_KEY: z.string().min(1, 'LLM_API_KEY is required'),
-  LLM_BASE_URL: z.string().url('LLM_BASE_URL must be a valid URL').default('https://api.openai.com/v1'),
+  LLM_BASE_URL: z
+    .string()
+    .url('LLM_BASE_URL must be a valid URL')
+    .default('https://api.openai.com/v1'),
 
   // LLM Configuration - 可选字段
   LLM_DEFAULT_MODEL: z.string().default('gpt-4o'),

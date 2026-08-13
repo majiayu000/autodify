@@ -45,7 +45,7 @@ async function demo1_builderRAG() {
       id: 'retrieval',
       title: '知识检索',
       queryFrom: ['start', 'query'],
-      datasetIds: ['dataset-001', 'dataset-002'],  // 实际使用时替换为真实的知识库 ID
+      datasetIds: ['dataset-001', 'dataset-002'], // 实际使用时替换为真实的知识库 ID
       retrievalMode: 'multiple',
       topK: 5,
       scoreThreshold: 0.5,
@@ -76,9 +76,7 @@ async function demo1_builderRAG() {
     // 结束节点
     .addEnd({
       id: 'end',
-      outputs: [
-        { name: 'answer', source: ['answer-llm', 'text'] },
-      ],
+      outputs: [{ name: 'answer', source: ['answer-llm', 'text'] }],
     })
     // 连接节点
     .connect('start', 'retrieval')
@@ -105,7 +103,7 @@ async function demo1_builderRAG() {
   console.log('  变量引用数:', analysis.variables.referencedVariables.length);
 
   if (analysis.issues.length > 0) {
-    console.log('  问题:', analysis.issues.map(i => i.message).join(', '));
+    console.log('  问题:', analysis.issues.map((i) => i.message).join(', '));
   }
 
   return dsl;
@@ -223,7 +221,7 @@ async function demo3_complexRAG() {
 
       if (analysis.issues.length > 0) {
         console.log('  ⚠️ 潜在问题:');
-        analysis.issues.forEach(issue => {
+        analysis.issues.forEach((issue) => {
           console.log(`    - [${issue.type}] ${issue.message}`);
         });
       }
@@ -258,4 +256,4 @@ async function main() {
   }
 }
 
-main();
+void main();

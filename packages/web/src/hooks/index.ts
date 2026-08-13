@@ -2,7 +2,7 @@
  * Hooks exports
  */
 
-export { useStreamingNodes } from './useStreamingNodes'
+export { useStreamingNodes } from './useStreamingNodes';
 export type {
   StreamEventType,
   ThinkingStep,
@@ -11,4 +11,4 @@ export type {
   StreamPhase,
   StreamState,
   StreamEvent,
-} from './useStreamingNodes'
+} from './useStreamingNodes';

@@ -158,17 +158,17 @@ services:
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
     ports:
-      - "4000:4000"
+      - '4000:4000'
     environment:
       - LITELLM_MASTER_KEY=sk-autodify
     volumes:
       - ./litellm-config.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml"]
+    command: ['--config', '/app/config.yaml']
 
   autodify-server:
     build: ./packages/server
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - LLM_BASE_URL=http://litellm:4000/v1
       - LLM_API_KEY=sk-autodify
@@ -271,17 +271,20 @@ litellm_settings:
 ## 测试策略
 
 ### 单元测试
+
 - LLM Service mock 测试
 - Planner 逻辑测试
 - Generator 输出格式测试
 - Validator 规则测试
 
 ### 集成测试
+
 - API 端到端测试
 - 核心流程测试 (输入 → DSL)
 - 模板匹配测试
 
 ### E2E 测试
+
 - 前端交互测试
 - 完整生成流程测试
 - 错误处理测试
@@ -289,6 +292,7 @@ litellm_settings:
 ## 部署架构
 
 ### 开发环境
+
 ```
 pnpm dev           # 启动所有服务
 ├── web:dev        # Vite dev server (3000)
@@ -297,6 +301,7 @@ pnpm dev           # 启动所有服务
 ```
 
 ### 生产环境
+
 ```
 Docker Compose / Kubernetes
 ├── nginx          # 反向代理 + 静态资源

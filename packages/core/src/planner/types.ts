@@ -33,16 +33,16 @@ export interface WorkflowFeature {
  * Types of features that can be detected
  */
 export type FeatureType =
-  | 'llm'              // LLM 对话/生成
-  | 'rag'              // 知识库检索
-  | 'classification'   // 意图分类
-  | 'conditional'      // 条件分支
-  | 'iteration'        // 循环迭代
-  | 'code'             // 代码执行
-  | 'api'              // API 调用
-  | 'agent'            // 智能体
-  | 'multi-model'      // 多模型
-  | 'streaming';       // 流式输出
+  | 'llm' // LLM 对话/生成
+  | 'rag' // 知识库检索
+  | 'classification' // 意图分类
+  | 'conditional' // 条件分支
+  | 'iteration' // 循环迭代
+  | 'code' // 代码执行
+  | 'api' // API 调用
+  | 'agent' // 智能体
+  | 'multi-model' // 多模型
+  | 'streaming'; // 流式输出
 
 /**
  * Planned node in the workflow

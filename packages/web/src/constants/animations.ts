@@ -3,7 +3,7 @@
  * 用于统一管理所有动画参数，确保一致的动画体验
  */
 
-import type { Transition, Variants } from 'framer-motion'
+import type { Transition, Variants } from 'framer-motion';
 
 // ============================================
 // 基础时间配置
@@ -19,7 +19,7 @@ export const TIMING = {
   thinkingStepDelay: 300,
   /** 完成特效持续时间 (秒) */
   completeDuration: 0.6,
-} as const
+} as const;
 
 // ============================================
 // 弹性动画配置
@@ -52,7 +52,7 @@ export const SPRING = {
     stiffness: 500,
     damping: 30,
   } as Transition,
-} as const
+} as const;
 
 // ============================================
 // 缓动函数配置
@@ -64,7 +64,7 @@ export const EASING = {
   easeIn: [0.4, 0.0, 1, 1],
   /** 平滑缓入缓出 */
   easeInOut: [0.4, 0.0, 0.2, 1],
-} as const
+} as const;
 
 // ============================================
 // 节点动画配置
@@ -104,7 +104,7 @@ export const NODE_ANIMATION = {
   tap: {
     scale: 0.98,
   },
-} as const
+} as const;
 
 // ============================================
 // 节点 Variants (用于 AnimatePresence)
@@ -113,7 +113,7 @@ export const nodeVariants: Variants = {
   initial: NODE_ANIMATION.initial,
   animate: NODE_ANIMATION.animate,
   exit: NODE_ANIMATION.exit,
-}
+};
 
 // ============================================
 // 边线动画配置
@@ -136,7 +136,7 @@ export const EDGE_ANIMATION = {
     duration: TIMING.edgeDuration,
     ease: EASING.easeOut,
   },
-} as const
+} as const;
 
 // ============================================
 // 思考展示层动画配置
@@ -164,7 +164,7 @@ export const THINKING_ANIMATION = {
       ease: 'linear',
     },
   },
-} as const
+} as const;
 
 // ============================================
 // 完成特效动画配置
@@ -204,7 +204,7 @@ export const COMPLETE_ANIMATION = {
       repeat: 2,
     },
   },
-}
+};
 
 // ============================================
 // 进度条动画配置
@@ -224,7 +224,7 @@ export const PROGRESS_ANIMATION = {
       duration: 0.5,
     },
   },
-} as const
+} as const;
 
 // ============================================
 // 侧边栏动画配置
@@ -245,7 +245,7 @@ export const SIDEBAR_ANIMATION = {
     exit: { opacity: 0 },
     transition: { duration: 0.15 },
   },
-} as const
+} as const;
 
 // ============================================
 // 画布整体动画配置
@@ -268,7 +268,7 @@ export const CANVAS_ANIMATION = {
     animate: { opacity: 1 },
     transition: { duration: 0.3 },
   },
-} as const
+} as const;
 
 // ============================================
 // 工具函数
@@ -286,7 +286,7 @@ export function getNodeAnimationWithDelay(index: number) {
       ...SPRING.default,
       delay: index * TIMING.stagger,
     },
-  }
+  };
 }
 
 /**
@@ -296,12 +296,12 @@ export function getNodeAnimationWithDelay(index: number) {
  * @returns 带延迟的动画配置
  */
 export function getEdgeAnimationWithDelay(index: number, nodeCount: number) {
-  const baseDelay = nodeCount * TIMING.stagger
+  const baseDelay = nodeCount * TIMING.stagger;
   return {
     ...EDGE_ANIMATION,
     transition: {
       ...EDGE_ANIMATION.transition,
       delay: baseDelay + index * 0.1,
     },
-  }
+  };
 }

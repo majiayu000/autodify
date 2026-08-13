@@ -67,6 +67,7 @@ LOG_LEVEL=info
 根据用户描述生成 Dify 工作流 DSL。
 
 **请求体：**
+
 ```json
 {
   "prompt": "创建一个客户服务工作流",
@@ -79,6 +80,7 @@ LOG_LEVEL=info
 ```
 
 **响应：**
+
 ```json
 {
   "success": true,
@@ -101,6 +103,7 @@ LOG_LEVEL=info
 根据用户指令优化现有的工作流 DSL。
 
 **请求体：**
+
 ```json
 {
   "dsl": { ... },
@@ -115,6 +118,7 @@ LOG_LEVEL=info
 验证工作流 DSL 的有效性。
 
 **请求体：**
+
 ```json
 {
   "dsl": { ... }
@@ -122,6 +126,7 @@ LOG_LEVEL=info
 ```
 
 **响应：**
+
 ```json
 {
   "valid": true,
@@ -141,6 +146,7 @@ LOG_LEVEL=info
 获取指定模板的 DSL 内容。
 
 **参数：**
+
 - `id`: 模板 ID（字母、数字、下划线、短横线）
 
 ### 健康检查
@@ -156,19 +162,23 @@ LOG_LEVEL=info
 ### 验证规则
 
 #### POST /api/generate
+
 - `prompt`: 1-10000 字符
 - `options.temperature`: 0-2
 - `options.model`: 可选字符串
 - `options.useTemplate`: 可选布尔值
 
 #### POST /api/refine
+
 - `dsl`: 有效的对象
 - `instruction`: 1-5000 字符
 
 #### POST /api/validate
+
 - `dsl`: 有效的对象
 
 #### GET /api/templates/:id
+
 - `id`: 只能包含字母、数字、下划线和短横线
 
 ### 验证错误响应
@@ -207,18 +217,18 @@ LOG_LEVEL=info
 
 ### 常见错误码
 
-| 错误码 | 描述 | HTTP 状态码 |
-|--------|------|-------------|
-| `VALIDATION_ERROR` | 请求参数验证失败 | 400 |
-| `INVALID_DSL` | 无效的 DSL 格式 | 400 |
-| `NOT_FOUND` | 资源未找到 | 404 |
-| `TEMPLATE_NOT_FOUND` | 模板未找到 | 404 |
-| `GENERATION_FAILED` | 工作流生成失败 | 500 |
-| `REFINEMENT_FAILED` | 工作流优化失败 | 500 |
-| `LLM_ERROR` | LLM 服务错误 | 502 |
-| `LLM_TIMEOUT` | LLM 服务超时 | 504 |
-| `RATE_LIMIT_EXCEEDED` | 请求频率超限 | 429 |
-| `INTERNAL_ERROR` | 服务器内部错误 | 500 |
+| 错误码                | 描述             | HTTP 状态码 |
+| --------------------- | ---------------- | ----------- |
+| `VALIDATION_ERROR`    | 请求参数验证失败 | 400         |
+| `INVALID_DSL`         | 无效的 DSL 格式  | 400         |
+| `NOT_FOUND`           | 资源未找到       | 404         |
+| `TEMPLATE_NOT_FOUND`  | 模板未找到       | 404         |
+| `GENERATION_FAILED`   | 工作流生成失败   | 500         |
+| `REFINEMENT_FAILED`   | 工作流优化失败   | 500         |
+| `LLM_ERROR`           | LLM 服务错误     | 502         |
+| `LLM_TIMEOUT`         | LLM 服务超时     | 504         |
+| `RATE_LIMIT_EXCEEDED` | 请求频率超限     | 429         |
+| `INTERNAL_ERROR`      | 服务器内部错误   | 500         |
 
 ### 错误处理示例
 
@@ -308,7 +318,7 @@ try {
 
   if (!result.success) {
     throw new GenerationFailedError('工作流生成失败', {
-      reason: result.error
+      reason: result.error,
     });
   }
 
@@ -322,13 +332,13 @@ try {
   // 转换 LLM 错误
   if (this.isLLMError(error)) {
     throw new LLMError('LLM 服务调用失败', {
-      originalError: error.message
+      originalError: error.message,
     });
   }
 
   // 其他未知错误
   throw new InternalError('服务内部错误', {
-    originalError: error instanceof Error ? error.message : '未知错误'
+    originalError: error instanceof Error ? error.message : '未知错误',
   });
 }
 ```

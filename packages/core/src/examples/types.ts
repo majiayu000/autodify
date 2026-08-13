@@ -8,14 +8,14 @@ import type { DifyDSL } from '../types/index.js';
  * Example category for organization
  */
 export type ExampleCategory =
-  | 'simple'       // 简单工作流
-  | 'conditional'  // 条件分支
-  | 'loop'         // 循环迭代
-  | 'rag'          // 知识库检索
-  | 'agent'        // 智能体
-  | 'api'          // API 集成
-  | 'code'         // 代码处理
-  | 'complex';     // 复杂场景
+  | 'simple' // 简单工作流
+  | 'conditional' // 条件分支
+  | 'loop' // 循环迭代
+  | 'rag' // 知识库检索
+  | 'agent' // 智能体
+  | 'api' // API 集成
+  | 'code' // 代码处理
+  | 'complex'; // 复杂场景
 
 /**
  * Few-shot example metadata

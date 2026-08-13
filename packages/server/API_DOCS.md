@@ -23,15 +23,18 @@
 ### API 端点分类
 
 #### Workflow (工作流)
+
 - `POST /api/generate` - 生成工作流
 - `POST /api/refine` - 优化工作流
 - `POST /api/validate` - 验证 DSL
 
 #### Template (模板)
+
 - `GET /api/templates` - 获取模板列表
 - `GET /api/templates/:id` - 获取模板详情
 
 #### Health (健康检查)
+
 - `GET /api/health` - 服务健康检查
 
 ### 示例使用

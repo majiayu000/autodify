@@ -4,13 +4,7 @@
  * Fluent API for building complete workflows.
  */
 
-import type {
-  DifyDSL,
-  Node,
-  Edge,
-  NodeData,
-  NodeType,
-} from '../types/index.js';
+import type { DifyDSL, Node, Edge, NodeData, NodeType } from '../types/index.js';
 import { createEdge } from '../types/edge.js';
 import type {
   WorkflowBuilderOptions,

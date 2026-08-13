@@ -1,4 +1,5 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { workflowRoutes } from '../../routes/workflow.routes.js';
@@ -10,6 +11,11 @@ import { workflowRoutes } from '../../routes/workflow.routes.js';
 export async function buildTestApp(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: false, // 测试时禁用日志
+    ajv: {
+      customOptions: {
+        keywords: ['example'],
+      },
+    },
   });
 
   // CORS

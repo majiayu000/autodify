@@ -208,9 +208,7 @@ export function getModelInfo(providerId: string, modelId: string): ModelInfo | u
  * 获取所有模型
  */
 export function getAllModels(): Array<{ provider: string; model: ModelInfo }> {
-  return modelProviders.flatMap((p) =>
-    p.models.map((m) => ({ provider: p.id, model: m }))
-  );
+  return modelProviders.flatMap((p) => p.models.map((m) => ({ provider: p.id, model: m })));
 }
 
 /**

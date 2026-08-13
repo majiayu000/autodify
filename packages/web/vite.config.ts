@@ -19,9 +19,9 @@ export default defineConfig({
           // React Flow 及其依赖
           'react-flow': ['@xyflow/react', 'dagre'],
           // Zustand 状态管理
-          'zustand': ['zustand'],
+          zustand: ['zustand'],
           // YAML 处理
-          'yaml': ['js-yaml'],
+          yaml: ['js-yaml'],
         },
       },
     },

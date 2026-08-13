@@ -17,5 +17,6 @@ export const simpleQAExample: FewShotExample = {
   },
   prompt: '帮我创建一个简单的问答工作流，用户输入问题，AI 回答',
   dsl: simpleQATemplate.build(),
-  explanation: '这是最简单的工作流结构：开始节点接收用户输入，LLM 节点处理并生成回答，结束节点输出结果。适合快速构建基础的问答应用。',
+  explanation:
+    '这是最简单的工作流结构：开始节点接收用户输入，LLM 节点处理并生成回答，结束节点输出结果。适合快速构建基础的问答应用。',
 };

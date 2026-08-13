@@ -41,9 +41,7 @@ const ThinkingOverlay = memo(function ThinkingOverlay({
                 transition={THINKING_ANIMATION.spinner.transition}
                 className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"
               />
-              <span className="text-slate-100 font-medium text-sm">
-                AI 正在思考...
-              </span>
+              <span className="text-slate-100 font-medium text-sm">AI 正在思考...</span>
             </div>
 
             {/* Thinking steps */}
@@ -64,9 +62,7 @@ const ThinkingOverlay = memo(function ThinkingOverlay({
                   >
                     ✓
                   </motion.span>
-                  <span className="text-slate-300 text-sm leading-relaxed">
-                    {step.message}
-                  </span>
+                  <span className="text-slate-300 text-sm leading-relaxed">{step.message}</span>
                 </motion.div>
               ))}
             </div>
