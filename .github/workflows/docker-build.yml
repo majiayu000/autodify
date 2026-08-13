@@ -17,6 +17,20 @@ env:
   IMAGE_NAME_WEB: ${{ github.repository }}/web
 
 jobs:
+  smoke-test-server:
+    name: Smoke test server container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 构建 Server 镜像
+        run: docker build --file packages/server/Dockerfile --tag autodify-server:smoke .
+
+      - name: 验证 Server 容器健康状态
+        run: scripts/smoke-test-server-container.sh autodify-server:smoke
+
   # ============================================
   # 构建和测试 Docker 镜像
   # ============================================
@@ -97,7 +111,7 @@ jobs:
   # 生成镜像摘要报告
   # ============================================
   summary:
-    needs: build
+    needs: [build, smoke-test-server]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
 
