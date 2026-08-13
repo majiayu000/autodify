@@ -68,14 +68,14 @@ export function planFromTemplate(
  */
 function getNodeTitle(type: string): string {
   const titles: Record<string, string> = {
-    'start': '开始',
-    'end': '结束',
-    'answer': '回答',
-    'llm': 'AI 处理',
+    start: '开始',
+    end: '结束',
+    answer: '回答',
+    llm: 'AI 处理',
     'knowledge-retrieval': '知识检索',
     'question-classifier': '问题分类',
     'if-else': '条件判断',
-    'code': '代码执行',
+    code: '代码执行',
     'http-request': 'HTTP 请求',
     'variable-aggregator': '变量聚合',
     'template-transform': '模板转换',
@@ -88,14 +88,14 @@ function getNodeTitle(type: string): string {
  */
 function getNodeDescription(type: string): string {
   const descriptions: Record<string, string> = {
-    'start': '接收用户输入',
-    'end': '输出结果',
-    'answer': '直接回答用户',
-    'llm': '使用大语言模型处理',
+    start: '接收用户输入',
+    end: '输出结果',
+    answer: '直接回答用户',
+    llm: '使用大语言模型处理',
     'knowledge-retrieval': '从知识库检索相关内容',
     'question-classifier': '对用户问题进行分类',
     'if-else': '根据条件执行不同分支',
-    'code': '执行自定义代码',
+    code: '执行自定义代码',
     'http-request': '调用外部 API',
     'variable-aggregator': '聚合多个变量',
     'template-transform': '转换数据格式',

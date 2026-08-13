@@ -1,4 +1,4 @@
-import { Condition } from '../../types/nodeData';
+import type { Condition } from '../../types/nodeData';
 
 interface IfElseNodeEditorProps {
   conditions: Condition[];

@@ -1,4 +1,4 @@
-import { Variable } from '../../types/nodeData';
+import type { Variable } from '../../types/nodeData';
 
 interface StartNodeEditorProps {
   variables: Variable[];

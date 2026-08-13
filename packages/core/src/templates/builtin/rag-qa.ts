@@ -13,8 +13,17 @@ export const ragQATemplate: WorkflowTemplate = {
     category: 'rag',
     tags: ['RAG', '知识库', '问答', '检索'],
     keywords: [
-      '知识库', '文档', '检索', 'RAG', '知识问答', '文档问答',
-      '资料库', '数据库', 'knowledge', 'retrieval', '查询文档',
+      '知识库',
+      '文档',
+      '检索',
+      'RAG',
+      '知识问答',
+      '文档问答',
+      '资料库',
+      '数据库',
+      'knowledge',
+      'retrieval',
+      '查询文档',
     ],
     nodeTypes: ['start', 'knowledge-retrieval', 'llm', 'end'],
     complexity: 2,
@@ -26,7 +35,8 @@ export const ragQATemplate: WorkflowTemplate = {
     const scoreThreshold = (params['scoreThreshold'] as number) ?? 0.5;
     const model = (params['model'] as string) ?? 'gpt-4o';
     const provider = (params['provider'] as string) ?? 'openai';
-    const systemPrompt = (params['systemPrompt'] as string) ??
+    const systemPrompt =
+      (params['systemPrompt'] as string) ??
       `你是一个专业的客服助手。请根据提供的参考资料回答用户的问题。
 
 要求：
@@ -79,9 +89,7 @@ export const ragQATemplate: WorkflowTemplate = {
       })
       .addEnd({
         id: 'end',
-        outputs: [
-          { name: 'answer', source: ['llm', 'text'] },
-        ],
+        outputs: [{ name: 'answer', source: ['llm', 'text'] }],
       })
       .connect('start', 'retrieval')
       .connect('retrieval', 'llm')

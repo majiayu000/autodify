@@ -29,7 +29,10 @@ export function initializeLogging(config: LoggingConfig): PinoLogger {
 
   isInitialized = true;
 
-  globalLogger.info({ config: { service: config.service, level: config.level, env: config.environment } }, 'Logger initialized');
+  globalLogger.info(
+    { config: { service: config.service, level: config.level, env: config.environment } },
+    'Logger initialized'
+  );
 
   return globalLogger;
 }
@@ -57,7 +60,11 @@ export function createChildLogger(context: Record<string, unknown>): PinoLogger 
 /**
  * 辅助函数：记录错误
  */
-export function logError(error: Error | unknown, message: string, context?: Record<string, unknown>) {
+export function logError(
+  error: Error | unknown,
+  message: string,
+  context?: Record<string, unknown>
+) {
   const logger = getLogger();
 
   if (error instanceof Error) {

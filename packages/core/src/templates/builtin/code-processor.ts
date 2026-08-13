@@ -13,8 +13,15 @@ export const codeProcessorTemplate: WorkflowTemplate = {
     category: 'automation',
     tags: ['代码', '数据处理', 'Python', 'JavaScript'],
     keywords: [
-      '代码', 'Python', 'JavaScript', '数据处理', '计算',
-      '脚本', '自动化', '转换', '格式化',
+      '代码',
+      'Python',
+      'JavaScript',
+      '数据处理',
+      '计算',
+      '脚本',
+      '自动化',
+      '转换',
+      '格式化',
     ],
     nodeTypes: ['start', 'code', 'llm', 'end'],
     complexity: 2,
@@ -25,8 +32,9 @@ export const codeProcessorTemplate: WorkflowTemplate = {
     const model = (params['model'] as string) ?? 'gpt-4o';
     const provider = (params['provider'] as string) ?? 'openai';
 
-    const defaultCode = language === 'python3'
-      ? `def main(data: str) -> dict:
+    const defaultCode =
+      language === 'python3'
+        ? `def main(data: str) -> dict:
     # 在这里处理数据
     lines = data.strip().split('\\n')
     processed = [line.upper() for line in lines]
@@ -34,7 +42,7 @@ export const codeProcessorTemplate: WorkflowTemplate = {
         "result": '\\n'.join(processed),
         "count": len(lines)
     }`
-      : `function main(data) {
+        : `function main(data) {
     // 在这里处理数据
     const lines = data.trim().split('\\n');
     const processed = lines.map(line => line.toUpperCase());
@@ -67,9 +75,7 @@ export const codeProcessorTemplate: WorkflowTemplate = {
         title: '数据处理',
         language,
         code,
-        inputs: [
-          { name: 'data', source: ['start', 'data'] },
-        ],
+        inputs: [{ name: 'data', source: ['start', 'data'] }],
         outputs: [
           { name: 'result', type: 'string' },
           { name: 'count', type: 'number' },

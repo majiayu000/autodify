@@ -110,10 +110,10 @@ export type StreamChunkType =
   | 'metadata'
   | 'error'
   | 'done'
-  | 'thinking'      // AI 思考过程
-  | 'node_created'  // 节点创建
+  | 'thinking' // AI 思考过程
+  | 'node_created' // 节点创建
   | 'edges_created' // 边创建
-  | 'complete';     // 生成完成
+  | 'complete'; // 生成完成
 
 /**
  * Node info for streaming

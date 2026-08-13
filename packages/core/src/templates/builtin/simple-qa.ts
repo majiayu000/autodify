@@ -18,7 +18,8 @@ export const simpleQATemplate: WorkflowTemplate = {
   },
 
   build: (params = {}) => {
-    const systemPrompt = (params['systemPrompt'] as string) ??
+    const systemPrompt =
+      (params['systemPrompt'] as string) ??
       '你是一个有帮助的 AI 助手。请根据用户的问题提供准确、简洁的回答。';
     const inputLabel = (params['inputLabel'] as string) ?? '问题';
     const model = (params['model'] as string) ?? 'gpt-4o';

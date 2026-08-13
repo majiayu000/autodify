@@ -4,11 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WorkflowOrchestrator, createOrchestrator } from './orchestrator.js';
-import type {
-  OrchestratorConfig,
-  GenerationRequest,
-  EditRequest,
-} from './types.js';
+import type { OrchestratorConfig, GenerationRequest, EditRequest } from './types.js';
 import type { ILLMService, CompletionResult, ChatMessage } from '../llm/types.js';
 import { createSimpleDSL, dslToYAML } from '../generator/generator.js';
 import type { DifyDSL } from '../types/index.js';
@@ -583,7 +579,12 @@ describe('WorkflowOrchestrator', () => {
               {
                 id: 'node1',
                 type: 'custom',
-                data: { type: 'llm', title: 'LLM', model: { provider: 'openai', name: 'gpt-4o', mode: 'chat' }, prompt_template: [] },
+                data: {
+                  type: 'llm',
+                  title: 'LLM',
+                  model: { provider: 'openai', name: 'gpt-4o', mode: 'chat' },
+                  prompt_template: [],
+                },
               },
             ],
             edges: [

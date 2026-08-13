@@ -1,4 +1,4 @@
-import { NodeData } from '../../types/nodeData';
+import type { NodeData } from '../../types/nodeData';
 
 interface KnowledgeNodeEditorProps {
   data: NodeData;

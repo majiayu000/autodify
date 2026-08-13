@@ -81,10 +81,7 @@ export abstract class BaseLLMService implements ILLMService {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      await this.chat(
-        [{ role: 'user', content: 'test' }],
-        { maxTokens: 5 }
-      );
+      await this.chat([{ role: 'user', content: 'test' }], { maxTokens: 5 });
       return true;
     } catch {
       return false;
@@ -94,7 +91,9 @@ export abstract class BaseLLMService implements ILLMService {
   /**
    * Merge options with defaults
    */
-  protected mergeOptions(options?: CompletionOptions): Required<Omit<CompletionOptions, 'stop'>> & { stop?: string[] } {
+  protected mergeOptions(
+    options?: CompletionOptions
+  ): Required<Omit<CompletionOptions, 'stop'>> & { stop?: string[] } {
     return {
       ...DEFAULT_OPTIONS,
       model: this.config.defaultModel ?? DEFAULT_OPTIONS.model,

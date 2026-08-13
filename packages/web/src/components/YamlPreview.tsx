@@ -32,7 +32,9 @@ const YamlPreview = memo(function YamlPreview({ yamlOutput, onCopy }: YamlPrevie
       </h3>
       {showYaml && (
         <div className="yaml-content" id="yaml-content" role="region" aria-label="YAML 代码内容">
-          <pre><code>{yamlOutput}</code></pre>
+          <pre>
+            <code>{yamlOutput}</code>
+          </pre>
         </div>
       )}
     </section>

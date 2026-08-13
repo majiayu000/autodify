@@ -38,7 +38,9 @@ export function generateTraceId(): string {
 /**
  * 从请求头中提取追踪 ID
  */
-export function extractTraceId(headers: Record<string, string | string[] | undefined>): string | undefined {
+export function extractTraceId(
+  headers: Record<string, string | string[] | undefined>
+): string | undefined {
   const traceId = headers['x-trace-id'] || headers['x-request-id'] || headers['traceparent'];
 
   if (Array.isArray(traceId)) {

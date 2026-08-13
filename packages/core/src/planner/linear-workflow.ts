@@ -2,12 +2,7 @@
  * Linear Workflow Planner - Plans simple linear workflows
  */
 
-import type {
-  WorkflowPlan,
-  PlannedNode,
-  PlannedEdge,
-  WorkflowIntent,
-} from './types.js';
+import type { WorkflowPlan, PlannedNode, PlannedEdge, WorkflowIntent } from './types.js';
 import { generateWorkflowName, inferInputVariables, inferOutputs } from './workflow-helpers.js';
 
 /**

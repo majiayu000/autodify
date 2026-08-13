@@ -135,14 +135,17 @@ function orderAppFields(app: any): any {
   if (app.icon_type !== undefined) ordered.icon_type = app.icon_type;
   if (app.mode !== undefined) ordered.mode = app.mode;
   if (app.name !== undefined) ordered.name = app.name;
-  if (app.use_icon_as_answer_icon !== undefined) ordered.use_icon_as_answer_icon = app.use_icon_as_answer_icon;
+  if (app.use_icon_as_answer_icon !== undefined)
+    ordered.use_icon_as_answer_icon = app.use_icon_as_answer_icon;
   return ordered;
 }
 
 function orderWorkflowFields(workflow: any): any {
   const ordered: any = {};
-  if (workflow.conversation_variables !== undefined) ordered.conversation_variables = workflow.conversation_variables;
-  if (workflow.environment_variables !== undefined) ordered.environment_variables = workflow.environment_variables;
+  if (workflow.conversation_variables !== undefined)
+    ordered.conversation_variables = workflow.conversation_variables;
+  if (workflow.environment_variables !== undefined)
+    ordered.environment_variables = workflow.environment_variables;
   if (workflow.features !== undefined) ordered.features = orderFeaturesFields(workflow.features);
   if (workflow.graph !== undefined) ordered.graph = orderGraphFields(workflow.graph);
   return ordered;
@@ -160,17 +163,23 @@ function orderFeaturesFields(features: any): any {
     if (fu.image) orderedFu.image = fu.image;
     if (fu.allowed_file_types) orderedFu.allowed_file_types = fu.allowed_file_types;
     if (fu.allowed_file_extensions) orderedFu.allowed_file_extensions = fu.allowed_file_extensions;
-    if (fu.allowed_file_upload_methods) orderedFu.allowed_file_upload_methods = fu.allowed_file_upload_methods;
+    if (fu.allowed_file_upload_methods)
+      orderedFu.allowed_file_upload_methods = fu.allowed_file_upload_methods;
     if (fu.number_limits !== undefined) orderedFu.number_limits = fu.number_limits;
     ordered.file_upload = orderedFu;
   }
 
-  if (features.opening_statement !== undefined) ordered.opening_statement = features.opening_statement;
-  if (features.retriever_resource !== undefined) ordered.retriever_resource = features.retriever_resource;
-  if (features.sensitive_word_avoidance !== undefined) ordered.sensitive_word_avoidance = features.sensitive_word_avoidance;
+  if (features.opening_statement !== undefined)
+    ordered.opening_statement = features.opening_statement;
+  if (features.retriever_resource !== undefined)
+    ordered.retriever_resource = features.retriever_resource;
+  if (features.sensitive_word_avoidance !== undefined)
+    ordered.sensitive_word_avoidance = features.sensitive_word_avoidance;
   if (features.speech_to_text !== undefined) ordered.speech_to_text = features.speech_to_text;
-  if (features.suggested_questions !== undefined) ordered.suggested_questions = features.suggested_questions;
-  if (features.suggested_questions_after_answer !== undefined) ordered.suggested_questions_after_answer = features.suggested_questions_after_answer;
+  if (features.suggested_questions !== undefined)
+    ordered.suggested_questions = features.suggested_questions;
+  if (features.suggested_questions_after_answer !== undefined)
+    ordered.suggested_questions_after_answer = features.suggested_questions_after_answer;
   if (features.text_to_speech !== undefined) ordered.text_to_speech = features.text_to_speech;
   return ordered;
 }

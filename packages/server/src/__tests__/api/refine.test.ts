@@ -184,8 +184,7 @@ describe('Refine Workflow API', () => {
       });
 
       it('应该处理非常长的 instruction', async () => {
-        const longInstruction =
-          '请详细说明如何优化这个工作流，' + 'A'.repeat(1000);
+        const longInstruction = '请详细说明如何优化这个工作流，' + 'A'.repeat(1000);
         const response = await app.inject({
           method: 'POST',
           url: '/api/refine',

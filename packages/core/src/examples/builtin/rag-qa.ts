@@ -20,5 +20,6 @@ export const ragQAExample: FewShotExample = {
     datasetIds: ['your-dataset-id'],
     topK: 5,
   }),
-  explanation: '这个工作流使用 RAG (Retrieval-Augmented Generation) 模式：首先通过知识检索节点从向量数据库中检索相关文档片段，然后将检索结果作为上下文提供给 LLM，让 AI 基于实际知识库内容回答问题，确保回答的准确性。',
+  explanation:
+    '这个工作流使用 RAG (Retrieval-Augmented Generation) 模式：首先通过知识检索节点从向量数据库中检索相关文档片段，然后将检索结果作为上下文提供给 LLM，让 AI 基于实际知识库内容回答问题，确保回答的准确性。',
 };

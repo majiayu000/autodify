@@ -75,11 +75,13 @@ for await (const chunk of stream) {
 添加了 `POST /api/generate/stream` 端点，使用 Server-Sent Events (SSE) 协议：
 
 **特性：**
+
 - 支持客户端断开检测
 - 自动取消任务（通过 AbortController）
 - 错误处理和恢复
 
 **响应格式：**
+
 ```
 data: {"type":"progress","progress":{"stage":"initializing","percentage":0,"message":"Starting..."},"done":false}
 
@@ -100,6 +102,7 @@ async *generateStream(
 ```
 
 **生成阶段：**
+
 1. initializing (0%) - 初始化
 2. analyzing (10%) - 分析需求
 3. generating (30%) - 生成工作流结构
@@ -117,22 +120,25 @@ export async function generateWorkflowStream(
   request: GenerateRequest,
   onProgress: ProgressCallback,
   abortSignal?: AbortSignal
-): Promise<GenerateResponse>
+): Promise<GenerateResponse>;
 ```
 
 #### UI 组件更新
 
 **App.tsx**
+
 - 添加流式状态管理（progress, abortController）
 - 实现 `handleCancelGeneration()` 取消功能
 - 支持流式和非流式两种模式切换
 
 **PromptInput.tsx**
+
 - 添加进度条显示
 - 添加取消按钮
 - 实时更新生成进度
 
 **进度条示例：**
+
 ```
 ┌─────────────────────────────────────┐
 │ Generating workflow structure...   │
@@ -223,15 +229,18 @@ request.raw.on('close', () => {
 ## 相关文件
 
 ### Core
+
 - `/packages/core/src/llm/types.ts` - 类型定义
 - `/packages/core/src/llm/base-service.ts` - 基础服务
 - `/packages/core/src/llm/openai-service.ts` - OpenAI 流式实现
 
 ### Server
+
 - `/packages/server/src/routes/workflow.routes.ts` - SSE 端点
 - `/packages/server/src/services/workflow.service.ts` - 流式生成服务
 
 ### Web
+
 - `/packages/web/src/api/generate.ts` - API 客户端
 - `/packages/web/src/App.tsx` - 主应用逻辑
 - `/packages/web/src/components/PromptInput.tsx` - 进度 UI

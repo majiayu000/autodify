@@ -91,7 +91,7 @@ export class AnthropicService extends BaseLLMService {
         throw new Error(`Anthropic API error: ${response.status} - ${error}`);
       }
 
-      const data = await response.json() as AnthropicResponse;
+      const data = (await response.json()) as AnthropicResponse;
 
       // Handle different response formats (Anthropic vs compatible APIs like GLM)
       let textContent: string;
@@ -111,13 +111,19 @@ export class AnthropicService extends BaseLLMService {
 
       return {
         content: textContent,
-        finishReason: data.stop_reason === 'end_turn' ? 'stop' :
-          data.stop_reason === 'max_tokens' ? 'length' : 'error',
-        usage: data.usage ? {
-          promptTokens: data.usage.input_tokens ?? 0,
-          completionTokens: data.usage.output_tokens ?? 0,
-          totalTokens: (data.usage.input_tokens ?? 0) + (data.usage.output_tokens ?? 0),
-        } : undefined,
+        finishReason:
+          data.stop_reason === 'end_turn'
+            ? 'stop'
+            : data.stop_reason === 'max_tokens'
+              ? 'length'
+              : 'error',
+        usage: data.usage
+          ? {
+              promptTokens: data.usage.input_tokens ?? 0,
+              completionTokens: data.usage.output_tokens ?? 0,
+              totalTokens: (data.usage.input_tokens ?? 0) + (data.usage.output_tokens ?? 0),
+            }
+          : undefined,
         model: data.model,
       };
     });
@@ -127,10 +133,13 @@ export class AnthropicService extends BaseLLMService {
 /**
  * Create an Anthropic service
  */
-export function createAnthropicService(apiKey: string, options?: {
-  model?: string;
-  baseUrl?: string;
-}): AnthropicService {
+export function createAnthropicService(
+  apiKey: string,
+  options?: {
+    model?: string;
+    baseUrl?: string;
+  }
+): AnthropicService {
   return new AnthropicService({
     apiKey,
     defaultModel: options?.model,

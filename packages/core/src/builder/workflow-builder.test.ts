@@ -91,7 +91,13 @@ describe('WorkflowBuilder', () => {
         .addStart({
           variables: [
             { name: 'input', label: '输入', type: 'paragraph', required: true },
-            { name: 'mode', label: '模式', type: 'select', required: true, options: ['详细', '简洁'] },
+            {
+              name: 'mode',
+              label: '模式',
+              type: 'select',
+              required: true,
+              options: ['详细', '简洁'],
+            },
           ],
         })
         .addIfElse({
@@ -124,7 +130,10 @@ describe('WorkflowBuilder', () => {
         .addAggregator({
           id: 'agg',
           title: '聚合',
-          variables: [['detailed-llm', 'text'], ['brief-llm', 'text']],
+          variables: [
+            ['detailed-llm', 'text'],
+            ['brief-llm', 'text'],
+          ],
           outputType: 'string',
         })
         .addEnd({
@@ -181,7 +190,9 @@ describe('WorkflowBuilder', () => {
 
       expect(dsl.workflow?.graph.nodes).toHaveLength(4);
 
-      const retrievalNode = dsl.workflow?.graph.nodes.find((n) => n.data.type === 'knowledge-retrieval');
+      const retrievalNode = dsl.workflow?.graph.nodes.find(
+        (n) => n.data.type === 'knowledge-retrieval'
+      );
       expect(retrievalNode).toBeDefined();
       expect(retrievalNode?.data.dataset_ids).toContain('dataset-1');
     });
@@ -289,7 +300,10 @@ describe('WorkflowBuilder', () => {
         .addAggregator({
           id: 'agg',
           title: '聚合',
-          variables: [['tech-llm', 'text'], ['business-llm', 'text']],
+          variables: [
+            ['tech-llm', 'text'],
+            ['business-llm', 'text'],
+          ],
           outputType: 'string',
         })
         .addEnd({
@@ -304,7 +318,9 @@ describe('WorkflowBuilder', () => {
         .connect('agg', 'end')
         .build();
 
-      const classifierNode = dsl.workflow?.graph.nodes.find((n) => n.data.type === 'question-classifier');
+      const classifierNode = dsl.workflow?.graph.nodes.find(
+        (n) => n.data.type === 'question-classifier'
+      );
       expect(classifierNode).toBeDefined();
       expect(classifierNode?.data.classes).toHaveLength(2);
     });

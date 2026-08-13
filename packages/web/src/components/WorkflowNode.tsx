@@ -98,14 +98,12 @@ const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
 
       {/* Node Content */}
       <div className="flex items-center gap-2">
-        <span className="text-lg" aria-hidden="true">{icon}</span>
+        <span className="text-lg" aria-hidden="true">
+          {icon}
+        </span>
         <div>
-          <div className="font-semibold text-[13px] text-slate-100">
-            {data.title}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {nodeType}
-          </div>
+          <div className="font-semibold text-[13px] text-slate-100">{data.title}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">{nodeType}</div>
         </div>
       </div>
 

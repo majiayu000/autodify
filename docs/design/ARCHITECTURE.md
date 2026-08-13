@@ -7,6 +7,7 @@
 ### 1.1 背景与动机
 
 [Dify](https://dify.ai/) 是一个强大的 LLM 应用开发平台，提供可视化的工作流编排能力。然而，对于复杂工作流的创建，用户需要：
+
 - 理解各种节点类型及其配置
 - 手动拖拽连接多个节点
 - 逐个配置节点参数
@@ -15,19 +16,19 @@
 
 ### 1.2 核心价值
 
-| 场景 | 传统方式 | Autodify |
-|------|----------|----------|
+| 场景       | 传统方式                    | Autodify                               |
+| ---------- | --------------------------- | -------------------------------------- |
 | 创建工作流 | 手动拖拽 10+ 节点，配置参数 | "创建一个爬取网页并用 AI 总结的工作流" |
-| 修改工作流 | 找到节点，修改配置 | "把 LLM 模型换成 Claude，温度调到 0.5" |
-| 复制模式 | 导出 DSL，手动修改 | "基于翻译工作流，改成中日互译" |
+| 修改工作流 | 找到节点，修改配置          | "把 LLM 模型换成 Claude，温度调到 0.5" |
+| 复制模式   | 导出 DSL，手动修改          | "基于翻译工作流，改成中日互译"         |
 
 ### 1.3 竞品分析
 
-| 产品 | 特点 | 差异 |
-|------|------|------|
-| [Refly.AI](https://refly.ai/) | 自建工作流引擎 + Copilot 生成 | Autodify 复用 Dify 生态 |
-| [n8n AI Builder](https://n8n.io/) | 自然语言生成 n8n 工作流 | Autodify 专注 Dify DSL |
-| [DslGenAgent](https://github.com/01554/DslGenAgent) | 三阶段 DSL 生成 | Autodify 增加编辑能力 |
+| 产品                                                | 特点                          | 差异                    |
+| --------------------------------------------------- | ----------------------------- | ----------------------- |
+| [Refly.AI](https://refly.ai/)                       | 自建工作流引擎 + Copilot 生成 | Autodify 复用 Dify 生态 |
+| [n8n AI Builder](https://n8n.io/)                   | 自然语言生成 n8n 工作流       | Autodify 专注 Dify DSL  |
+| [DslGenAgent](https://github.com/01554/DslGenAgent) | 三阶段 DSL 生成               | Autodify 增加编辑能力   |
 
 ---
 
@@ -82,23 +83,25 @@
 interface ParsedIntent {
   action: 'create' | 'edit' | 'delete' | 'query';
   entities: {
-    nodeTypes?: string[];        // 涉及的节点类型
-    nodeIds?: string[];          // 涉及的节点 ID（编辑场景）
+    nodeTypes?: string[]; // 涉及的节点类型
+    nodeIds?: string[]; // 涉及的节点 ID（编辑场景）
     parameters?: Record<string, any>; // 提取的参数
   };
   context: {
-    isFollowUp: boolean;         // 是否是追问
-    referenceWorkflow?: string;  // 引用的工作流
+    isFollowUp: boolean; // 是否是追问
+    referenceWorkflow?: string; // 引用的工作流
   };
 }
 ```
 
 **输入示例**：
+
 ```
 "创建一个工作流：接收用户问题，从知识库检索相关文档，用 GPT-4 生成回答"
 ```
 
 **输出示例**：
+
 ```json
 {
   "action": "create",
@@ -134,13 +137,13 @@ interface PlannedNode {
   type: NodeType;
   title: string;
   description: string;
-  dependsOn: string[];  // 依赖的节点 ID
+  dependsOn: string[]; // 依赖的节点 ID
 }
 
 interface PlannedEdge {
   source: string;
   target: string;
-  condition?: string;  // IF/ELSE 条件
+  condition?: string; // IF/ELSE 条件
 }
 ```
 
@@ -149,6 +152,7 @@ interface PlannedEdge {
 **职责**：将工作流规划转换为符合 Dify 规范的 YAML DSL。
 
 **生成策略**：
+
 1. **模板匹配**：优先从模板库匹配相似工作流
 2. **节点逐个生成**：按拓扑顺序生成每个节点配置
 3. **边连接生成**：根据依赖关系生成 edges
@@ -159,6 +163,7 @@ interface PlannedEdge {
 **职责**：验证生成的 DSL 是否符合 Dify 规范。
 
 **验证规则**：
+
 - [ ] 必须有且仅有一个 `start` 节点
 - [ ] 必须有至少一个 `end` 或 `answer` 节点
 - [ ] 所有节点 ID 必须唯一
@@ -173,13 +178,14 @@ interface PlannedEdge {
 ```typescript
 interface ConversationContext {
   sessionId: string;
-  currentWorkflow?: DifyDSL;      // 当前操作的工作流
-  history: Message[];             // 对话历史
-  pendingChanges: Change[];       // 待确认的修改
+  currentWorkflow?: DifyDSL; // 当前操作的工作流
+  history: Message[]; // 对话历史
+  pendingChanges: Change[]; // 待确认的修改
 }
 ```
 
 **支持的编辑场景**：
+
 - "把第二个 LLM 节点的温度改成 0.3"
 - "在知识检索后面加一个代码节点处理结果"
 - "删除最后一个条件分支"
@@ -196,8 +202,8 @@ interface NodeMeta {
   category: 'basic' | 'llm' | 'tool' | 'logic' | 'data';
   inputs: PortDefinition[];
   outputs: PortDefinition[];
-  configSchema: JSONSchema;       // 配置项的 JSON Schema
-  examples: NodeExample[];        // Few-shot 示例
+  configSchema: JSONSchema; // 配置项的 JSON Schema
+  examples: NodeExample[]; // Few-shot 示例
 }
 ```
 
@@ -276,24 +282,30 @@ interface NodeMeta {
 
 ```markdown
 # Role
+
 你是 Autodify，一个专门生成 Dify 工作流 DSL 的 AI 助手。
 
 # Capabilities
+
 1. 理解用户的自然语言需求
 2. 规划合理的工作流拓扑结构
 3. 生成符合 Dify DSL 规范的 YAML 配置
 
 # Dify DSL Reference
+
 [嵌入精简版 DSL 格式说明]
 
 # Node Types Available
+
 [嵌入节点注册表信息]
 
 # Output Format
+
 你的输出必须是有效的 YAML，符合以下 schema:
 [嵌入 DSL JSON Schema]
 
 # Examples
+
 [嵌入 Few-shot 示例]
 ```
 
@@ -301,18 +313,18 @@ interface NodeMeta {
 
 每种常见工作流模式准备 2-3 个示例：
 
-| 模式 | 示例数量 | 说明 |
-|------|----------|------|
-| 简单对话 | 2 | start → llm → end |
-| RAG 检索 | 3 | 知识库 + LLM |
-| 条件分支 | 2 | IF/ELSE 路由 |
-| 迭代处理 | 2 | 批量数据处理 |
-| API 集成 | 2 | HTTP 请求 |
-| Agent | 2 | 工具调用 |
+| 模式     | 示例数量 | 说明              |
+| -------- | -------- | ----------------- |
+| 简单对话 | 2        | start → llm → end |
+| RAG 检索 | 3        | 知识库 + LLM      |
+| 条件分支 | 2        | IF/ELSE 路由      |
+| 迭代处理 | 2        | 批量数据处理      |
+| API 集成 | 2        | HTTP 请求         |
+| Agent    | 2        | 工具调用          |
 
 ### 4.3 动态 Prompt 组装
 
-```python
+````python
 def build_prompt(user_request: str, context: Context) -> str:
     prompt_parts = [
         SYSTEM_PROMPT,
@@ -331,7 +343,7 @@ def build_prompt(user_request: str, context: Context) -> str:
     prompt_parts.append(f"# User Request\n{user_request}")
 
     return "\n\n".join(prompt_parts)
-```
+````
 
 ---
 
@@ -339,25 +351,25 @@ def build_prompt(user_request: str, context: Context) -> str:
 
 ### 5.1 技术栈
 
-| 层次 | 技术选型 | 说明 |
-|------|----------|------|
-| 语言 | TypeScript | 类型安全，生态丰富 |
-| 运行时 | Node.js 20+ | 长期支持版本 |
-| LLM SDK | Vercel AI SDK | 统一多模型调用 |
-| Schema 验证 | Zod | 运行时类型验证 |
-| YAML 处理 | yaml | YAML 解析/生成 |
-| CLI 框架 | Commander.js | 命令行工具 |
-| Web 框架 | Hono | 轻量级 API 服务 |
-| 测试 | Vitest | 快速单元测试 |
+| 层次        | 技术选型      | 说明               |
+| ----------- | ------------- | ------------------ |
+| 语言        | TypeScript    | 类型安全，生态丰富 |
+| 运行时      | Node.js 20+   | 长期支持版本       |
+| LLM SDK     | Vercel AI SDK | 统一多模型调用     |
+| Schema 验证 | Zod           | 运行时类型验证     |
+| YAML 处理   | yaml          | YAML 解析/生成     |
+| CLI 框架    | Commander.js  | 命令行工具         |
+| Web 框架    | Hono          | 轻量级 API 服务    |
+| 测试        | Vitest        | 快速单元测试       |
 
 ### 5.2 LLM 选择策略
 
-| 任务 | 推荐模型 | 原因 |
-|------|----------|------|
-| 意图解析 | GPT-4o-mini / Claude Haiku | 快速、低成本 |
-| 工作流规划 | GPT-4o / Claude Sonnet | 需要推理能力 |
-| DSL 生成 | Claude Sonnet | 结构化输出稳定 |
-| 复杂编辑 | GPT-4o / Claude Opus | 需要理解上下文 |
+| 任务       | 推荐模型                   | 原因           |
+| ---------- | -------------------------- | -------------- |
+| 意图解析   | GPT-4o-mini / Claude Haiku | 快速、低成本   |
+| 工作流规划 | GPT-4o / Claude Sonnet     | 需要推理能力   |
+| DSL 生成   | Claude Sonnet              | 结构化输出稳定 |
+| 复杂编辑   | GPT-4o / Claude Opus       | 需要理解上下文 |
 
 ### 5.3 项目结构
 
@@ -543,13 +555,13 @@ async function generateWithRetry(prompt: string, maxRetries = 3): Promise<DifyDS
 
 ### 7.2 常见错误处理
 
-| 错误类型 | 处理策略 |
-|----------|----------|
+| 错误类型      | 处理策略                           |
+| ------------- | ---------------------------------- |
 | YAML 语法错误 | 尝试修复常见格式问题（缩进、引号） |
-| 节点 ID 重复 | 自动重命名 |
-| 变量引用无效 | 提示用户确认或自动修正 |
-| 模型不存在 | 降级到默认模型 |
-| 必填参数缺失 | 使用默认值或询问用户 |
+| 节点 ID 重复  | 自动重命名                         |
+| 变量引用无效  | 提示用户确认或自动修正             |
+| 模型不存在    | 降级到默认模型                     |
+| 必填参数缺失  | 使用默认值或询问用户               |
 
 ---
 
@@ -578,12 +590,12 @@ interface CacheStrategy {
 
 ### 8.3 成本估算
 
-| 操作 | 预估 Token | 成本（GPT-4o） |
-|------|------------|----------------|
-| 简单创建 | ~2000 | $0.02 |
-| 复杂创建 | ~5000 | $0.05 |
-| 编辑操作 | ~1500 | $0.015 |
-| 验证修复 | ~1000 | $0.01 |
+| 操作     | 预估 Token | 成本（GPT-4o） |
+| -------- | ---------- | -------------- |
+| 简单创建 | ~2000      | $0.02          |
+| 复杂创建 | ~5000      | $0.05          |
+| 编辑操作 | ~1500      | $0.015         |
+| 验证修复 | ~1000      | $0.01          |
 
 ---
 
@@ -597,14 +609,10 @@ interface CacheStrategy {
 
 ### 9.2 Prompt 注入防护
 
-```typescript
+````typescript
 function sanitizeUserInput(input: string): string {
   // 移除可能的 prompt 注入尝试
-  const dangerous = [
-    /ignore previous instructions/i,
-    /system:/i,
-    /```yaml\s*\n/,
-  ];
+  const dangerous = [/ignore previous instructions/i, /system:/i, /```yaml\s*\n/];
 
   let sanitized = input;
   for (const pattern of dangerous) {
@@ -613,7 +621,7 @@ function sanitizeUserInput(input: string): string {
 
   return sanitized;
 }
-```
+````
 
 ---
 
@@ -697,24 +705,28 @@ interface Metrics {
 ## 12. 里程碑规划
 
 ### Phase 1: MVP（核心功能）
+
 - [ ] DSL 格式解析与验证
 - [ ] 基础工作流生成（5 种节点类型）
 - [ ] CLI 工具
 - [ ] 单元测试覆盖
 
 ### Phase 2: 增强功能
+
 - [ ] 完整节点类型支持
 - [ ] 自然语言编辑
 - [ ] 多轮对话上下文
 - [ ] API 服务
 
 ### Phase 3: 生态集成
+
 - [ ] Dify 官方 API 集成
 - [ ] 模板市场
 - [ ] VSCode 插件
 - [ ] Web UI
 
 ### Phase 4: 智能化
+
 - [ ] 意图澄清对话
 - [ ] 自动错误修复
 - [ ] 工作流优化建议
@@ -733,10 +745,10 @@ interface Metrics {
 
 ### B. 术语表
 
-| 术语 | 说明 |
-|------|------|
-| DSL | Domain Specific Language，领域特定语言 |
-| Node | 工作流中的处理单元 |
-| Edge | 节点间的连接关系 |
-| Chatflow | 对话型工作流 |
-| Workflow | 自动化批处理工作流 |
+| 术语     | 说明                                   |
+| -------- | -------------------------------------- |
+| DSL      | Domain Specific Language，领域特定语言 |
+| Node     | 工作流中的处理单元                     |
+| Edge     | 节点间的连接关系                       |
+| Chatflow | 对话型工作流                           |
+| Workflow | 自动化批处理工作流                     |

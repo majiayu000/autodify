@@ -7,7 +7,12 @@ interface StatusBarProps {
   hasDsl: boolean;
 }
 
-const StatusBar = memo(function StatusBar({ apiConnected, nodeCount, edgeCount, hasDsl }: StatusBarProps) {
+const StatusBar = memo(function StatusBar({
+  apiConnected,
+  nodeCount,
+  edgeCount,
+  hasDsl,
+}: StatusBarProps) {
   const getStatusDotClass = () => {
     if (apiConnected === true) return 'status-dot';
     if (apiConnected === false) return 'status-dot disconnected';

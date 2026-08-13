@@ -2,12 +2,7 @@
  * Workflow Helper Functions - Common utilities for workflow planning
  */
 
-import type {
-  PlannedNode,
-  InputVariable,
-  OutputDefinition,
-  WorkflowIntent,
-} from './types.js';
+import type { PlannedNode, InputVariable, OutputDefinition, WorkflowIntent } from './types.js';
 
 /**
  * Generate workflow name from intent
@@ -21,10 +16,7 @@ export function generateWorkflowName(intent: WorkflowIntent): string {
 /**
  * Infer input variables from request and intent
  */
-export function inferInputVariables(
-  userRequest: string,
-  _intent: WorkflowIntent
-): InputVariable[] {
+export function inferInputVariables(userRequest: string, _intent: WorkflowIntent): InputVariable[] {
   const variables: InputVariable[] = [];
 
   // Default text input

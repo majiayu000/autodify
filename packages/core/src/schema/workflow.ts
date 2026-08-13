@@ -168,17 +168,21 @@ export const AgentModeConfigSchema = z.object({
 });
 
 export const DatasetConfigSchema = z.object({
-  datasets: z.array(z.object({
-    dataset_id: z.string(),
-  })),
+  datasets: z.array(
+    z.object({
+      dataset_id: z.string(),
+    })
+  ),
 });
 
 export const ModelConfigSectionSchema = z.object({
-  model: z.object({
-    provider: z.string(),
-    name: z.string(),
-    completion_params: z.record(z.unknown()).optional(),
-  }).optional(),
+  model: z
+    .object({
+      provider: z.string(),
+      name: z.string(),
+      completion_params: z.record(z.unknown()).optional(),
+    })
+    .optional(),
   agent_mode: AgentModeConfigSchema.optional(),
   dataset_configs: DatasetConfigSchema.optional(),
 });
@@ -187,34 +191,38 @@ export const ModelConfigSectionSchema = z.object({
 // Dependencies Schema
 // ============================================================================
 
-export const DependencySchema = z.object({
-  provider: z.string(),
-}).passthrough();
+export const DependencySchema = z
+  .object({
+    provider: z.string(),
+  })
+  .passthrough();
 
 // ============================================================================
 // Complete DSL Schema
 // ============================================================================
 
-export const DifyDSLSchema = z.object({
-  version: DSLVersionSchema,
-  kind: z.literal('app'),
-  app: AppConfigSchema,
-  workflow: WorkflowConfigSchema.optional(),
-  model_config: ModelConfigSectionSchema.optional(),
-  dependencies: z.array(DependencySchema).optional(),
-}).refine(
-  (data) => {
-    // workflow 或 advanced-chat 模式必须有 workflow 字段
-    if (data.app.mode === 'workflow' || data.app.mode === 'advanced-chat') {
-      return !!data.workflow;
+export const DifyDSLSchema = z
+  .object({
+    version: DSLVersionSchema,
+    kind: z.literal('app'),
+    app: AppConfigSchema,
+    workflow: WorkflowConfigSchema.optional(),
+    model_config: ModelConfigSectionSchema.optional(),
+    dependencies: z.array(DependencySchema).optional(),
+  })
+  .refine(
+    (data) => {
+      // workflow 或 advanced-chat 模式必须有 workflow 字段
+      if (data.app.mode === 'workflow' || data.app.mode === 'advanced-chat') {
+        return !!data.workflow;
+      }
+      return true;
+    },
+    {
+      message: 'Workflow mode requires "workflow" field',
+      path: ['workflow'],
     }
-    return true;
-  },
-  {
-    message: 'Workflow mode requires "workflow" field',
-    path: ['workflow'],
-  }
-);
+  );
 
 // ============================================================================
 // Type Exports

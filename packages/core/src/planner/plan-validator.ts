@@ -18,12 +18,12 @@ export function validatePlan(plan: WorkflowPlan): PlanValidationResult {
   const warnings: string[] = [];
 
   // Check for start node
-  if (!plan.nodes.some(n => n.type === 'start')) {
+  if (!plan.nodes.some((n) => n.type === 'start')) {
     errors.push('Workflow must have a start node');
   }
 
   // Check for end/answer node
-  if (!plan.nodes.some(n => n.type === 'end' || n.type === 'answer')) {
+  if (!plan.nodes.some((n) => n.type === 'end' || n.type === 'answer')) {
     errors.push('Workflow must have an end or answer node');
   }
 
@@ -51,8 +51,8 @@ export function validatePlan(plan: WorkflowPlan): PlanValidationResult {
 
   // Check for invalid edges
   for (const edge of plan.edges) {
-    const sourceExists = plan.nodes.some(n => n.id === edge.source);
-    const targetExists = plan.nodes.some(n => n.id === edge.target);
+    const sourceExists = plan.nodes.some((n) => n.id === edge.source);
+    const targetExists = plan.nodes.some((n) => n.id === edge.target);
 
     if (!sourceExists) {
       errors.push(`Edge references non-existent source node: ${edge.source}`);
@@ -78,7 +78,10 @@ export function validatePlan(plan: WorkflowPlan): PlanValidationResult {
 /**
  * Detect cycles in the workflow graph
  */
-function detectCycles(nodes: PlannedNode[], edges: Array<{ source: string; target: string }>): string[] {
+function detectCycles(
+  nodes: PlannedNode[],
+  edges: Array<{ source: string; target: string }>
+): string[] {
   const cycles: string[] = [];
   const visited = new Set<string>();
   const recursionStack = new Set<string>();
@@ -126,8 +129,8 @@ function detectCycles(nodes: PlannedNode[], edges: Array<{ source: string; targe
  * Check if plan has required features
  */
 export function checkPlanFeatures(plan: WorkflowPlan, requiredFeatures: FeatureType[]): boolean {
-  const planFeatures = plan.intent.features.map(f => f.type);
-  return requiredFeatures.every(feature => planFeatures.includes(feature));
+  const planFeatures = plan.intent.features.map((f) => f.type);
+  return requiredFeatures.every((feature) => planFeatures.includes(feature));
 }
 
 /**
@@ -140,15 +143,13 @@ export function estimatePlanComplexity(plan: WorkflowPlan): number {
   complexity += plan.nodes.length;
 
   // Add complexity for branching nodes
-  const branchingNodes = plan.nodes.filter(n =>
-    n.type === 'question-classifier' || n.type === 'if-else'
+  const branchingNodes = plan.nodes.filter(
+    (n) => n.type === 'question-classifier' || n.type === 'if-else'
   );
   complexity += branchingNodes.length * 2;
 
   // Add complexity for advanced nodes
-  const advancedNodes = plan.nodes.filter(n =>
-    n.type === 'code' || n.type === 'http-request'
-  );
+  const advancedNodes = plan.nodes.filter((n) => n.type === 'code' || n.type === 'http-request');
   complexity += advancedNodes.length * 1.5;
 
   return Math.round(complexity);

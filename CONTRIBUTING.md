@@ -287,6 +287,7 @@ git checkout -b fix/bug-description
 ```
 
 分支命名规范：
+
 - `feat/feature-name` - 新功能
 - `fix/bug-name` - Bug 修复
 - `docs/description` - 文档更新
@@ -478,12 +479,14 @@ PR 审查时会检查以下方面：
 ### 审查礼仪
 
 **对于审查者**：
+
 - 提供建设性的反馈
 - 解释为什么需要修改
 - 区分必须修改和建议
 - 及时响应
 
 **对于贡献者**：
+
 - 保持开放心态
 - 不要对反馈过于防御
 - 及时响应审查意见
@@ -494,6 +497,7 @@ PR 审查时会检查以下方面：
 使用 [Bug Report 模板](https://github.com/ORIGINAL_OWNER/autodify/issues/new?template=bug_report.md) 报告 bug。
 
 请提供：
+
 - 清晰的问题描述
 - 重现步骤
 - 期望行为
@@ -506,6 +510,7 @@ PR 审查时会检查以下方面：
 使用 [Feature Request 模板](https://github.com/ORIGINAL_OWNER/autodify/issues/new?template=feature_request.md) 提出功能建议。
 
 请说明：
+
 - 功能描述
 - 使用场景
 - 期望的 API 设计

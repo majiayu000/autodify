@@ -29,9 +29,9 @@ import { LRUCache, createLRUCache } from '@autodify/core';
 
 // 创建缓存实例
 const cache = new LRUCache({
-  maxSize: 100,        // 最大缓存条目数
-  ttl: 300000,         // 5 分钟过期（毫秒）
-  enableStats: true    // 启用统计
+  maxSize: 100, // 最大缓存条目数
+  ttl: 300000, // 5 分钟过期（毫秒）
+  enableStats: true, // 启用统计
 });
 
 // 设置和获取
@@ -77,9 +77,9 @@ const store = new TemplateStore({
   enableCache: true,
   cacheConfig: {
     maxSize: 100,
-    ttl: 300000,  // 5 分钟
-    enableStats: true
-  }
+    ttl: 300000, // 5 分钟
+    enableStats: true,
+  },
 });
 
 // 查看缓存统计
@@ -175,8 +175,8 @@ const data1 = await response1.json();
 // 后续请求（使用 ETag）
 const response2 = await fetch('/api/templates', {
   headers: {
-    'If-None-Match': etag
-  }
+    'If-None-Match': etag,
+  },
 });
 
 if (response2.status === 304) {
@@ -255,6 +255,7 @@ NODE_CACHE_ENABLED=false
 ### Q: 缓存何时失效？
 
 A:
+
 - 达到 TTL 时间后自动失效
 - 手动调用 `clear()` 或 `clearCache()`
 - 修改数据源时（如注册新模板）
@@ -262,6 +263,7 @@ A:
 ### Q: 如何确定合适的缓存大小？
 
 A:
+
 - 监控实际使用情况的统计数据
 - 根据内存限制调整
 - 通常默认值已足够
@@ -273,6 +275,7 @@ A: 使用响应数据的 MD5 哈希值作为 ETag，确保数据变化时 ETag �
 ### Q: 缓存对内存的影响？
 
 A:
+
 - 每个缓存条目占用的内存取决于数据大小
 - LRU 策略自动淘汰旧条目
 - 可通过 `maxSize` 限制最大条目数

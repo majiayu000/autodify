@@ -68,12 +68,8 @@ const PromptInput = memo(function PromptInput({
             transition={{ duration: 0.2 }}
           >
             <div className="progress-header">
-              <span className="progress-message">
-                {progress.message}
-              </span>
-              <span className="progress-percentage">
-                {progress.percentage}%
-              </span>
+              <span className="progress-message">{progress.message}</span>
+              <span className="progress-percentage">{progress.percentage}%</span>
             </div>
             <div className="progress-bar">
               <motion.div

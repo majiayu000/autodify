@@ -1,4 +1,5 @@
-import { DragEvent, memo } from 'react';
+import type { DragEvent } from 'react';
+import { memo } from 'react';
 
 // 节点类型定义
 interface NodeTypeInfo {
@@ -18,19 +19,49 @@ const NODE_TYPES: NodeTypeInfo[] = [
 
   // AI 处理
   { type: 'llm', title: 'LLM', icon: '🤖', description: '大语言模型调用', category: 'ai' },
-  { type: 'question-classifier', title: '问题分类', icon: '🏷️', description: 'LLM 驱动的分类器', category: 'ai' },
+  {
+    type: 'question-classifier',
+    title: '问题分类',
+    icon: '🏷️',
+    description: 'LLM 驱动的分类器',
+    category: 'ai',
+  },
 
   // 数据
-  { type: 'knowledge-retrieval', title: '知识检索', icon: '📚', description: '知识库检索', category: 'data' },
-  { type: 'variable-aggregator', title: '变量聚合', icon: '📦', description: '合并多个变量', category: 'data' },
+  {
+    type: 'knowledge-retrieval',
+    title: '知识检索',
+    icon: '📚',
+    description: '知识库检索',
+    category: 'data',
+  },
+  {
+    type: 'variable-aggregator',
+    title: '变量聚合',
+    icon: '📦',
+    description: '合并多个变量',
+    category: 'data',
+  },
 
   // 逻辑
   { type: 'if-else', title: '条件分支', icon: '🔀', description: '条件判断', category: 'logic' },
   { type: 'code', title: '代码执行', icon: '💻', description: 'Python/JS 代码', category: 'logic' },
 
   // 外部
-  { type: 'http-request', title: 'HTTP 请求', icon: '🌐', description: '外部 API 调用', category: 'external' },
-  { type: 'template-transform', title: '模板转换', icon: '📝', description: 'Jinja2 模板', category: 'external' },
+  {
+    type: 'http-request',
+    title: 'HTTP 请求',
+    icon: '🌐',
+    description: '外部 API 调用',
+    category: 'external',
+  },
+  {
+    type: 'template-transform',
+    title: '模板转换',
+    icon: '📝',
+    description: 'Jinja2 模板',
+    category: 'external',
+  },
 ];
 
 // 分类信息
@@ -51,10 +82,13 @@ const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
     if (disabled) return;
 
     // 设置拖拽数据
-    e.dataTransfer.setData('application/autodify-node', JSON.stringify({
-      type: nodeType.type,
-      title: nodeType.title,
-    }));
+    e.dataTransfer.setData(
+      'application/autodify-node',
+      JSON.stringify({
+        type: nodeType.type,
+        title: nodeType.title,
+      })
+    );
     e.dataTransfer.effectAllowed = 'copy';
   };
 
@@ -71,7 +105,12 @@ const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
           if (nodes.length === 0) return null;
 
           return (
-            <div key={category.key} className="palette-category" role="group" aria-labelledby={`category-${category.key}`}>
+            <div
+              key={category.key}
+              className="palette-category"
+              role="group"
+              aria-labelledby={`category-${category.key}`}
+            >
               <div className="category-title" id={`category-${category.key}`}>
                 <span aria-hidden="true">{category.icon}</span>
                 <span>{category.title}</span>
@@ -88,7 +127,9 @@ const NodePalette = memo(function NodePalette({ disabled }: NodePaletteProps) {
                     aria-disabled={disabled}
                     tabIndex={disabled ? -1 : 0}
                   >
-                    <span className="node-icon" aria-hidden="true">{node.icon}</span>
+                    <span className="node-icon" aria-hidden="true">
+                      {node.icon}
+                    </span>
                     <div className="node-info">
                       <span className="node-title">{node.title}</span>
                       <span className="node-desc">{node.description}</span>

@@ -53,17 +53,23 @@ type GeneratorConfig = MultiStageGeneratorConfig;
 const WorkflowPlanSchema = z.object({
   name: z.string(),
   description: z.string(),
-  nodes: z.array(z.object({
-    id: z.string(),
-    type: z.string(),
-    title: z.string(),
-    description: z.string(),
-    inputs: z.array(z.object({
-      from: z.string(),
-      variable: z.string(),
-    })).optional(),
-    config: z.record(z.unknown()).optional(),
-  })),
+  nodes: z.array(
+    z.object({
+      id: z.string(),
+      type: z.string(),
+      title: z.string(),
+      description: z.string(),
+      inputs: z
+        .array(
+          z.object({
+            from: z.string(),
+            variable: z.string(),
+          })
+        )
+        .optional(),
+      config: z.record(z.unknown()).optional(),
+    })
+  ),
   complexity: z.enum(['simple', 'medium', 'complex']),
 });
 
@@ -189,7 +195,7 @@ export class MultiStageGenerator {
     const template = getNodeTemplate(plan.type);
 
     // Build context from existing nodes
-    const context = existingNodes.map(n => ({
+    const context = existingNodes.map((n) => ({
       id: n.id,
       type: n.data.type,
       outputs: this.getNodeOutputs(n),
@@ -244,7 +250,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
 
         // Collect validation errors
         lastError = validation.error.issues
-          .map(i => `${i.path.join('.')}: ${i.message}`)
+          .map((i) => `${i.path.join('.')}: ${i.message}`)
           .join('; ');
 
         this.log(`    Retry ${retry + 1}: ${lastError}`);
@@ -266,10 +272,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
   /**
    * Create node from template with plan data
    */
-  private createFromTemplate(
-    plan: NodePlan,
-    _existingNodes: Node<NodeData>[]
-  ): Node<NodeData> {
+  private createFromTemplate(plan: NodePlan, _existingNodes: Node<NodeData>[]): Node<NodeData> {
     const template = NODE_TEMPLATES[plan.type];
     if (!template) {
       throw new Error(`No template for node type: ${plan.type}`);
@@ -300,7 +303,10 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
   /**
    * Wire input references into node data
    */
-  private wireInputs(data: Record<string, unknown>, inputs: Array<{ from: string; variable: string }>) {
+  private wireInputs(
+    data: Record<string, unknown>,
+    inputs: Array<{ from: string; variable: string }>
+  ) {
     const firstInput = inputs[0];
     if (!firstInput) return;
 
@@ -322,8 +328,8 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
    */
   private inferEdges(nodes: Node<NodeData>[], plans: NodePlan[]): Edge[] {
     const edges: Edge[] = [];
-    const nodeMap = new Map(nodes.map(n => [n.id, n]));
-    const planMap = new Map(plans.map(p => [p.id, p]));
+    const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+    const planMap = new Map(plans.map((p) => [p.id, p]));
 
     // Create edges based on plan inputs
     for (const plan of plans) {
@@ -387,7 +393,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     planMap: Map<string, NodePlan>
   ) {
     // Remove any existing edges from classifier
-    const toRemove = edges.filter(e => e.source === classifier.id);
+    const toRemove = edges.filter((e) => e.source === classifier.id);
     for (const e of toRemove) {
       const idx = edges.indexOf(e);
       if (idx >= 0) edges.splice(idx, 1);
@@ -401,11 +407,11 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     for (const cls of classes) {
       // Look for nodes that should handle this class
       const targetPlan = Array.from(planMap.values()).find(
-        p => p.config?.['forClass'] === cls.id || p.description.includes(cls.name)
+        (p) => p.config?.['forClass'] === cls.id || p.description.includes(cls.name)
       );
 
       if (targetPlan) {
-        const targetNode = nodes.find(n => n.id === targetPlan.id);
+        const targetNode = nodes.find((n) => n.id === targetPlan.id);
         if (targetNode) {
           edges.push({
             id: `${classifier.id}-${cls.id}-${targetNode.id}-target`,
@@ -439,7 +445,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     const conditions = data.conditions || [];
 
     // Remove existing edges from if-else
-    const toRemove = edges.filter(e => e.source === ifElse.id);
+    const toRemove = edges.filter((e) => e.source === ifElse.id);
     for (const e of toRemove) {
       const idx = edges.indexOf(e);
       if (idx >= 0) edges.splice(idx, 1);
@@ -448,11 +454,11 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     // Add edges for each condition branch
     for (const cond of conditions) {
       const targetPlan = Array.from(planMap.values()).find(
-        p => p.config?.['forCondition'] === cond.id
+        (p) => p.config?.['forCondition'] === cond.id
       );
 
       if (targetPlan) {
-        const targetNode = nodes.find(n => n.id === targetPlan.id);
+        const targetNode = nodes.find((n) => n.id === targetPlan.id);
         if (targetNode) {
           edges.push({
             id: `${ifElse.id}-${cond.id}-${targetNode.id}-target`,
@@ -473,10 +479,10 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
 
     // Add false branch
     const falsePlan = Array.from(planMap.values()).find(
-      p => p.config?.['forCondition'] === 'false'
+      (p) => p.config?.['forCondition'] === 'false'
     );
     if (falsePlan) {
-      const targetNode = nodes.find(n => n.id === falsePlan.id);
+      const targetNode = nodes.find((n) => n.id === falsePlan.id);
       if (targetNode) {
         edges.push({
           id: `${ifElse.id}-false-${targetNode.id}-target`,
@@ -498,11 +504,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
   /**
    * Stage 4: Assemble complete DSL
    */
-  private assembleDSL(
-    plan: WorkflowPlan,
-    nodes: Node<NodeData>[],
-    edges: Edge[]
-  ): DifyDSL {
+  private assembleDSL(plan: WorkflowPlan, nodes: Node<NodeData>[], edges: Edge[]): DifyDSL {
     // Add Dify-required positioning and UI fields to nodes
     const positionedNodes = this.addNodePositions(nodes);
 
@@ -530,7 +532,11 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
         features: {
           file_upload: {
             enabled: false,
-            image: { enabled: false, number_limits: 3, transfer_methods: ['local_file', 'remote_url'] },
+            image: {
+              enabled: false,
+              number_limits: 3,
+              transfer_methods: ['local_file', 'remote_url'],
+            },
           },
           opening_statement: '',
           retriever_resource: { enabled: false },
@@ -589,7 +595,7 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
     const levels = new Map<string, number>();
 
     // Find start node
-    const startNode = nodes.find(n => n.data.type === 'start');
+    const startNode = nodes.find((n) => n.data.type === 'start');
     if (startNode) {
       levels.set(startNode.id, 0);
     }
@@ -621,11 +627,15 @@ ${plan.config ? `用户指定配置:\n${JSON.stringify(plan.config, null, 2)}` :
   private getNodeOutputs(node: Node<NodeData>): string[] {
     switch (node.data.type) {
       case 'start':
-        return (node.data as { variables: Array<{ variable: string }> }).variables.map(v => v.variable);
+        return (node.data as { variables: Array<{ variable: string }> }).variables.map(
+          (v) => v.variable
+        );
       case 'llm':
         return ['text'];
       case 'code':
-        return (node.data as { outputs: Array<{ variable: string }> }).outputs.map(o => o.variable);
+        return (node.data as { outputs: Array<{ variable: string }> }).outputs.map(
+          (o) => o.variable
+        );
       case 'http-request':
         return ['status_code', 'body', 'headers'];
       case 'knowledge-retrieval':

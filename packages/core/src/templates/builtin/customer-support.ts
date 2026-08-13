@@ -13,11 +13,28 @@ export const customerSupportTemplate: WorkflowTemplate = {
     category: 'agent',
     tags: ['客服', '对话', '多轮', '情感分析'],
     keywords: [
-      '客服', '客户服务', '对话', '聊天', '咨询', '支持',
-      'customer service', 'support', 'chat', '智能客服',
-      '售后', '在线客服',
+      '客服',
+      '客户服务',
+      '对话',
+      '聊天',
+      '咨询',
+      '支持',
+      'customer service',
+      'support',
+      'chat',
+      '智能客服',
+      '售后',
+      '在线客服',
     ],
-    nodeTypes: ['start', 'question-classifier', 'knowledge-retrieval', 'llm', 'if-else', 'variable-aggregator', 'end'],
+    nodeTypes: [
+      'start',
+      'question-classifier',
+      'knowledge-retrieval',
+      'llm',
+      'if-else',
+      'variable-aggregator',
+      'end',
+    ],
     complexity: 4,
   },
 
@@ -103,8 +120,10 @@ export const customerSupportTemplate: WorkflowTemplate = {
       responseNodeIds.push(nodeId);
 
       const systemPrompts: Record<string, string> = {
-        product: '你是产品咨询专家。请基于知识库内容，清晰准确地回答客户关于产品的问题。如果知识库中没有相关信息，请礼貌地说明。',
-        technical: '你是技术支持专家。请基于知识库内容，提供详细的技术解决方案。必要时提供分步指导。',
+        product:
+          '你是产品咨询专家。请基于知识库内容，清晰准确地回答客户关于产品的问题。如果知识库中没有相关信息，请礼貌地说明。',
+        technical:
+          '你是技术支持专家。请基于知识库内容，提供详细的技术解决方案。必要时提供分步指导。',
         order: '你是订单处理专家。请基于知识库内容，帮助客户处理订单相关问题。注意保护客户隐私。',
         complaint: '你是客户关系专家。请以同理心回应客户的投诉或建议，表达理解并提供解决方案。',
       };
@@ -155,7 +174,9 @@ export const customerSupportTemplate: WorkflowTemplate = {
       .connect('start', 'sentiment-analysis');
 
     for (let i = 0; i < categories.length; i++) {
-      builder.connect('intent-classifier', responseNodeIds[i]!, { sourceHandle: categories[i]!.id });
+      builder.connect('intent-classifier', responseNodeIds[i]!, {
+        sourceHandle: categories[i]!.id,
+      });
       builder.connect('kb-retrieval', responseNodeIds[i]!);
       builder.connect('sentiment-analysis', responseNodeIds[i]!);
       builder.connect(responseNodeIds[i]!, 'response-aggregator');

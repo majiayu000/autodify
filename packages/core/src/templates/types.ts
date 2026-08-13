@@ -6,14 +6,14 @@ import type { DifyDSL } from '../types/index.js';
 
 /** 模板分类 */
 export type TemplateCategory =
-  | 'qa'           // 问答
-  | 'rag'          // 知识库问答
-  | 'translation'  // 翻译
-  | 'writing'      // 写作
-  | 'analysis'     // 分析
-  | 'automation'   // 自动化
-  | 'agent'        // Agent
-  | 'other';       // 其他
+  | 'qa' // 问答
+  | 'rag' // 知识库问答
+  | 'translation' // 翻译
+  | 'writing' // 写作
+  | 'analysis' // 分析
+  | 'automation' // 自动化
+  | 'agent' // Agent
+  | 'other'; // 其他
 
 /** 模板元信息 */
 export interface TemplateMetadata {

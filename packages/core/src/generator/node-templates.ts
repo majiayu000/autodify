@@ -291,7 +291,7 @@ export function createIfElse(
     title: options.title || '条件分支',
   });
 
-  node['conditions'] = conditions.map(c => ({
+  node['conditions'] = conditions.map((c) => ({
     id: c.id,
     logical_operator: c.logicalOperator || 'and',
     conditions: [
@@ -359,11 +359,11 @@ export function createCode(
 
   node['code'] = code;
   node['code_language'] = language;
-  node['variables'] = inputs.map(i => ({
+  node['variables'] = inputs.map((i) => ({
     variable: i.variable,
     value_selector: i.selector,
   }));
-  node['outputs'] = outputs.map(o => ({
+  node['outputs'] = outputs.map((o) => ({
     variable: o.variable,
     variable_type: o.type,
   }));

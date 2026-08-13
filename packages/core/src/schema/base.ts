@@ -8,9 +8,23 @@ import { z } from 'zod';
 // Base Enums
 // ============================================================================
 
-export const DSLVersionSchema = z.enum(['0.5.0', '0.1.0', '0.1.1', '0.1.2', '0.1.3', '0.1.4', '0.1.5']);
+export const DSLVersionSchema = z.enum([
+  '0.5.0',
+  '0.1.0',
+  '0.1.1',
+  '0.1.2',
+  '0.1.3',
+  '0.1.4',
+  '0.1.5',
+]);
 
-export const AppModeSchema = z.enum(['workflow', 'advanced-chat', 'chat', 'agent-chat', 'completion']);
+export const AppModeSchema = z.enum([
+  'workflow',
+  'advanced-chat',
+  'chat',
+  'agent-chat',
+  'completion',
+]);
 
 export const IconTypeSchema = z.enum(['emoji', 'image', 'link']);
 
@@ -37,7 +51,13 @@ export const CodeLanguageSchema = z.enum(['python3', 'javascript']);
 
 export const HttpMethodSchema = z.enum(['get', 'post', 'put', 'patch', 'delete', 'head']);
 
-export const BodyTypeSchema = z.enum(['none', 'form-data', 'x-www-form-urlencoded', 'raw-text', 'json']);
+export const BodyTypeSchema = z.enum([
+  'none',
+  'form-data',
+  'x-www-form-urlencoded',
+  'raw-text',
+  'json',
+]);
 
 export const ComparisonOperatorSchema = z.enum([
   '=',
@@ -60,7 +80,11 @@ export const LogicalOperatorSchema = z.enum(['and', 'or']);
 
 export const RetrievalModeSchema = z.enum(['single', 'multiple']);
 
-export const ErrorHandleModeSchema = z.enum(['terminated', 'continue-on-error', 'remove-abnormal-output']);
+export const ErrorHandleModeSchema = z.enum([
+  'terminated',
+  'continue-on-error',
+  'remove-abnormal-output',
+]);
 
 export const AuthorizationTypeSchema = z.enum(['no-auth', 'api-key', 'basic']);
 
@@ -84,7 +108,13 @@ export const TransferMethodSchema = z.enum(['remote_url', 'local_file']);
 
 export const AllowedFileTypeSchema = z.enum(['image', 'document', 'audio', 'video', 'custom']);
 
-export const VariableValueTypeSchema = z.enum(['string', 'number', 'object', 'secret', 'array[string]']);
+export const VariableValueTypeSchema = z.enum([
+  'string',
+  'number',
+  'object',
+  'secret',
+  'array[string]',
+]);
 
 export const EditionTypeSchema = z.enum(['basic', 'jinja2']);
 

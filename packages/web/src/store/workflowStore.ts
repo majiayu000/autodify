@@ -48,7 +48,12 @@ interface WorkflowState {
   updateNode: (nodeId: string, data: Partial<NodeData>) => void;
   addNode: (nodeType: string, nodeTitle: string) => string;
   removeNode: (nodeId: string) => void;
-  addEdge: (edge: { source: string; target: string; sourceHandle?: string; targetHandle?: string }) => void;
+  addEdge: (edge: {
+    source: string;
+    target: string;
+    sourceHandle?: string;
+    targetHandle?: string;
+  }) => void;
   removeEdge: (edgeId: string) => void;
   reset: () => void;
 }
@@ -72,7 +77,8 @@ const createEmptyDsl = (): DslType => ({
 });
 
 // 生成唯一 ID
-const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const generateId = (prefix: string) =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 // 创建带有时间旅行功能的 store
 export const useWorkflowStore = create<WorkflowState>()(
@@ -113,9 +119,7 @@ export const useWorkflowStore = create<WorkflowState>()(
               graph: {
                 ...dsl.workflow.graph,
                 nodes: dsl.workflow.graph.nodes.map((node) =>
-                  node.id === nodeId
-                    ? { ...node, data: { ...node.data, ...newData } }
-                    : node
+                  node.id === nodeId ? { ...node, data: { ...node.data, ...newData } } : node
                 ),
               },
             },
