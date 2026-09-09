@@ -32,6 +32,9 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().url().optional(),
 
+  // API authentication — required for LLM-consuming routes
+  API_KEY: z.string().min(1, 'API_KEY is required'),
+
   // CORS Configuration
   ALLOWED_ORIGINS: z.string().optional(),
 
@@ -151,6 +154,9 @@ export const config = {
     maxTokens: env.LLM_MAX_TOKENS,
     maxRetries: env.LLM_MAX_RETRIES,
   },
+
+  // API key for authenticating LLM-consuming routes
+  apiKey: env.API_KEY,
 
   // CORS
   cors: {

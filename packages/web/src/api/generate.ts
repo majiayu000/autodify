@@ -3,6 +3,18 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
+
+function apiHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...extra,
+  };
+  if (API_KEY) {
+    headers['X-API-Key'] = API_KEY;
+  }
+  return headers;
+}
 
 export interface GenerateRequest {
   prompt: string;
@@ -95,9 +107,7 @@ export async function generateWorkflow(request: GenerateRequest): Promise<Genera
   try {
     const response = await fetch(`${API_BASE_URL}/api/generate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiHeaders(),
       body: JSON.stringify(request),
     });
 
@@ -134,9 +144,7 @@ export async function generateWorkflowStream(
     // We need to use fetch with SSE for POST requests
     fetch(`${API_BASE_URL}/api/generate/stream`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiHeaders(),
       body: JSON.stringify(request),
       signal: abortSignal,
     })
@@ -268,9 +276,7 @@ export async function refineWorkflow(request: RefineRequest): Promise<RefineResp
   try {
     const response = await fetch(`${API_BASE_URL}/api/refine`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: apiHeaders(),
       body: JSON.stringify(request),
     });
 

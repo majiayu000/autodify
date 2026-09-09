@@ -45,6 +45,8 @@ RUN pnpm --filter @autodify/core build
 # 使用构建参数允许在构建时传入环境变量
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_KEY=
+ENV VITE_API_KEY=$VITE_API_KEY
 
 RUN pnpm --filter @autodify/web build
 

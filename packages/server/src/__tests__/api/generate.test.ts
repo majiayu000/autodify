@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { buildTestApp, closeTestApp } from '../helpers/build-app.js';
+import { buildTestApp, closeTestApp, withAuthHeaders } from '../helpers/build-app.js';
 import { mockWorkflowService } from '../helpers/mock-llm.js';
 
 // Mock 工作流服务模块
@@ -32,6 +32,7 @@ describe('Generate Workflow API', () => {
         payload: {
           prompt: '创建一个问答工作流',
         },
+        headers: withAuthHeaders(),
       });
 
       expect(response.statusCode).toBe(200);
@@ -49,6 +50,7 @@ describe('Generate Workflow API', () => {
         payload: {
           prompt: '创建一个问答工作流',
         },
+        headers: withAuthHeaders(),
       });
 
       const body = JSON.parse(response.body);
@@ -65,6 +67,7 @@ describe('Generate Workflow API', () => {
         payload: {
           prompt: '创建一个问答工作流',
         },
+        headers: withAuthHeaders(),
       });
 
       const body = JSON.parse(response.body);
@@ -86,6 +89,7 @@ describe('Generate Workflow API', () => {
             useTemplate: true,
           },
         },
+        headers: withAuthHeaders(),
       });
 
       expect(response.statusCode).toBe(200);
@@ -101,6 +105,7 @@ describe('Generate Workflow API', () => {
           payload: {
             prompt: '',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -114,6 +119,7 @@ describe('Generate Workflow API', () => {
           method: 'POST',
           url: '/api/generate',
           payload: {},
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -131,6 +137,7 @@ describe('Generate Workflow API', () => {
               temperature: 3.0, // 超出范围
             },
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -143,9 +150,10 @@ describe('Generate Workflow API', () => {
           method: 'POST',
           url: '/api/generate',
           payload: 'invalid-json',
-          headers: {
+          headers: withAuthHeaders({
+
             'content-type': 'text/plain',
-          },
+          }),
         });
 
         expect(response.statusCode).toBe(400);
@@ -161,6 +169,7 @@ describe('Generate Workflow API', () => {
           payload: {
             prompt: longPrompt,
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -173,6 +182,7 @@ describe('Generate Workflow API', () => {
           payload: {
             prompt: '创建一个工作流：包含"引号"、<标签>和{大括号}',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -185,6 +195,7 @@ describe('Generate Workflow API', () => {
           payload: {
             prompt: 'Create a workflow with English, 中文, and 日本語',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -199,9 +210,9 @@ describe('Generate Workflow API', () => {
           payload: {
             prompt: '创建一个问答工作流',
           },
-          headers: {
+          headers: withAuthHeaders({
             origin: 'http://localhost:5173',
-          },
+          }),
         });
 
         expect(response.headers).toHaveProperty('access-control-allow-origin');
