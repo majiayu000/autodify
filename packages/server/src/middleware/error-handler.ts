@@ -40,12 +40,18 @@ export function registerErrorHandler(
   fastify.addHook('onError', async (request, _reply, error) => {
     // 这里可以添加错误监控服务（如 Sentry）
     if (!isOperationalError(error)) {
+      // Allowlist only — never dump request.headers (Authorization, cookie, etc.)
+      // Aligns with packages/server/src/lib/logging/middleware.ts
       fastify.log.error(
         {
           err: error,
           url: request.url,
           method: request.method,
-          headers: request.headers,
+          headers: {
+            'user-agent': request.headers['user-agent'],
+            'content-type': request.headers['content-type'],
+            referer: request.headers['referer'],
+          },
         },
         'Unexpected error occurred'
       );
