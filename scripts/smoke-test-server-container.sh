@@ -11,6 +11,7 @@ docker run \
   --detach \
   --name "$container_name" \
   --env LLM_API_KEY=smoke-test-only \
+  --env API_KEY=smoke-test-api-key \
   --health-interval=2s \
   --health-timeout=2s \
   --health-start-period=0s \

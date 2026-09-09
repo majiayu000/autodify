@@ -232,7 +232,6 @@ describe('Refine Workflow API', () => {
             instruction: '添加节点',
           },
           headers: withAuthHeaders({
-
             'content-type': 'application/json',
           }),
         });

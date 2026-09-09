@@ -11,9 +11,7 @@ export const TEST_API_KEY = 'test-server-api-key';
 /**
  * Headers including a valid X-API-Key for authenticated LLM routes.
  */
-export function withAuthHeaders(
-  headers: Record<string, string> = {}
-): Record<string, string> {
+export function withAuthHeaders(headers: Record<string, string> = {}): Record<string, string> {
   return {
     'x-api-key': process.env.API_KEY || TEST_API_KEY,
     ...headers,

@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import {
-  buildTestApp,
-  closeTestApp,
-  withAuthHeaders,
-  TEST_API_KEY,
-} from '../helpers/build-app.js';
+import { buildTestApp, closeTestApp, withAuthHeaders, TEST_API_KEY } from '../helpers/build-app.js';
 import { mockWorkflowService, mockDSL } from '../helpers/mock-llm.js';
 
 vi.mock('../../services/workflow.service.js', () => ({

@@ -23,10 +23,7 @@ function safeEqual(provided: string, expected: string): boolean {
  * Validate X-API-Key against the server API_KEY secret.
  * Apply only to LLM-consuming routes; keep /health public.
  */
-export async function apiKeyAuth(
-  request: FastifyRequest,
-  _reply: FastifyReply
-): Promise<void> {
+export async function apiKeyAuth(request: FastifyRequest, _reply: FastifyReply): Promise<void> {
   const provided = request.headers[API_KEY_HEADER];
   const headerValue = Array.isArray(provided) ? provided[0] : provided;
 

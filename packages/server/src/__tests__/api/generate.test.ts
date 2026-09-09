@@ -151,7 +151,6 @@ describe('Generate Workflow API', () => {
           url: '/api/generate',
           payload: 'invalid-json',
           headers: withAuthHeaders({
-
             'content-type': 'text/plain',
           }),
         });
