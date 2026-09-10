@@ -98,6 +98,7 @@ services:
       - LLM_BASE_URL=http://litellm:4000/v1
       - LLM_API_KEY=${LITELLM_MASTER_KEY}
       - LLM_DEFAULT_MODEL=${LLM_DEFAULT_MODEL:-gpt-4o}
+      - API_KEY=${API_KEY}
       - LOG_LEVEL=info
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60000}
@@ -140,6 +141,7 @@ services:
       dockerfile: packages/web/Dockerfile
       args:
         - VITE_API_URL=/api
+        - VITE_API_KEY=${VITE_API_KEY:-${API_KEY}}
       cache_from:
         - autodify-web:latest
     image: autodify-web:latest

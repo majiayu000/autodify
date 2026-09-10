@@ -3,8 +3,20 @@ import { createHash } from 'crypto';
 import { getWorkflowService } from '../services/workflow.service.js';
 import { config } from '../config/index.js';
 import { NotFoundError } from '../errors/custom-errors.js';
+import { apiKeyAuth } from '../middleware/api-key-auth.js';
 import { createValidationHook } from '../plugins/index.js';
 import { zodToOpenApiSchema, withExample } from '../utils/zod-to-schema.js';
+
+const unauthorizedResponse = {
+  description: '未授权 — 缺少或无效的 X-API-Key',
+  type: 'object',
+  properties: {
+    success: { type: 'boolean', example: false },
+    error: { type: 'string', example: '缺少或无效的 API Key，请在请求头中提供有效的 X-API-Key' },
+    code: { type: 'string', example: 'UNAUTHORIZED' },
+    statusCode: { type: 'number', example: 401 },
+  },
+} as const;
 import {
   GenerateRequestBodySchema,
   RefineRequestBodySchema,
@@ -71,6 +83,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         description: '根据自然语言描述生成 Dify 工作流',
         tags: ['workflow'],
         summary: '生成工作流',
+        security: [{ apiKey: [] }],
         body: withExample(GenerateRequestBodySchema, {
           prompt: '创建一个客服聊天机器人，能够回答常见问题',
           options: {
@@ -109,6 +122,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
               error: { type: 'string', example: '请输入工作流描述' },
             },
           },
+          401: unauthorizedResponse,
           429: {
             description: '请求频率超限',
             type: 'object',
@@ -125,9 +139,12 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           timeWindow: config.rateLimit.generate.timeWindow,
         },
       },
-      preHandler: createValidationHook({
-        body: GenerateRequestBodySchema,
-      }),
+      preHandler: [
+        apiKeyAuth,
+        createValidationHook({
+          body: GenerateRequestBodySchema,
+        }),
+      ],
     },
     async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
       const result = await workflowService.generate(request.body);
@@ -147,6 +164,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         description: '根据自然语言描述生成 Dify 工作流（流式响应，使用 Server-Sent Events）',
         tags: ['workflow'],
         summary: '生成工作流（流式）',
+        security: [{ apiKey: [] }],
         body: withExample(GenerateRequestBodySchema, {
           prompt: '创建一个客服聊天机器人，能够回答常见问题',
           options: {
@@ -170,6 +188,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
               error: { type: 'string', example: '请输入工作流描述' },
             },
           },
+          401: unauthorizedResponse,
         },
       },
       config: {
@@ -178,9 +197,12 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           timeWindow: config.rateLimit.generate.timeWindow,
         },
       },
-      preHandler: createValidationHook({
-        body: GenerateRequestBodySchema,
-      }),
+      preHandler: [
+        apiKeyAuth,
+        createValidationHook({
+          body: GenerateRequestBodySchema,
+        }),
+      ],
     },
     async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
       // Set up Server-Sent Events headers
@@ -245,6 +267,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
         description: '根据指令迭代优化现有的工作流',
         tags: ['workflow'],
         summary: '优化工作流',
+        security: [{ apiKey: [] }],
         body: withExample(RefineRequestBodySchema, {
           dsl: {
             version: '0.1',
@@ -283,6 +306,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
               error: { type: 'string', example: 'DSL 必须是一个有效的对象' },
             },
           },
+          401: unauthorizedResponse,
         },
       },
       config: {
@@ -291,9 +315,12 @@ export async function workflowRoutes(fastify: FastifyInstance) {
           timeWindow: config.rateLimit.refine.timeWindow,
         },
       },
-      preHandler: createValidationHook({
-        body: RefineRequestBodySchema,
-      }),
+      preHandler: [
+        apiKeyAuth,
+        createValidationHook({
+          body: RefineRequestBodySchema,
+        }),
+      ],
     },
     async (request: FastifyRequest<{ Body: RefineRequestBody }>, reply: FastifyReply) => {
       const result = await workflowService.refine({

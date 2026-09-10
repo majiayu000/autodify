@@ -78,6 +78,7 @@ pnpm dev:web     # Web 界面 (http://localhost:3000)
 ```bash
 curl -X POST http://localhost:3001/api/generate \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
   -d '{"prompt": "创建一个中英互译的工作流"}'
 ```
 

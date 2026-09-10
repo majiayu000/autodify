@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { buildTestApp, closeTestApp } from '../helpers/build-app.js';
+import { buildTestApp, closeTestApp, withAuthHeaders } from '../helpers/build-app.js';
 import { mockWorkflowService, mockDSL } from '../helpers/mock-llm.js';
 
 // Mock 工作流服务模块
@@ -33,6 +33,7 @@ describe('Refine Workflow API', () => {
           dsl: mockDSL,
           instruction: '添加一个知识库检索节点',
         },
+        headers: withAuthHeaders(),
       });
 
       expect(response.statusCode).toBe(200);
@@ -50,6 +51,7 @@ describe('Refine Workflow API', () => {
           dsl: mockDSL,
           instruction: '修改 prompt 模板',
         },
+        headers: withAuthHeaders(),
       });
 
       const body = JSON.parse(response.body);
@@ -69,6 +71,7 @@ describe('Refine Workflow API', () => {
           dsl: mockDSL,
           instruction: '添加一个 HTTP 请求节点',
         },
+        headers: withAuthHeaders(),
       });
 
       const body = JSON.parse(response.body);
@@ -86,6 +89,7 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: '',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -100,6 +104,7 @@ describe('Refine Workflow API', () => {
           payload: {
             dsl: mockDSL,
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -114,6 +119,7 @@ describe('Refine Workflow API', () => {
           payload: {
             instruction: '添加节点',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -129,6 +135,7 @@ describe('Refine Workflow API', () => {
             dsl: 'invalid-dsl',
             instruction: '添加节点',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(400);
@@ -165,6 +172,7 @@ describe('Refine Workflow API', () => {
             dsl: complexDSL,
             instruction: '优化工作流',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -178,6 +186,7 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: '添加节点：使用"引号"和<标签>',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -192,6 +201,7 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: longInstruction,
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -205,6 +215,7 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: 'Add a node with English, 中文, and 日本語',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.statusCode).toBe(200);
@@ -220,9 +231,9 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: '添加节点',
           },
-          headers: {
+          headers: withAuthHeaders({
             'content-type': 'application/json',
-          },
+          }),
         });
 
         expect(response.statusCode).toBe(200);
@@ -236,6 +247,7 @@ describe('Refine Workflow API', () => {
             dsl: mockDSL,
             instruction: '添加节点',
           },
+          headers: withAuthHeaders(),
         });
 
         expect(response.headers['content-type']).toContain('application/json');

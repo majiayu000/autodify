@@ -56,7 +56,7 @@ async function main() {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true, // 允许携带凭证（cookies、授权头等）
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   });
 
   // 全局速率限制
