@@ -39,6 +39,7 @@ import {
   type TemplateDetailResponse,
   type HealthResponse,
 } from '../schemas/index.js';
+import { resolveCorsAllowOrigin } from '../utils/cors.js';
 
 /**
  * Response cache for templates list
@@ -205,13 +206,21 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       ],
     },
     async (request: FastifyRequest<{ Body: GenerateRequestBody }>, reply: FastifyReply) => {
-      // Set up Server-Sent Events headers
-      reply.raw.writeHead(200, {
+      // Set up Server-Sent Events headers.
+      // reply.raw.writeHead bypasses @fastify/cors, so reflect only allowlisted origins
+      // (never `*`) to match global CORS + credentials configuration.
+      const sseHeaders: Record<string, string> = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-      });
+      };
+      const allowOrigin = resolveCorsAllowOrigin(request.headers.origin, config.cors.origin);
+      if (allowOrigin) {
+        sseHeaders['Access-Control-Allow-Origin'] = allowOrigin;
+        sseHeaders['Access-Control-Allow-Credentials'] = 'true';
+        sseHeaders['Vary'] = 'Origin';
+      }
+      reply.raw.writeHead(200, sseHeaders);
 
       // Create AbortController for cancellation support
       const abortController = new AbortController();

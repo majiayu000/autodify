@@ -2,6 +2,8 @@ import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vites
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, closeTestApp, withAuthHeaders } from '../helpers/build-app.js';
 import { mockWorkflowService } from '../helpers/mock-llm.js';
+import { config } from '../../config/index.js';
+import { resolveCorsAllowOrigin } from '../../utils/cors.js';
 
 // Mock 工作流服务模块
 vi.mock('../../services/workflow.service.js', () => ({
@@ -231,5 +233,71 @@ describe('Generate Workflow API', () => {
         expect(response.headers).toHaveProperty('access-control-allow-methods');
       });
     });
+  });
+
+  describe('POST /api/generate/stream CORS (SEC-07)', () => {
+    const allowedOrigin = 'http://localhost:5173';
+    const disallowedOrigin = 'https://evil.example';
+    let previousCorsOrigin: typeof config.cors.origin;
+
+    beforeAll(() => {
+      previousCorsOrigin = config.cors.origin;
+      // Align SSE allowlist with global CORS credentials semantics for this suite
+      config.cors.origin = [allowedOrigin, 'http://localhost:3000'];
+    });
+
+    afterAll(() => {
+      config.cors.origin = previousCorsOrigin;
+    });
+
+    it('disallowed Origin must never receive Access-Control-Allow-Origin: *', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/generate/stream',
+        payload: {
+          prompt: '创建一个问答工作流',
+        },
+        headers: withAuthHeaders({
+          origin: disallowedOrigin,
+        }),
+      });
+
+      expect(response.statusCode).toBe(200);
+      const acao = response.headers['access-control-allow-origin'];
+      expect(acao).not.toBe('*');
+      expect(acao).toBeUndefined();
+    });
+
+    it('allowed Origin is reflected exactly (not *)', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/generate/stream',
+        payload: {
+          prompt: '创建一个问答工作流',
+        },
+        headers: withAuthHeaders({
+          origin: allowedOrigin,
+        }),
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['access-control-allow-origin']).toBe(allowedOrigin);
+      expect(response.headers['access-control-allow-origin']).not.toBe('*');
+      expect(response.headers['access-control-allow-credentials']).toBe('true');
+    });
+  });
+});
+
+describe('resolveCorsAllowOrigin', () => {
+  it('never returns * for any allowlist shape', () => {
+    expect(resolveCorsAllowOrigin('https://evil.example', false)).toBeUndefined();
+    expect(resolveCorsAllowOrigin('https://evil.example', 'http://localhost:5173')).toBeUndefined();
+    expect(
+      resolveCorsAllowOrigin('https://evil.example', ['http://localhost:5173'])
+    ).toBeUndefined();
+    expect(resolveCorsAllowOrigin('http://localhost:5173', true)).toBe('http://localhost:5173');
+    expect(resolveCorsAllowOrigin('http://localhost:5173', 'http://localhost:5173')).toBe(
+      'http://localhost:5173'
+    );
   });
 });

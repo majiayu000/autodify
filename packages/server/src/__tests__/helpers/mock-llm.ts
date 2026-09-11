@@ -145,6 +145,24 @@ export function mockWorkflowService() {
       },
     ]),
     getTemplateById: vi.fn().mockResolvedValue(mockDSL),
+    generateStream: vi.fn().mockImplementation(async function* () {
+      yield {
+        type: 'progress',
+        progress: { stage: 'initializing', percentage: 0, message: 'Starting...' },
+        done: false,
+      };
+      yield {
+        type: 'complete',
+        dsl: mockDSL,
+        yaml: 'version: 0.1.3\nkind: app\n...',
+        metadata: {
+          duration: 100,
+          model: 'gpt-4o',
+          templateUsed: null,
+        },
+        done: true,
+      };
+    }),
   };
 }
 
