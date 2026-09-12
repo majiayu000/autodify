@@ -214,6 +214,8 @@ lsof -i :3001
 lsof -i :4000
 
 # 修改端口（编辑 .env）
+# WEB_PORT / SERVER_PORT / LITELLM_PORT 仅用于 Docker 宿主机端口映射
+# 容器内 API 仍绑定 PORT=3001；本地直接跑 Node 时请改 PORT
 WEB_PORT=8080
 SERVER_PORT=8081
 LITELLM_PORT=8082
@@ -271,9 +273,12 @@ DEEPSEEK_API_KEY=sk-...
 
 ```bash
 # 端口配置
+# SERVER_PORT / WEB_PORT / LITELLM_PORT：Docker 宿主机发布端口（compose 映射）
+# PORT：Node 进程绑定端口（packages/server 读取；compose 容器内固定为 3001）
 SERVER_PORT=3001
 WEB_PORT=3000
 LITELLM_PORT=4000
+PORT=3001
 
 # LLM 配置
 LLM_PROVIDER=openai
@@ -398,7 +403,7 @@ docker-compose down -v
 ```
 
 **Q: 如何更改默认端口？**
-编辑 `.env` 文件，修改 `WEB_PORT`、`SERVER_PORT` 等变量。
+Docker 部署时编辑 `.env`，修改 `WEB_PORT`、`SERVER_PORT` 等宿主机映射变量（不影响容器内 `PORT=3001`）。本地直接运行 Node 服务时修改 `PORT`。
 
 **Q: 如何在生产环境使用 HTTPS？**
 推荐使用 Nginx 或 Traefik 作为反向代理。
