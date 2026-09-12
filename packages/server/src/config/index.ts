@@ -4,6 +4,44 @@ import { z } from 'zod';
 // Load .env file
 dotenvConfig();
 
+/** Canonical rate-limit env keys plus documented aliases. */
+const KNOWN_RATE_LIMIT_ENV_KEYS = new Set([
+  'RATE_LIMIT_GLOBAL_MAX',
+  'RATE_LIMIT_GLOBAL_TIME_WINDOW',
+  'RATE_LIMIT_GENERATE_MAX',
+  'RATE_LIMIT_GENERATE_TIME_WINDOW',
+  'RATE_LIMIT_REFINE_MAX',
+  'RATE_LIMIT_REFINE_TIME_WINDOW',
+  // Legacy aliases (compose/docs historically used these for global limits)
+  'RATE_LIMIT_MAX',
+  'RATE_LIMIT_WINDOW',
+]);
+
+function isUnset(value: string | undefined): boolean {
+  return value == null || value === '';
+}
+
+/**
+ * Map legacy RATE_LIMIT_MAX / RATE_LIMIT_WINDOW onto canonical global vars
+ * when the canonical vars are unset. Returns undocumented RATE_LIMIT_* keys.
+ */
+export function applyRateLimitEnvAliases(env: NodeJS.ProcessEnv = process.env): string[] {
+  if (isUnset(env.RATE_LIMIT_GLOBAL_MAX) && !isUnset(env.RATE_LIMIT_MAX)) {
+    env.RATE_LIMIT_GLOBAL_MAX = env.RATE_LIMIT_MAX;
+  }
+  if (isUnset(env.RATE_LIMIT_GLOBAL_TIME_WINDOW) && !isUnset(env.RATE_LIMIT_WINDOW)) {
+    env.RATE_LIMIT_GLOBAL_TIME_WINDOW = env.RATE_LIMIT_WINDOW;
+  }
+
+  const unknownKeys: string[] = [];
+  for (const key of Object.keys(env)) {
+    if (key.startsWith('RATE_LIMIT_') && !KNOWN_RATE_LIMIT_ENV_KEYS.has(key) && !isUnset(env[key])) {
+      unknownKeys.push(key);
+    }
+  }
+  return unknownKeys;
+}
+
 /**
  * 环境变量 Schema 定义
  * 使用 Zod 进行类型验证和运行时检查
@@ -43,6 +81,7 @@ const envSchema = z.object({
 
   // Rate Limiting Configuration
   RATE_LIMIT_GLOBAL_MAX: z.coerce.number().int().positive().default(100),
+  // Fastify @fastify/rate-limit accepts ms numbers or human strings (e.g. "15 minutes")
   RATE_LIMIT_GLOBAL_TIME_WINDOW: z.string().default('15 minutes'),
   RATE_LIMIT_GENERATE_MAX: z.coerce.number().int().positive().default(20),
   RATE_LIMIT_GENERATE_TIME_WINDOW: z.string().default('15 minutes'),
@@ -68,6 +107,15 @@ const envSchema = z.object({
  */
 function validateEnv() {
   try {
+    const unknownRateLimitKeys = applyRateLimitEnvAliases(process.env);
+    if (unknownRateLimitKeys.length > 0) {
+      console.warn(
+        `[autodify-server] Ignoring undocumented rate-limit env var(s): ${unknownRateLimitKeys.join(', ')}. ` +
+          'Canonical: RATE_LIMIT_GLOBAL_*, RATE_LIMIT_GENERATE_*, RATE_LIMIT_REFINE_*. ' +
+          'Aliases: RATE_LIMIT_MAX → RATE_LIMIT_GLOBAL_MAX, RATE_LIMIT_WINDOW → RATE_LIMIT_GLOBAL_TIME_WINDOW.'
+      );
+    }
+
     // 尝试验证环境变量
     const parsed = envSchema.safeParse(process.env);
 
@@ -132,6 +180,40 @@ function validateEnv() {
 
 // 验证并获取环境变量
 const env = validateEnv();
+
+/**
+ * Resolve rate-limit config from an env bag (applies aliases, then schema defaults).
+ * Mirrors `config.rateLimit` — used by unit tests and kept in sync with startup parsing.
+ */
+export function resolveRateLimitConfig(rawEnv: NodeJS.ProcessEnv = process.env) {
+  const envCopy = { ...rawEnv };
+  applyRateLimitEnvAliases(envCopy);
+  const parsed = envSchema
+    .pick({
+      RATE_LIMIT_GLOBAL_MAX: true,
+      RATE_LIMIT_GLOBAL_TIME_WINDOW: true,
+      RATE_LIMIT_GENERATE_MAX: true,
+      RATE_LIMIT_GENERATE_TIME_WINDOW: true,
+      RATE_LIMIT_REFINE_MAX: true,
+      RATE_LIMIT_REFINE_TIME_WINDOW: true,
+    })
+    .parse(envCopy);
+
+  return {
+    global: {
+      max: parsed.RATE_LIMIT_GLOBAL_MAX,
+      timeWindow: parsed.RATE_LIMIT_GLOBAL_TIME_WINDOW,
+    },
+    generate: {
+      max: parsed.RATE_LIMIT_GENERATE_MAX,
+      timeWindow: parsed.RATE_LIMIT_GENERATE_TIME_WINDOW,
+    },
+    refine: {
+      max: parsed.RATE_LIMIT_REFINE_MAX,
+      timeWindow: parsed.RATE_LIMIT_REFINE_TIME_WINDOW,
+    },
+  };
+}
 
 /**
  * 应用配置对象
