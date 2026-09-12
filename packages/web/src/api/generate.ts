@@ -293,12 +293,22 @@ export async function generateWorkflowStream(
             }
           }
 
-          // If we get here without a done chunk, something went wrong
+          // EOF after a valid `complete` (or legacy content) payload is success;
+          // only treat a bare close with no captured DSL as unexpected.
           if (result.success === false && !result.error) {
-            result = {
-              success: false,
-              error: 'Stream ended unexpectedly',
-            };
+            if (dslData?.dsl !== undefined) {
+              result = {
+                success: true,
+                dsl: dslData.dsl,
+                yaml: dslData.yaml,
+                metadata: result.metadata,
+              };
+            } else {
+              result = {
+                success: false,
+                error: 'Stream ended unexpectedly',
+              };
+            }
           }
           resolve(result);
         } catch (error) {

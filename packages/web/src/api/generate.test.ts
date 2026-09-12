@@ -84,6 +84,39 @@ describe('generateWorkflowStream', () => {
     expect(received.find((c) => c.type === 'complete')).toMatchObject({ dsl, yaml });
   });
 
+  it('treats EOF after complete (without done) as success', async () => {
+    const dsl = {
+      app: { name: 'eof-complete' },
+      workflow: { graph: { nodes: [], edges: [] } },
+    };
+    const yaml = 'app:\n  name: eof-complete\n';
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        body: sseBody([
+          {
+            type: 'complete',
+            dsl,
+            yaml,
+            metadata: { model: 'test-model' },
+            done: false,
+          },
+        ]),
+      })
+    );
+
+    const result = await generateWorkflowStream({ prompt: 'eof' }, () => undefined);
+
+    expect(result).toEqual({
+      success: true,
+      dsl,
+      yaml,
+      metadata: { model: 'test-model' },
+    });
+  });
+
   it('still supports legacy content chunks for DSL', async () => {
     const dslPayload = { dsl: { app: { name: 'legacy' } }, yaml: 'legacy: true' };
 

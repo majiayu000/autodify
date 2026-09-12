@@ -29,6 +29,10 @@ const STREAM_EVENT_TYPES = new Set<StreamEventType>([
   'done',
 ]);
 
+/** Stable empties so non-streaming App rerenders do not reset WorkflowCanvas. */
+const EMPTY_STREAMING_NODES: never[] = [];
+const EMPTY_STREAMING_EDGES: never[] = [];
+
 export default function App() {
   // Store 状态
   const {
@@ -179,9 +183,7 @@ export default function App() {
                 percentage: 0,
                 message: chunk.thinking.message,
               });
-            } else if (chunk.type === 'complete' && chunk.dsl) {
-              // Apply DSL as soon as the server complete event arrives
-              setDsl(chunk.dsl as DslType);
+            } else if (chunk.type === 'complete') {
               setProgress(null);
             } else if (chunk.type === 'error') {
               setError(chunk.error || 'Generation failed');
@@ -192,6 +194,8 @@ export default function App() {
           controller.signal
         );
 
+        // Apply DSL only after the stream result succeeds so EOF-after-complete
+        // (or other stream errors) cannot leave a completed graph with a failure UI.
         if (result.success && result.dsl) {
           setDsl(result.dsl as DslType);
           setDuration(result.metadata?.duration || 0);
@@ -345,7 +349,10 @@ export default function App() {
         <main className="canvas-container relative">
           <ThinkingOverlay
             steps={streamState.thinkingSteps}
-            isVisible={streamState.isGenerating && streamState.phase === 'thinking'}
+            isVisible={
+              streamState.isGenerating &&
+              (streamState.phase === 'thinking' || streamState.phase === 'generating')
+            }
             nodeProgress={streamState.nodeProgress}
           />
           <WorkflowCanvas
@@ -353,12 +360,12 @@ export default function App() {
             streamingNodes={
               streamState.phase === 'generating' || streamState.phase === 'connecting'
                 ? streamState.nodes
-                : []
+                : EMPTY_STREAMING_NODES
             }
             streamingEdges={
               streamState.phase === 'generating' || streamState.phase === 'connecting'
                 ? streamState.edges
-                : []
+                : EMPTY_STREAMING_EDGES
             }
             onNodeSelect={selectNode}
             onAddNode={handleAddNode}
