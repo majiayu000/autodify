@@ -348,7 +348,21 @@ export default function App() {
             isVisible={streamState.isGenerating && streamState.phase === 'thinking'}
             nodeProgress={streamState.nodeProgress}
           />
-          <WorkflowCanvas dsl={dsl} onNodeSelect={selectNode} onAddNode={handleAddNode} />
+          <WorkflowCanvas
+            dsl={dsl}
+            streamingNodes={
+              streamState.phase === 'generating' || streamState.phase === 'connecting'
+                ? streamState.nodes
+                : []
+            }
+            streamingEdges={
+              streamState.phase === 'generating' || streamState.phase === 'connecting'
+                ? streamState.edges
+                : []
+            }
+            onNodeSelect={selectNode}
+            onAddNode={handleAddNode}
+          />
         </main>
       </div>
 

@@ -38,6 +38,9 @@ interface WorkflowCanvasProps {
       };
     };
   } | null;
+  /** Live React Flow graph from streaming generation (node_created / edges_created). */
+  streamingNodes?: Node[];
+  streamingEdges?: Edge[];
   onNodeSelect?: (nodeId: string | null) => void;
   onAddNode?: (nodeType: string, nodeTitle: string, position: { x: number; y: number }) => void;
 }
@@ -94,14 +97,22 @@ const defaultEdgeOptions = {
 
 const WorkflowCanvas = React.memo(function WorkflowCanvas({
   dsl,
+  streamingNodes = [],
+  streamingEdges = [],
   onNodeSelect,
   onAddNode,
 }: WorkflowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const hasStreamingGraph = streamingNodes.length > 0;
 
-  // Convert DSL to React Flow nodes and edges
+  // Prefer live streamed graph while generating; otherwise convert DSL.
   const { initialNodes, initialEdges } = useMemo(() => {
+    if (hasStreamingGraph) {
+      const layoutedNodes = layoutNodes(streamingNodes, streamingEdges);
+      return { initialNodes: layoutedNodes, initialEdges: streamingEdges };
+    }
+
     if (!dsl?.workflow?.graph) {
       return { initialNodes: [], initialEdges: [] };
     }
@@ -130,12 +141,12 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({
     const layoutedNodes = layoutNodes(nodes, edges);
 
     return { initialNodes: layoutedNodes, initialEdges: edges };
-  }, [dsl]);
+  }, [dsl, hasStreamingGraph, streamingNodes, streamingEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Update nodes when DSL changes
+  // Update nodes when DSL or streaming preview changes
   React.useEffect(() => {
     if (initialNodes.length > 0) {
       setNodes(initialNodes);
@@ -198,7 +209,7 @@ const WorkflowCanvas = React.memo(function WorkflowCanvas({
     [onAddNode]
   );
 
-  if (!dsl) {
+  if (!dsl && !hasStreamingGraph) {
     return (
       <div
         ref={reactFlowWrapper}
