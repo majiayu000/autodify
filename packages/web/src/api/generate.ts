@@ -71,9 +71,34 @@ export interface TemplateInfo {
 }
 
 /**
- * Stream chunk types
+ * Stream chunk types — includes server generateStream events plus legacy types.
  */
-export type StreamChunkType = 'content' | 'progress' | 'metadata' | 'error' | 'done';
+export type StreamChunkType =
+  | 'content'
+  | 'progress'
+  | 'metadata'
+  | 'error'
+  | 'done'
+  | 'thinking'
+  | 'node_created'
+  | 'edges_created'
+  | 'complete';
+
+export interface StreamNodeInfo {
+  id: string;
+  type: string;
+  title: string;
+  position?: { x: number; y: number };
+  data?: Record<string, unknown>;
+}
+
+export interface StreamEdgeInfo {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
+}
 
 export interface StreamChunk {
   type: StreamChunkType;
@@ -93,6 +118,24 @@ export interface StreamChunk {
   };
   error?: string;
   done: boolean;
+  /** Thinking step (server `thinking` events) */
+  thinking?: {
+    step: string;
+    message: string;
+  };
+  /** Node info (server `node_created` events) */
+  node?: StreamNodeInfo;
+  /** Node index/total (server `node_created` events) */
+  nodeProgress?: {
+    current: number;
+    total: number;
+  };
+  /** Edges (server `edges_created` events) */
+  edges?: StreamEdgeInfo[];
+  /** Final DSL (server `complete` events) */
+  dsl?: unknown;
+  /** Final YAML (server `complete` events) */
+  yaml?: string;
 }
 
 /**
@@ -195,7 +238,24 @@ export async function generateWorkflowStream(
                 const chunk = JSON.parse(trimmed.slice(6)) as StreamChunk;
                 onProgress(chunk);
 
-                // Collect content chunks
+                // Capture final DSL from server `complete` events (done: false)
+                if (chunk.type === 'complete') {
+                  dslData = {
+                    dsl: chunk.dsl,
+                    yaml: chunk.yaml,
+                  };
+                  if (chunk.metadata?.model) {
+                    result = {
+                      ...result,
+                      metadata: {
+                        ...result.metadata,
+                        model: chunk.metadata.model,
+                      },
+                    };
+                  }
+                }
+
+                // Legacy: collect DSL from content chunks
                 if (chunk.type === 'content' && chunk.content) {
                   try {
                     dslData = JSON.parse(chunk.content);
@@ -204,8 +264,8 @@ export async function generateWorkflowStream(
                   }
                 }
 
-                // Handle completion
-                if (chunk.done) {
+                // Handle terminal chunks (`done: true` or type `done`/`error`)
+                if (chunk.done || chunk.type === 'done') {
                   if (chunk.type === 'error') {
                     result = {
                       success: false,
@@ -216,10 +276,12 @@ export async function generateWorkflowStream(
                       success: true,
                       dsl: dslData.dsl,
                       yaml: dslData.yaml,
+                      metadata: result.metadata,
                     };
                   } else {
                     result = {
                       success: true,
+                      metadata: result.metadata,
                     };
                   }
                   resolve(result);
@@ -231,12 +293,22 @@ export async function generateWorkflowStream(
             }
           }
 
-          // If we get here without a done chunk, something went wrong
+          // EOF after a valid `complete` (or legacy content) payload is success;
+          // only treat a bare close with no captured DSL as unexpected.
           if (result.success === false && !result.error) {
-            result = {
-              success: false,
-              error: 'Stream ended unexpectedly',
-            };
+            if (dslData?.dsl !== undefined) {
+              result = {
+                success: true,
+                dsl: dslData.dsl,
+                yaml: dslData.yaml,
+                metadata: result.metadata,
+              };
+            } else {
+              result = {
+                success: false,
+                error: 'Stream ended unexpectedly',
+              };
+            }
           }
           resolve(result);
         } catch (error) {

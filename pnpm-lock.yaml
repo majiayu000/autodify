@@ -218,6 +218,9 @@ importers:
       vite:
         specifier: ^5.0.0
         version: 5.4.21(@types/node@22.19.3)(lightningcss@1.30.2)
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@22.19.3)(lightningcss@1.30.2)
 
 packages:
   '@ai-sdk/anthropic@0.0.53':
