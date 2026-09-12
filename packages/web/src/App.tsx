@@ -12,7 +12,22 @@ import {
   checkHealth,
   type StreamChunk,
 } from './api/generate';
+import {
+  useStreamingNodes,
+  type StreamEvent,
+  type StreamEventType,
+} from './hooks/useStreamingNodes';
+import ThinkingOverlay from './components/ThinkingOverlay';
 import yaml from 'js-yaml';
+
+const STREAM_EVENT_TYPES = new Set<StreamEventType>([
+  'thinking',
+  'node_created',
+  'edges_created',
+  'complete',
+  'error',
+  'done',
+]);
 
 export default function App() {
   // Store 状态
@@ -30,6 +45,13 @@ export default function App() {
     updateNode,
     addNode,
   } = useWorkflowStore();
+
+  const {
+    state: streamState,
+    handleStreamEvent,
+    reset: resetStream,
+    startGeneration: startStreamGeneration,
+  } = useStreamingNodes();
 
   // 时间旅行（撤销/重做）
   const { undo, redo, pastStates, futureStates } = useTemporalStore(
@@ -133,17 +155,34 @@ export default function App() {
 
     try {
       if (useStreaming) {
+        startStreamGeneration();
+
         // Use streaming API
         const result = await generateWorkflowStream(
           { prompt },
           (chunk: StreamChunk) => {
-            // Handle progress updates
+            // Forward server animation events into useStreamingNodes
+            if (STREAM_EVENT_TYPES.has(chunk.type as StreamEventType)) {
+              handleStreamEvent(chunk as StreamEvent);
+            }
+
+            // Handle progress updates (legacy + thinking)
             if (chunk.type === 'progress' && chunk.progress) {
               setProgress({
                 stage: chunk.progress.stage,
                 percentage: chunk.progress.percentage || 0,
                 message: chunk.progress.message || '',
               });
+            } else if (chunk.type === 'thinking' && chunk.thinking) {
+              setProgress({
+                stage: chunk.thinking.step,
+                percentage: 0,
+                message: chunk.thinking.message,
+              });
+            } else if (chunk.type === 'complete' && chunk.dsl) {
+              // Apply DSL as soon as the server complete event arrives
+              setDsl(chunk.dsl as DslType);
+              setProgress(null);
             } else if (chunk.type === 'error') {
               setError(chunk.error || 'Generation failed');
             } else if (chunk.type === 'done') {
@@ -160,6 +199,7 @@ export default function App() {
         } else {
           setError(result.error || '生成失败');
           console.error('Generation failed:', result.error);
+          resetStream();
         }
       } else {
         // Use non-streaming API
@@ -187,7 +227,17 @@ export default function App() {
       setProgress(null);
       setAbortController(null);
     }
-  }, [prompt, useStreaming, setIsGenerating, selectNode, setDsl, setDuration]);
+  }, [
+    prompt,
+    useStreaming,
+    setIsGenerating,
+    selectNode,
+    setDsl,
+    setDuration,
+    handleStreamEvent,
+    startStreamGeneration,
+    resetStream,
+  ]);
 
   const handleCancelGeneration = useCallback(() => {
     if (abortController) {
@@ -196,8 +246,9 @@ export default function App() {
       setIsGenerating(false);
       setProgress(null);
       setError('生成已取消');
+      resetStream();
     }
-  }, [abortController, setIsGenerating]);
+  }, [abortController, setIsGenerating, resetStream]);
 
   const handleExampleClick = useCallback((example: string) => {
     setPrompt(example);
@@ -291,7 +342,12 @@ export default function App() {
           onCopyYaml={handleCopyYaml}
         />
 
-        <main className="canvas-container">
+        <main className="canvas-container relative">
+          <ThinkingOverlay
+            steps={streamState.thinkingSteps}
+            isVisible={streamState.isGenerating && streamState.phase === 'thinking'}
+            nodeProgress={streamState.nodeProgress}
+          />
           <WorkflowCanvas dsl={dsl} onNodeSelect={selectNode} onAddNode={handleAddNode} />
         </main>
       </div>
