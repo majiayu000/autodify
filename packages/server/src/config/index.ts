@@ -23,6 +23,8 @@ const envSchema = z.object({
 
   // LLM Configuration - 可选字段
   LLM_DEFAULT_MODEL: z.string().default('gpt-4o'),
+  // Comma-separated allowlist for client-supplied options.model (default model always included)
+  LLM_ALLOWED_MODELS: z.string().optional(),
   LLM_PROVIDER: z.enum(['openai', 'anthropic', 'deepseek', 'custom']).default('openai'),
   LLM_TEMPERATURE: z.coerce.number().min(0).max(2).default(0.7),
   LLM_MAX_TOKENS: z.coerce.number().int().positive().default(4096),
@@ -149,6 +151,19 @@ export const config = {
     apiKey: env.LLM_API_KEY || env.OPENAI_API_KEY || '',
     baseUrl: env.LLM_BASE_URL || env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
     defaultModel: env.LLM_DEFAULT_MODEL,
+    // Always includes LLM_DEFAULT_MODEL; merges LLM_ALLOWED_MODELS if set
+    allowedModels: (() => {
+      const models = new Set<string>([env.LLM_DEFAULT_MODEL]);
+      if (env.LLM_ALLOWED_MODELS) {
+        for (const part of env.LLM_ALLOWED_MODELS.split(',')) {
+          const trimmed = part.trim();
+          if (trimmed) {
+            models.add(trimmed);
+          }
+        }
+      }
+      return Object.freeze([...models]) as readonly string[];
+    })(),
     provider: env.LLM_PROVIDER,
     temperature: env.LLM_TEMPERATURE,
     maxTokens: env.LLM_MAX_TOKENS,

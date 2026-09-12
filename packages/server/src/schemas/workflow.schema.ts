@@ -1,15 +1,26 @@
 import { z } from 'zod';
+import { config } from '../config/index.js';
 
 /**
  * ==================== 请求 Schema ====================
  */
+
+/** Reject client-supplied models that are not on LLM_ALLOWED_MODELS (+ default). */
+function isAllowedModel(model: string | undefined): boolean {
+  return model === undefined || config.llm.allowedModels.includes(model);
+}
 
 // POST /api/generate - 生成工作流
 export const GenerateRequestBodySchema = z.object({
   prompt: z.string().min(1, '请输入工作流描述').max(10000, '工作流描述不能超过 10000 字符'),
   options: z
     .object({
-      model: z.string().optional(),
+      model: z
+        .string()
+        .optional()
+        .refine(isAllowedModel, {
+          message: `模型不在允许列表中。允许的模型: ${config.llm.allowedModels.join(', ')}`,
+        }),
       temperature: z.number().min(0, '温度参数不能小于 0').max(2, '温度参数不能大于 2').optional(),
       useTemplate: z.boolean().optional(),
     })

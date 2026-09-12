@@ -11,6 +11,7 @@ process.env.LLM_API_KEY = 'test-api-key';
 process.env.LLM_BASE_URL = 'http://localhost:11434/v1';
 process.env.LLM_PROVIDER = 'openai';
 process.env.LLM_DEFAULT_MODEL = 'gpt-4o';
+process.env.LLM_ALLOWED_MODELS = 'gpt-4o,gpt-4o-mini';
 process.env.API_KEY = 'test-server-api-key';
 process.env.PORT = '3001';
 process.env.HOST = '0.0.0.0';

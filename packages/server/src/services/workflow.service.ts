@@ -14,6 +14,7 @@ import {
   RefinementFailedError,
   LLMError,
   InternalError,
+  ValidationError,
 } from '../errors/custom-errors.js';
 import { getLogger } from '../lib/logging/index.js';
 
@@ -99,9 +100,26 @@ export class WorkflowService {
     this.templateStore = new TemplateStore();
   }
 
+  /**
+   * Resolve preferred model: omit → server default; present → must be allowlisted.
+   * Throws ValidationError (400) before any orchestrator/LLM call.
+   */
+  private resolvePreferredModel(requested?: string): string {
+    if (!requested) {
+      return config.llm.defaultModel;
+    }
+    if (!config.llm.allowedModels.includes(requested)) {
+      throw new ValidationError(
+        `模型不在允许列表中: ${requested}。允许的模型: ${config.llm.allowedModels.join(', ')}`,
+        { model: requested, allowedModels: [...config.llm.allowedModels] }
+      );
+    }
+    return requested;
+  }
+
   async generate(request: GenerateApiRequest): Promise<GenerateApiResult> {
     const startTime = Date.now();
-    const model = request.options?.model || config.llm.defaultModel;
+    const model = this.resolvePreferredModel(request.options?.model);
 
     try {
       // 构建生成请求
@@ -145,7 +163,7 @@ export class WorkflowService {
       };
     } catch (error) {
       // 如果已经是自定义错误，直接抛出
-      if (error instanceof GenerationFailedError) {
+      if (error instanceof GenerationFailedError || error instanceof ValidationError) {
         throw error;
       }
 
@@ -274,7 +292,8 @@ export class WorkflowService {
     signal?: AbortSignal
   ): AsyncGenerator<StreamChunk> {
     const startTime = Date.now();
-    const model = request.options?.model || config.llm.defaultModel;
+    // Validate before any stream/LLM work (mirrors generate)
+    const model = this.resolvePreferredModel(request.options?.model);
 
     // Helper to check cancellation
     const checkCancelled = (): StreamChunk | null => {

@@ -1,13 +1,56 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp, closeTestApp, withAuthHeaders } from '../helpers/build-app.js';
-import { mockWorkflowService } from '../helpers/mock-llm.js';
 import { config } from '../../config/index.js';
 import { resolveCorsAllowOrigin } from '../../utils/cors.js';
 
+// Hoisted so vi.mock factory can reference a stable mock instance
+const workflowServiceMock = vi.hoisted(() => {
+  const dsl = {
+    version: '0.1.3',
+    kind: 'app',
+    app: { mode: 'workflow', name: '测试工作流' },
+    workflow: { graph: { nodes: [], edges: [] } },
+  };
+  return {
+    generate: vi.fn().mockResolvedValue({
+      success: true,
+      dsl,
+      yaml: 'version: 0.1.3\nkind: app\n...',
+      metadata: {
+        duration: 1500,
+        model: 'gpt-4o',
+        templateUsed: null,
+      },
+    }),
+    refine: vi.fn().mockResolvedValue({
+      success: true,
+      dsl,
+      yaml: 'version: 0.1.3\nkind: app\n...',
+      changes: [],
+    }),
+    validate: vi.fn().mockResolvedValue({
+      valid: true,
+      errors: [],
+      warnings: [],
+    }),
+    getTemplates: vi.fn().mockReturnValue([]),
+    getTemplateById: vi.fn().mockResolvedValue(dsl),
+    generateStream: vi.fn().mockImplementation(async function* () {
+      yield {
+        type: 'complete',
+        dsl,
+        yaml: 'version: 0.1.3\nkind: app\n...',
+        metadata: { duration: 100, model: 'gpt-4o', templateUsed: null },
+        done: true,
+      };
+    }),
+  };
+});
+
 // Mock 工作流服务模块
 vi.mock('../../services/workflow.service.js', () => ({
-  getWorkflowService: () => mockWorkflowService(),
+  getWorkflowService: () => workflowServiceMock,
   WorkflowService: vi.fn(),
 }));
 
@@ -97,6 +140,44 @@ describe('Generate Workflow API', () => {
       expect(response.statusCode).toBe(200);
       const body = JSON.parse(response.body);
       expect(body.success).toBe(true);
+      expect(workflowServiceMock.generate).toHaveBeenCalled();
+    });
+
+    it('应该接受允许列表中的模型', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/generate',
+        payload: {
+          prompt: '创建一个问答工作流',
+          options: {
+            model: 'gpt-4o',
+          },
+        },
+        headers: withAuthHeaders(),
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(workflowServiceMock.generate).toHaveBeenCalledTimes(1);
+    });
+
+    it('应该拒绝未允许的模型且不调用 LLM', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/generate',
+        payload: {
+          prompt: '创建一个问答工作流',
+          options: {
+            model: 'o1-pro',
+          },
+        },
+        headers: withAuthHeaders(),
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = JSON.parse(response.body);
+      expect(body.success === false || body.error).toBeTruthy();
+      expect(String(body.error || '')).toMatch(/允许列表|模型/);
+      expect(workflowServiceMock.generate).not.toHaveBeenCalled();
     });
 
     describe('错误处理', () => {
