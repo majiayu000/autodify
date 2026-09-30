@@ -43,7 +43,7 @@
 3. **添加上游仓库**
 
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/autodify.git
+   git remote add upstream https://github.com/majiayu000/autodify.git
    ```
 
 4. **安装依赖**
@@ -494,7 +494,7 @@ PR 审查时会检查以下方面：
 
 ## 报告 Bug
 
-使用 [Bug Report 模板](https://github.com/ORIGINAL_OWNER/autodify/issues/new?template=bug_report.md) 报告 bug。
+使用 [Bug Report 模板](https://github.com/majiayu000/autodify/issues/new?template=bug_report.md) 报告 bug。
 
 请提供：
 
@@ -507,7 +507,7 @@ PR 审查时会检查以下方面：
 
 ## 建议新功能
 
-使用 [Feature Request 模板](https://github.com/ORIGINAL_OWNER/autodify/issues/new?template=feature_request.md) 提出功能建议。
+使用 [Feature Request 模板](https://github.com/majiayu000/autodify/issues/new?template=feature_request.md) 提出功能建议。
 
 请说明：
 
