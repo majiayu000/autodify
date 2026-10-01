@@ -4,7 +4,7 @@
 
 Autodify 让你可以使用自然语言描述来生成 [Dify](https://dify.ai/) 工作流 DSL，支持 Web 界面、API 服务和命令行工具。
 
-[快速开始](#快速开始) · [使用方式](#使用方式) · [Docker 启动指南](DOCKER-QUICKSTART.md) · [部署文档](DOCKER.md)
+[快速开始](#快速开始) · [使用方式](#使用方式) · [Docker 启动指南](DOCKER-QUICKSTART.md) · [部署文档](DOCKER.md) · [生成、校验与导入教程](docs/guides/generate-validate-import.md)
 
 源码运行需要 Node.js 20 或更新版本和 pnpm 9；工作流生成还需要配置 LLM 服务凭据。
 
